@@ -16,6 +16,13 @@ include:
   - project: 'paydock/platform/gitlab-templates'
     file: '/code_quality.yml'
 
+run_tests:
+  image: composer:lts
+  stage: test
+  script:
+    - composer install
+    - ./vendor/bin/phpunit ./tests
+
 run_phpcs:
   image: composer:lts
   stage: quality

@@ -11,4 +11,5 @@ rm phpstan.neon
 rm phpcs2codeclimate.py
 rm phpcs.xml
 rm eslint.config.mjs
+rm -r tests
 rm cleanup_files_for_zip.sh

@@ -5,8 +5,7 @@
 	"author": "Paydock",
 	"keywords": [],
 	"engines": {
-		"node": ">=6.9.4",
-		"npm": ">=1.1.0"
+		"node": "20.11.1"
 	},
 	"devDependencies": {
 		"@babel/core": "7.26.0",
@@ -16,7 +15,7 @@
 		"@eslint/js": "9.17.0",
 		"@woocommerce/dependency-extraction-webpack-plugin": "2.2.0",
 		"@woocommerce/eslint-plugin": "2.3.0",
-		"@wordpress/scripts": "26.19.0",
+		"@wordpress/scripts": "30.14.1",
 		"cross-env": "7.0.3",
 		"eslint": "8.57.1",
 		"globals": "15.13.0",
@@ -26,6 +25,7 @@
 	"scripts": {
 		"start": "wp-scripts start",
 		"build": "wp-scripts build",
+		"tests": "./vendor/bin/phpunit ./tests",
 		"i18n": "npm run i18n:build",
 		"i18n:build": "npm run i18n:pot && ./bin/build_i18n.sh",
 		"i18n:pot": "php -d xdebug.max_nesting_level=512 $(which wp) i18n make-pot --exclude=\"node_modules/,languages/,assets/\" --headers='{\"Report-Msgid-Bugs-To\":\"https://woocommerce.com/my-account/create-a-ticket/\", \"language-team\":\"LANGUAGE <EMAIL@ADDRESS>\"}' . languages/woocommerce-gateway-dummy.pot",
@@ -35,8 +35,8 @@
 	},
 	"dependencies": {
 		"@woocommerce/settings": "1.0.0",
-		"@wordpress/html-entities": "3.53.0",
-		"@wordpress/i18n": "5.16.0",
+		"@wordpress/html-entities": "4.21.0",
+		"@wordpress/i18n": "5.21.0",
 		"react": "18.3.1",
 		"react-select": "5.8.0"
 	}

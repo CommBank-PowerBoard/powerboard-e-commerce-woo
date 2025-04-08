@@ -363,8 +363,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 				'status'        => $payment_data['status'] ?? null,
 				'error_message' => $payment_data['errorMessage'] ?? null,
 				'raw_data'      => $payment_data,
-			],
-			'info'
+			]
 		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -439,8 +438,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			[
 				'order_id'  => $order_id ?? null,
 				'charge_id' => $charge_id ?? null,
-			],
-			'info'
+			]
 		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */

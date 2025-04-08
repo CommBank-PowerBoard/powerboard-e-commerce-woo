@@ -102,34 +102,28 @@ class OrderService {
 		) {
 			return;
 		}
-		$statuses_rules = [
-			'processing' => [ 'refunded', 'cancelled', 'failed', 'pending', 'completed' ],
-			'refunded'   => [ 'cancelled', 'failed' ],
-			'cancelled'  => [ 'failed', 'cancelled', 'refunded' ],
-		];
-		if ( ! empty( $statuses_rules[ $old_status_key ] ) ) {
-			if ( ! in_array( $new_status_key, $statuses_rules[ $old_status_key ], true ) ) {
-				/* @noinspection PhpUndefinedFunctionInspection */
-				$new_status_name = wc_get_order_status_name( $new_status_key );
-				/* @noinspection PhpUndefinedFunctionInspection */
-				$old_status_name = wc_get_order_status_name( $old_status_key );
-				/* @noinspection PhpUndefinedFunctionInspection */
-				$error = sprintf(
-					/* translators: 1: Old status name, 2: New status name */
-					__( 'You can not change status from "%1$s"  to "%2$s"', 'power-board' ),
-					$old_status_name,
-					$new_status_name
-				);
-				$GLOBALS['power_board_is_updating_order_status'] = true;
-				$order->update_meta_data( '_status_change_verification_failed', 1 );
-				$order->update_status( $old_status_key, $error );
-				/* @noinspection PhpUndefinedFunctionInspection */
-				set_transient( 'power_board_status_change_error_' . get_current_user_id(), $error, 300 );
-				unset( $GLOBALS['power_board_is_updating_order_status'] );
-				$this->remove_status_related_notes( $order_id );
-				/* @noinspection PhpUndefinedFunctionInspection */
-				throw new Exception( esc_html( $error ) );
-			}
+		$is_status_change_allowed = self::check_is_status_change_allowed( $old_status_key, $new_status_key );
+		if ( ! $is_status_change_allowed ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			$new_status_name = wc_get_order_status_name( $new_status_key );
+			/* @noinspection PhpUndefinedFunctionInspection */
+			$old_status_name = wc_get_order_status_name( $old_status_key );
+			/* @noinspection PhpUndefinedFunctionInspection */
+			$error = sprintf(
+				/* translators: 1: Old status name, 2: New status name */
+				__( 'You can not change status from "%1$s"  to "%2$s"', 'power-board' ),
+				$old_status_name,
+				$new_status_name
+			);
+			$GLOBALS['power_board_is_updating_order_status'] = true;
+			$order->update_meta_data( '_status_change_verification_failed', 1 );
+			$order->update_status( $old_status_key, $error );
+			/* @noinspection PhpUndefinedFunctionInspection */
+			set_transient( 'power_board_status_change_error_' . get_current_user_id(), $error, 300 );
+			unset( $GLOBALS['power_board_is_updating_order_status'] );
+			$this->remove_status_related_notes( $order_id );
+			/* @noinspection PhpUndefinedFunctionInspection */
+			throw new Exception( esc_html( $error ) );
 		}
 	}
 
@@ -215,4 +209,17 @@ class OrderService {
 		}
 	}
 	// phpcs:enable
+
+	public static function check_is_status_change_allowed( $old_status_key, $new_status_key ): bool {
+		$statuses_rules = [
+			'processing' => [ 'refunded', 'cancelled', 'failed', 'pending', 'completed' ],
+			'refunded'   => [ 'cancelled', 'failed' ],
+			'cancelled'  => [ 'failed', 'refunded' ],
+		];
+		if ( ! empty( $statuses_rules[ $old_status_key ] ) && ! in_array( $new_status_key, $statuses_rules[ $old_status_key ], true ) ) {
+			return false;
+		}
+
+		return true;
+	}
 }

@@ -80,7 +80,7 @@ class ChargeService extends AbstractApiService {
 		return $this;
 	}
 
-	protected function build_endpoint(): ?string {
+	public function build_endpoint(): ?string {
 		switch ( $this->action ) {
 			case 'refunds':
 				$result = self::ENDPOINT . '/' . $this->parameters['charge_id'] . '/' . self::REFUNDS_ENDPOINT;
