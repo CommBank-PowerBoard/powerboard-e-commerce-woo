@@ -3,7 +3,9 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Controllers\Admin;
 
+use PowerBoard\Helpers\JsonHelper;
 use PowerBoard\Helpers\OrderHelper;
+use PowerBoard\Helpers\PaymentMethodHelper;
 use PowerBoard\Services\Settings\APIAdapterService;
 use PowerBoard\Services\SettingsService;
 
@@ -230,7 +232,7 @@ class WidgetController {
 			&& ! empty( $address['postcode'] );
 	}
 
-	public static function check_intent_status( $intent_id, $charge_id, $order_id, $total_amount ): bool {
+	public static function check_intent_status( $intent_id, $charge_id, $order_id, $order ): bool {
 		$settings = SettingsService::get_instance();
 
 		$intent_request_params = [ 'intent_id' => $intent_id ];
@@ -238,10 +240,28 @@ class WidgetController {
 		$api_adapter_service->initialise( $settings->get_environment(), $settings->get_access_token() );
 		$result = $api_adapter_service->get_checkout_intent_by_id( $intent_request_params );
 
-		return (float) $result['resource']['data']['amount'] === (float) $total_amount
-			&& (string) $result['resource']['data']['reference'] === (string) $order_id
-			&& $result['resource']['data']['status'] === 'completed'
-			&& $result['resource']['data']['process_reference'] === $charge_id;
+        $is_intent_valid = (float) $result['resource']['data']['amount'] === (float) $order->get_total( false )
+            && (string) $result['resource']['data']['reference'] === (string) $order_id
+            && $result['resource']['data']['status'] === 'completed'
+            && $result['resource']['data']['process_reference'] === $charge_id;
+
+        if ( $is_intent_valid ) {
+            $intent_journey = $result['resource']['data']['journey'];
+            for ( $i = count( $intent_journey ) - 1; $i >= 0; $i-- ) {
+                if ( ! empty( $intent_journey[ $i ]['context'] ) ) {
+                    $decoded_context = JsonHelper::decode_stringified_json( $intent_journey[ $i ]['context'] );
+                    if ( ! empty( $decoded_context['payment_method'] ) ) {
+                        $payment_method_key = $decoded_context['payment_method'];
+                        $payment_method     = PaymentMethodHelper::get_payment_method( $payment_method_key );
+                        $order->update_meta_data( '_power_board_payment_method', $payment_method );
+                        $order->save();
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $is_intent_valid;
 	}
 
 	private function create_draft_order( $billing_address = null, $shipping_address = null ): string {
