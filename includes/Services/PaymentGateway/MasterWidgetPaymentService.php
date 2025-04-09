@@ -286,7 +286,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$intent_id = isset( $_POST['intentid'] ) ? sanitize_text_field( wp_unslash( $_POST['intentid'] ) ) : '';
 
 		if ( ! empty( $charge_id ) && ! empty( $intent_id ) && in_array( $intent_id, $current_active_intent_ids, true ) ) {
-            $valid_payment = WidgetController::check_intent_status( $intent_id, $charge_id, $order_id, $order );
+			$valid_payment = WidgetController::check_intent_status( $intent_id, $charge_id, $order_id, $order );
 		} else {
 			$valid_payment = false;
 		}
@@ -304,9 +304,9 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			throw new Exception( esc_html( $failed_message ) );
 		}
 
-        $payment_method = $order->get_meta( '_power_board_payment_method' );
+		$payment_method = $order->get_meta( '_power_board_payment_method' );
 
-        $order->add_order_note( 'Payment succeeded. Payment Method: ' . $payment_method . '. Charge ID: ' . $charge_id );
+		$order->add_order_note( 'Payment succeeded. Payment Method: ' . $payment_method . '. Charge ID: ' . $charge_id );
 		$order->set_status( 'processing' );
 		$order->payment_complete();
 
