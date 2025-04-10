@@ -304,9 +304,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			throw new Exception( esc_html( $failed_message ) );
 		}
 
-		$payment_method = $order->get_meta( 'PowerBoard_payment_method' );
-
-		$order->add_order_note( 'Payment succeeded. Payment Method: ' . $payment_method . '. Charge ID: ' . $charge_id );
+		$order->add_order_note( 'Payment succeeded. Charge ID: ' . $charge_id );
 		$order->set_status( 'processing' );
 		$order->payment_complete();
 
