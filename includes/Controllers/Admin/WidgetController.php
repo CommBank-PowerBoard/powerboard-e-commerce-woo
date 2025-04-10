@@ -253,7 +253,7 @@ class WidgetController {
 					if ( ! empty( $decoded_context['payment_method'] ) ) {
 						$payment_method_key = $decoded_context['payment_method'];
 						$payment_method     = PaymentMethodHelper::get_payment_method( $payment_method_key );
-						$order->update_meta_data( 'power_board_payment_method', $payment_method );
+						$order->update_meta_data( 'PowerBoard_payment_method', $payment_method );
 						$order->save();
 						break;
 					}
