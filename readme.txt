@@ -81,7 +81,7 @@ Also, we use helper code that not need compile what contained in assets path.
 
 * Changed
 
-  - Moved order status update out of order creation to enable compatability with external plugin.
+  - Moved order status update out of order creation to enable compatibility with "Preorders" external plugin.
 
 = 1.1.0 =
 
