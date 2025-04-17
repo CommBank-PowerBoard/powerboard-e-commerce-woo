@@ -151,9 +151,10 @@ jQuery(
 					},
 					isValidForm( paymentMethod ) {
 						this.hideFormValidationError( paymentMethod );
-						let fieldList = this.getFieldsList();
-						let result    = true
-						if ( this.invalidPostcode ) {
+						let fieldList                 = this.getFieldsList();
+						let result                    = true
+						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
+						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
 						}
 						fieldList.filter( field => !field.includes( 'address_2' ) ).forEach(
@@ -220,7 +221,7 @@ jQuery(
 						error.hide();
 						createIntentError.hide();
 
-						if ( !this.isValidForm( methodName ) ) {
+						if ( !this.isValidForm( methodName ) && methodName === 'power_board' ) {
 							this.toggleWidgetVisibility( true );
 							this.toggleOrderButton( true );
 							loading.hide();
@@ -544,7 +545,11 @@ jQuery(
 								const currentAddress = this.getAddressData( true );
 								if ( eventTargetId.includes( 'billing_postcode' ) || eventTargetId.includes( 'billing_country' ) || eventTargetId.includes( 'billing_state' ) ) {
 									this.checkIsValidPostCodeAndLoadPayment();
-								} else if (this.lastAddressVerified !== currentAddress || eventTargetId.includes( 'payment_method' )) {
+								} else if (
+									this.lastAddressVerified !== currentAddress
+									|| eventTargetId.includes( 'payment_method' )
+									|| eventTargetId.includes( '_woo_additional_terms' )
+								) {
 									this.lastAddressVerified = currentAddress;
 									// noinspection JSUnresolvedReference
 									this.setPaymentMethod(

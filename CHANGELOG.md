@@ -1,6 +1,16 @@
 # Changelog
 
-## [1.2.0] - 2025-03-28
+## [1.3.0] - 2025-04-15
+
+### Compatibility
+
+- Compatible with WooCommerce version `9.5.2`.
+
+### Added
+
+- Added compatibility fix for "Woo Additional Terms" plugin.
+
+## [1.2.0] - 2025-04-11
 
 ### Compatibility
 

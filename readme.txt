@@ -6,7 +6,7 @@ Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
 Tested up to: 6.7.1
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,16 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 1.3.0 =
+
+* Compatibility
+
+  - Compatible with WooCommerce version `9.5.2`.
+
+* Added
+
+  - Added compatibility fix for "Woo Additional Terms" plugin.
 
 = 1.2.0 =
 
