@@ -121,6 +121,12 @@ class WidgetController {
 				/* @noinspection PhpUndefinedFunctionInspection */
 				$order = wc_get_order( $order_id );
 				OrderHelper::update_order( $order, $billing_address, $shipping_address );
+
+				$order_status = $order->get_status();
+
+				if ( $order_status !== 'checkout-draft' && $order_status !== 'failed' ) {
+					$order_id = $this->create_draft_order( $billing_address, $shipping_address );
+				}
 			} else {
 				$order_id = $this->create_draft_order( $billing_address, $shipping_address );
 			}

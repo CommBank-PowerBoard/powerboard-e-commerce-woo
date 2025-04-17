@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1] - 2025-04-16
+
+### Compatibility
+
+- Compatible with WooCommerce version `9.5.2`.
+
+### Fixed
+
+- Fixed an issue where the Classic checkout could sometimes process a new order with the order ID of an already processing order.
+
 ## [1.3.0] - 2025-04-15
 
 ### Compatibility

@@ -457,13 +457,26 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			);
 	}
 
+	/**
+	 * Returns order id if order was created previously on PowerBoard
+     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 *
+	 * @return string
+	 */
 	public function get_order_id(): ?string {
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$custom_order_id = (string) WC()->session->get( 'power_board_draft_order' );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$order_awaiting_payment = (string) WC()->session->get( 'order_awaiting_payment' );
-		return ! empty( $custom_order_id ) ? $custom_order_id : $order_awaiting_payment;
+		$payment_method = isset( $_POST['payment_method'] ) ? sanitize_text_field( wp_unslash( $_POST['payment_method'] ) ) : '';
+		if ( $payment_method === POWER_BOARD_PLUGIN_PREFIX ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			$custom_order_id = (string) WC()->session->get( 'power_board_draft_order' );
+			/* @noinspection PhpUndefinedFunctionInspection */
+			$order_awaiting_payment = (string) WC()->session->get( 'order_awaiting_payment' );
+			return ! empty( $custom_order_id ) ? $custom_order_id : $order_awaiting_payment;
+		}
+
+		return null;
 	}
+	// phpcs:enable
 
 	public function check_email( $email ): bool {
 		/* @noinspection PhpUndefinedFunctionInspection */
