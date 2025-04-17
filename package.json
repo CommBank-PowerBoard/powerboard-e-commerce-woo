@@ -1,8 +1,8 @@
 {
 	"name": "woocommerce-gateway-power-board",
 	"title": "WooCommerce PowerBoard Payment",
-	"version": "1.2.0",
-	"author": "Paydock",
+	"version": "1.3.0",
+	"author": "PowerBoard",
 	"keywords": [],
 	"engines": {
 		"node": ">=6.9.4",
