@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] - 2025-03-28
+
+### Compatibility
+
+- Compatible with WooCommerce version `9.5.2`.
+
+### Changed
+
+- Moved order status update out of order creation to enable compatability with external plugin.
+
 ## [1.1.0] - 2025-03-28
 
 ### Compatibility

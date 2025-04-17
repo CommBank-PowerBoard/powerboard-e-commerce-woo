@@ -270,10 +270,10 @@ class WidgetController {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$order = wc_create_order(
 			[
-				'status'    => 'checkout-draft',
 				'cart_hash' => $cart->get_cart_hash(),
 			]
 		);
+		$order->set_status( 'checkout-draft' );
 		OrderHelper::update_order( $order, $billing_address, $shipping_address );
 
 		$order_id = $order->get_id();
