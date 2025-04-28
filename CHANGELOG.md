@@ -4,7 +4,7 @@
 
 ### Compatibility
 
-- Compatible with WooCommerce version `9.5.2`.
+- Compatible with WooCommerce version `9.8.1`.
 
 ### Fixed
 

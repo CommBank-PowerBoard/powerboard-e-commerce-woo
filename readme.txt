@@ -5,7 +5,7 @@ https://www.commbank.com.au/
 Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
-Tested up to: 6.7.1
+Tested up to: 6.8
 Stable tag: 1.3.1
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -22,7 +22,7 @@ With a few quick configuration steps, this plugin provides you with access to Po
 Please note that WooCommerce must be installed and active before this plugin can be used.
 Prerequisites to install and configure the PowerBoard plugin, you will need a WordPress instance running:
 
-* WooCommerce version: 9.5.2
+* WooCommerce version: 9.8.1
 * [WooCommerce Server Requirements](https://woocommerce.com/document/server-requirements/)
 * [WooCommerce PHP and WordPress Support](https://woocommerce.com/document/update-php-wordpress/)
 
@@ -77,7 +77,7 @@ Also, we use helper code that not need compile what contained in assets path.
 
 * Compatibility
 
-  - Compatible with WooCommerce version `9.5.2`.
+  - Compatible with WooCommerce version `9.8.1`.
 
 * Bug fixes
 
