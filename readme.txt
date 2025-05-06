@@ -22,7 +22,7 @@ With a few quick configuration steps, this plugin provides you with access to Po
 Please note that WooCommerce must be installed and active before this plugin can be used.
 Prerequisites to install and configure the PowerBoard plugin, you will need a WordPress instance running:
 
-* WooCommerce version: 9.5.2
+* WooCommerce version: 9.8.1
 * [WooCommerce Server Requirements](https://woocommerce.com/document/server-requirements/)
 * [WooCommerce PHP and WordPress Support](https://woocommerce.com/document/update-php-wordpress/)
 
@@ -82,10 +82,12 @@ Also, we use helper code that not need compile what contained in assets path.
 * Added
 
   - Added payment method used for order payment to meta on an order.
+  - Added support for default Woo terms and conditions checkbox on classic checkout.
 
 * Bug fixes
 
   - Fixed an issue in Classic checkout where the payment method would not load if merchant did not collect shipping address on their Checkout page.
+  - Fixed an issue in Classic checkout when an order id failed to retrieve an order causing us not to navigate to order confirmation page post transaction approved.
 
 = 1.3.1 =
 

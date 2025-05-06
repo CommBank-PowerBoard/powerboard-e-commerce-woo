@@ -30,7 +30,7 @@ jQuery(
 					// noinspection JSUnresolvedReference
 					const phone = $input.val();
 					$input.next( `.${CONFIG.errorMessageClassName}` ).remove();
-					if (phone && !CONFIG.phonePattern.test( phone )) {
+					if ( phone && !CONFIG.phonePattern.test( phone ) ) {
 						$input.after( CONFIG.errorMessageHtml );
 						// noinspection JSUnresolvedReference
 						$input.addClass( 'power-board-invalid-phone' );
@@ -155,6 +155,10 @@ jQuery(
 						let result                    = true
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
 						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
+							result = false;
+						}
+						const defaultTermsCheckbox = document.getElementById( 'terms' );
+						if ( defaultTermsCheckbox && !defaultTermsCheckbox.checked ) {
 							result = false;
 						}
 						fieldList.filter( field => !field.includes( 'address_2' ) ).forEach(
@@ -550,6 +554,7 @@ jQuery(
 									this.lastAddressVerified !== currentAddress
 									|| eventTargetId.includes( 'payment_method' )
 									|| eventTargetId.includes( '_woo_additional_terms' )
+									|| eventTargetId.includes( 'terms' )
 								) {
 									this.lastAddressVerified = currentAddress;
 									// noinspection JSUnresolvedReference

@@ -50,8 +50,6 @@ phpcs_report:
 
 prepare_power_board_version:
   stage: publish
-  only:
-    - power_board
   needs:
     - job: create_version
       artifacts: true
@@ -68,8 +66,6 @@ prepare_power_board_version:
 publish_power_board:
   image: composer:lts
   stage: publish
-  only:
-    - power_board
   needs:
     - job: prepare_power_board_version
       artifacts: true
@@ -87,7 +83,7 @@ publish_power_board:
 simulate_deploy_power_board_staging:
   stage: deploy_cba
   only:
-    - power_board
+    - main
   needs:
     - job: publish_power_board
       artifacts: true
@@ -103,7 +99,7 @@ simulate_deploy_power_board_staging:
 simulate_deploy_power_board_uat:
   stage: deploy_cba
   only:
-    - power_board
+    - main
   needs:
     - job: publish_power_board
       artifacts: true

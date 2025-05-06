@@ -126,6 +126,8 @@ class WidgetController {
 				if ( is_object( $order ) ) {
 					OrderHelper::update_order( $order, $billing_address, $shipping_address );
 					$order_status = $order->get_status();
+				} else {
+					$order_status = false;
 				}
 
 				if ( $order_status !== 'checkout-draft' && $order_status !== 'failed' ) {
