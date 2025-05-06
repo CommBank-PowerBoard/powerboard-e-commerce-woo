@@ -5,8 +5,8 @@ https://www.commbank.com.au/
 Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
-Tested up to: 6.7.1
-Stable tag: 1.3.1
+Tested up to: 6.8
+Stable tag: 1.4.0
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,20 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 1.4.0 =
+
+* Compatibility
+
+  - Compatible with WooCommerce version `9.8.1`.
+
+* Added
+
+  - Added payment method used for order payment to meta on an order.
+
+* Bug fixes
+
+  - Fixed an issue in Classic checkout where the payment method would not load if merchant did not collect shipping address on their Checkout page.
 
 = 1.3.1 =
 

@@ -264,7 +264,8 @@ jQuery(
 						let addressData     = this.getAddressData( false );
 						let billingAddress  = addressData.address;
 						let shippingAddress = billingAddress;
-						if ( document.getElementById( 'ship-to-different-address-checkbox' ).checked ) {
+						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
+						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
 						}
 

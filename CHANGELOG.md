@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0] - 2025-05-01
+
+### Compatibility
+
+- Compatible with WooCommerce version `9.8.1`.
+
+### Added
+
+- Added payment method used for order payment to meta on an order.
+
+### Fixed
+
+- Fixed an issue in Classic checkout where the payment method would not load if merchant did not collect shipping address on their Checkout page.
+
 ## [1.3.1] - 2025-04-16
 
 ### Compatibility
