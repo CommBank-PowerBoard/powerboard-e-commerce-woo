@@ -88,6 +88,7 @@ Also, we use helper code that not need compile what contained in assets path.
 
   - Fixed an issue in Classic checkout where the payment method would not load if merchant did not collect shipping address on their Checkout page.
   - Fixed an issue in Classic checkout when an order id failed to retrieve an order causing us not to navigate to order confirmation page post transaction approved.
+  - Fixed overwriting of internal styling of button by external plugin.
 
 = 1.3.1 =
 
