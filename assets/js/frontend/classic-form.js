@@ -183,8 +183,8 @@ jQuery(
 						let isPhoneNumberValid = this.isBillingPhoneValid();
 
 						// noinspection JSUnresolvedReference
-						let useSameBillingAndShipping = jQuery( '#ship-to-different-address-checkbox' ).checked;
-						if ( !useSameBillingAndShipping ) {
+						let useDifferentAddress = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
+						if ( useDifferentAddress ) {
 							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
 						}
 
@@ -498,6 +498,10 @@ jQuery(
 						);
 
 						this.form = $( 'form[name="checkout"]' );
+						$( '#ship-to-different-address-checkbox' ).on( 'change', function () {
+							const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+							powerBoardHelper.setPaymentMethod( selectedPayment, true );
+						} );
 						this.form.on(
 							'change',
 							( event ) => {
