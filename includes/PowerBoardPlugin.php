@@ -46,6 +46,9 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 					display: block !important;
 					max-width: 100% !important;
 				}
+				.checkout-overlay {
+					z-index: 999 ! important;
+				}
 			</style>
 			<?php
 		}
