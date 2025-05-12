@@ -10,6 +10,7 @@
 
 - Added payment method used for order payment to meta on an order.
 - Added support for default Woo terms and conditions checkbox on classic checkout.
+- Added support for hidden checkout fields on classic checkout.
 
 ### Fixed
 

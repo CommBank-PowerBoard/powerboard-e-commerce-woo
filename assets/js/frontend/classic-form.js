@@ -152,7 +152,7 @@ jQuery(
 					isValidForm( paymentMethod ) {
 						this.hideFormValidationError( paymentMethod );
 						let fieldList                 = this.getFieldsList();
-						let result                    = true
+						let result                    = true;
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
 						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
@@ -163,35 +163,27 @@ jQuery(
 						}
 						fieldList.filter( field => !field.includes( 'address_2' ) ).forEach(
 							( fieldName ) => {
-								let element = document.querySelector( `[name="${fieldName}"]` );
-								if (element) {
-									if (element.value) {
-										this.setFieldLikeValid( fieldName );
-									} else {
-										this.setFieldLikeInvalid( fieldName );
-										this.showFormValidationError( paymentMethod );
-										result = false;
-									}
+								const el = document.getElementById( fieldName );
+								if ( el && el.value ) {
+									this.setFieldLikeValid( fieldName );
 								} else {
+									this.setFieldLikeInvalid( fieldName );
+									this.showFormValidationError( paymentMethod );
 									result = false;
 								}
 							}
-						)
-
-					if ( result ) {
-						// noinspection JSUnresolvedReference
-						let isPhoneNumberValid = this.isBillingPhoneValid();
-
-						// noinspection JSUnresolvedReference
-						let useDifferentAddress = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
-						if ( useDifferentAddress ) {
-							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
+						);
+						if ( result ) {
+							// noinspection JSUnresolvedReference
+							let isPhoneNumberValid = this.isBillingPhoneValid();
+							// noinspection JSUnresolvedReference
+							const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
+							if ( !useSameBillingAndShipping ) {
+								isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
+							}
+							return isPhoneNumberValid;
 						}
-
-						return isPhoneNumberValid;
-					}
-
-					return result;
+						return result;
 					},
 					isShippingPhoneValid() {
 						return !document.getElementById( 'shipping_phone' )?.classList?.contains( 'power-board-invalid-phone' );
@@ -396,24 +388,15 @@ jQuery(
 						};
 						fieldList.forEach(
 							( fieldName ) => {
-								let type = 'input';
-								if ( fieldName.includes( 'state' ) || fieldName.includes( 'country' ) ) {
-									type = 'select'
-
-									if ( fieldName.includes( 'country' ) && document.querySelectorAll( `select[name="${fieldName}"]` ).length === 0 ) {
-										type = 'input'
-									}
-								}
-								let elements   = document.querySelectorAll( `${type}[name="${fieldName}"]` );
-								let value      = elements.length > 0 ? elements[0].value : null;
-								let isShipping = fieldName.includes( 'shipping' );
+								let element = document.getElementById( fieldName );
+								let value = element ? element.value : '';
+								let isShipping = fieldName.startsWith( 'shipping_' );
 								result[isShipping ? 'shipping_address' : 'address'][fieldName.replace( 'shipping_', '' ).replace( 'billing_', '' )] = value;
 							}
 						);
-
-					if ( returnJson ) {
-						return JSON.stringify( result );
-					}
+						if ( returnJson ) {
+							return JSON.stringify( result );
+						}
 						return result;
 					},
 					getConfigs() {
