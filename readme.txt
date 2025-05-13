@@ -91,6 +91,7 @@ Also, we use helper code that not need compile what contained in assets path.
   - Fixed an issue in Classic checkout when an order id failed to retrieve an order causing us not to navigate to order confirmation page post transaction approved.
   - Fixed overwriting of internal styling of button by external plugin.
   - Fixed checkout shipping form validation when toggling the "Ship to a different address?" checkbox with empty fields.
+  - Fixed checkout overlay z-index to prevent switching payment methods during an active payment session.
 
 = 1.3.1 =
 
