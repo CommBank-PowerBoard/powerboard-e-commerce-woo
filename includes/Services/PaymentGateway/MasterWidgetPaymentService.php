@@ -272,6 +272,10 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
 
+		if ( $order->get_status() !== 'pending' && ! empty( $session->get( 'power_board_draft_order' ) ) ) {
+			$order->set_status( 'pending' );
+		}
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$checkout_order_identifier = 'power_board_checkout_cart_' . wp_create_nonce( 'power-board-checkout-cart' );
 		$checkout_order            = $session->get( $checkout_order_identifier );
