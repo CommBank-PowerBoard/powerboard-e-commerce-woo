@@ -264,6 +264,7 @@ class WidgetController {
 						$payment_method_key = $decoded_context['payment_method'];
 						$payment_method     = PaymentMethodHelper::get_payment_method( $payment_method_key );
 						$order->update_meta_data( 'PowerBoard_payment_method', $payment_method );
+						$order->set_payment_method_title( $payment_method );
 						$order->save();
 						break;
 					}

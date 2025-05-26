@@ -7,17 +7,17 @@ class PaymentMethodHelper {
 	public static function get_payment_method( string $payment_method ): string {
 		switch ( $payment_method ) {
 			case 'card':
-				return 'Card';
+				return 'Credit Card';
 			case 'afterpay_checkout':
 				return 'Afterpay';
 			case 'zip_checkout':
 				return 'Zip';
 			case 'applepay_wallet':
-				return 'ApplePay';
+				return 'Apple Pay';
 			case 'googlepay_wallet':
-				return 'GooglePay';
+				return 'Google Pay';
 			case 'paypal_wallet':
-				return 'Paypal';
+				return 'PayPal';
 			default:
 				return $payment_method;
 		}
