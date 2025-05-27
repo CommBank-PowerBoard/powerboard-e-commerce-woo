@@ -97,7 +97,7 @@ const initMasterWidgetCheckout = () => {
 			success: ( response ) => {
 				if ( ! checkIsFormValid() ) {
 					// noinspection JSUnresolvedReference
-					let error = jQuery( '#fields-validation-error' )[0];
+					let error = jQuery( '#required-fields-validation-error' )[0];
 					// noinspection JSUnresolvedReference
 					let loading = jQuery( '#loading' )[0];
 					showInvalidFormError( loading, error );
@@ -278,19 +278,30 @@ const showInvalidFormError = (loading, error) => {
 const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false ) => {
 	let isFormValid       = checkIsFormValid();
 	// noinspection JSUnresolvedReference
-	let error = jQuery( '#fields-validation-error' )[0];
+	let error = jQuery( '#required-fields-validation-error' )[0];
 	// noinspection JSUnresolvedReference
 	let intentCreationError = jQuery( '#intent-creation-error' )[0];
+	// noinspection JSUnresolvedReference
+	let invalidFieldsError = jQuery( '#invalid-fields-error' )[0];
 	// noinspection JSUnresolvedReference
 	let loading = jQuery( '#loading' )[0];
 	toggleWidgetVisibility( true );
 	intentCreationError.classList.add( 'hide' );
+	invalidFieldsError.classList.add( 'hide' );
 	if ( isFormValid ) {
 		if ( loading.classList.length > 0 ) {
 			loading.classList.remove( 'hide' );
 		}
 		error.classList.add( 'hide' );
 	} else {
+		const validPostcode = document.getElementById( 'shipping-postcode' )?.checkValidity() && document.getElementById( 'billing-postcode' )?.checkValidity();
+		const validEmail    = document.getElementById( 'email' ).checkValidity();
+		const validPhone    = !document.getElementById( 'shipping-phone' )?.className.includes( 'power-board-invalid-phone' ) && !document.getElementById( 'billing-phone' )?.className.includes( 'power-board-invalid-phone' );
+		if ( !validPostcode || !validEmail || !validPhone ) {
+			error.classList.add( 'hide' );
+			// noinspection JSUnresolvedReference
+			error = invalidFieldsError;
+		}
 		showInvalidFormError( loading, error );
 	}
 
@@ -522,11 +533,11 @@ const Content                               = ( props ) => {
 		),
 		createElement(
 			"div",
-			{id: 'fields-validation-error', className: 'hide'},
+			{id: 'required-fields-validation-error', className: 'hide'},
 			createElement(
 				"p",
 				{className: 'power-board-validation-error'},
-				'Please fill in the required fields of the form to display payment methods',
+				'Please fill in the required fields of the form to display payment methods.',
 			),
 		),
 		createElement(
@@ -536,6 +547,15 @@ const Content                               = ( props ) => {
 				"p",
 				{className: 'power-board-validation-error'},
 				'Something went wrong, please refresh the page and try again.',
+			),
+		),
+		createElement(
+			"div",
+			{id: 'invalid-fields-error', className: 'hide'},
+			createElement(
+				"p",
+				{className: 'power-board-validation-error'},
+				'Please enter valid information in all fields to display payment methods.',
 			),
 		),
 		createElement(
