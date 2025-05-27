@@ -225,7 +225,7 @@ jQuery(
 							this.toggleOrderButton( true );
 							loading.hide();
 
-							if (this.invalidPostcode || this.invalidEmail) {
+							if ( this.invalidPostcode || this.invalidEmail ) {
 								invalidFieldsError.show();
 							} else {
 								error.show();
@@ -289,6 +289,10 @@ jQuery(
 								success: ( response ) => {
 									if ( !this.isValidForm( 'power_board' ) ) {
 										let error   = $( '#fields-validation-error' );
+
+										if ( this.invalidPostcode || this.invalidEmail ) {
+											error     = $( '#invalid-fields-error' );
+										}
 										let loading = $( '#loading' );
 										this.toggleWidgetVisibility( true );
 										this.toggleOrderButton( true );
