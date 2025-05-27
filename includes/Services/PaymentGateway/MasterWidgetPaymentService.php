@@ -309,7 +309,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		}
 
 		$order->add_order_note( 'Payment succeeded. Charge ID: ' . $charge_id );
-		$order->set_status( 'processing' );
 		$order->payment_complete();
 
 		$order->update_meta_data( '_power_board_charge_id', $charge_id );
