@@ -155,7 +155,8 @@ jQuery(
 						let fieldList                 = this.getFieldsList();
 						let result                    = true;
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
-						if ( this.invalidPostcode || this.invalidEmail || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
+						const invalidPhone            = document.getElementById( 'shipping-phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing-phone' )?.className.includes( 'power-board-invalid-phone' );
+						if ( this.invalidPostcode || this.invalidEmail || invalidPhone || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
 						}
 						const defaultTermsCheckbox = document.getElementById( 'terms' );
@@ -225,7 +226,8 @@ jQuery(
 							this.toggleOrderButton( true );
 							loading.hide();
 
-							if ( this.invalidPostcode || this.invalidEmail ) {
+							const invalidPhone = document.getElementById( 'shipping_phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing_phone' )?.className.includes( 'power-board-invalid-phone' );
+							if ( this.invalidPostcode || this.invalidEmail || invalidPhone ) {
 								invalidFieldsError.show();
 							} else {
 								error.show();
@@ -288,10 +290,10 @@ jQuery(
 								data: data,
 								success: ( response ) => {
 									if ( !this.isValidForm( 'power_board' ) ) {
-										let error   = $( '#fields-validation-error' );
+										let error = $( '#fields-validation-error' );
 
 										if ( this.invalidPostcode || this.invalidEmail ) {
-											error     = $( '#invalid-fields-error' );
+											error = $( '#invalid-fields-error' );
 										}
 										let loading = $( '#loading' );
 										this.toggleWidgetVisibility( true );
