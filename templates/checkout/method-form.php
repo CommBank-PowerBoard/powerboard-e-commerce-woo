@@ -17,11 +17,14 @@ echo wp_kses_post(
 <fieldset id="wc-classic-power-board-checkout" class="wc-payment-form powerboard">
 	<div id="classic-powerBoardCheckout_wrapper">
 	</div>
-	<div id="fields-validation-error" style="display: none;">
-		<p class="power-board-validation-error">Please fill in the required fields of the form to display payment methods</p>
+	<div id="required-fields-validation-error" style="display: none;">
+		<p class="power-board-validation-error">Please fill in the required fields of the form to display payment methods.</p>
 	</div>
 	<div id="intent-creation-error" style="display: none;">
 		<p class="power-board-validation-error">Something went wrong, please refresh the page and try again.</p>
+	</div>
+	<div id="invalid-fields-error" style="display: none;">
+		<p class="power-board-validation-error">Please enter valid information in all fields to display payment methods</p>
 	</div>
 	<div id="loading">
 		<p class="loading-text">Loading...</p>

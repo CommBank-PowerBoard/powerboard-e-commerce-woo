@@ -50,6 +50,7 @@ jQuery(
 				};
 				const powerBoardHelper = {
 					invalidPostcode: false,
+					invalidEmail: false,
 					paymentMethodLoaded: null,
 					selectedPaymentMethod: null,
 					form: null,
@@ -154,7 +155,7 @@ jQuery(
 						let fieldList                 = this.getFieldsList();
 						let result                    = true;
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
-						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
+						if ( this.invalidPostcode || this.invalidEmail || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
 						}
 						const defaultTermsCheckbox = document.getElementById( 'terms' );
@@ -173,16 +174,16 @@ jQuery(
 								}
 							}
 						);
-						if ( result ) {
-							// noinspection JSUnresolvedReference
-							let isPhoneNumberValid = this.isBillingPhoneValid();
-							// noinspection JSUnresolvedReference
-							const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
-							if ( !useSameBillingAndShipping ) {
-								isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
-							}
-							return isPhoneNumberValid;
+					if ( result ) {
+						// noinspection JSUnresolvedReference
+						let isPhoneNumberValid = this.isBillingPhoneValid();
+						// noinspection JSUnresolvedReference
+						const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
+						if ( !useSameBillingAndShipping ) {
+							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
 						}
+						return isPhoneNumberValid;
+					}
 						return result;
 					},
 					isShippingPhoneValid() {
@@ -210,18 +211,26 @@ jQuery(
 							return;
 						}
 						this.selectedPaymentMethod = methodName;
-						let error                  = $( '#fields-validation-error' );
+						let error                  = $( '#required-fields-validation-error' );
+						let invalidFieldsError     = $( '#invalid-fields-error' );
 						let createIntentError      = $( '#intent-creation-error' );
 						let loading                = $( '#loading' );
 						loading.show();
 						error.hide();
+						invalidFieldsError.hide();
 						createIntentError.hide();
 
 						if ( !this.isValidForm( methodName ) && methodName === 'power_board' ) {
 							this.toggleWidgetVisibility( true );
 							this.toggleOrderButton( true );
 							loading.hide();
-							error.show();
+
+							if (this.invalidPostcode || this.invalidEmail) {
+								invalidFieldsError.show();
+							} else {
+								error.show();
+							}
+
 							return;
 						}
 						if (methodName !== 'power_board' ) {
@@ -257,9 +266,9 @@ jQuery(
 						const initTimestamp       = ( new Date() ).getTime();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
-						let addressData     = this.getAddressData( false );
-						let billingAddress  = addressData.address;
-						let shippingAddress = billingAddress;
+						let addressData      = this.getAddressData( false );
+						let billingAddress   = addressData.address;
+						let shippingAddress  = billingAddress;
 						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
 						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
@@ -381,22 +390,22 @@ jQuery(
 						);
 					},
 					getAddressData( returnJson = true ) {
-						let fieldList    = this.getFieldsList( true, true );
-						let result       = {
+						let fieldList          = this.getFieldsList( true, true );
+						let result             = {
 							shipping_address: {},
 							address: {}
 						};
 						fieldList.forEach(
 							( fieldName ) => {
-								let element = document.getElementById( fieldName );
-								let value = element ? element.value : '';
+								let element    = document.getElementById( fieldName );
+								let value      = element ? element.value : '';
 								let isShipping = fieldName.startsWith( 'shipping_' );
 								result[isShipping ? 'shipping_address' : 'address'][fieldName.replace( 'shipping_', '' ).replace( 'billing_', '' )] = value;
 							}
 						);
-						if ( returnJson ) {
-							return JSON.stringify( result );
-						}
+					if ( returnJson ) {
+						return JSON.stringify( result );
+					}
 						return result;
 					},
 					getConfigs() {
@@ -475,16 +484,20 @@ jQuery(
 									this.lastAddressVerified = this.getAddressData( true );
 									clearInterval( paymentMethodInterval );
 									this.checkIsValidPostCodeAndLoadPayment( false );
+									this.checkIsValidEmailAndLoadPayment();
 								}
 							},
 							100
 						);
 
 						this.form = $( 'form[name="checkout"]' );
-						$( '#ship-to-different-address-checkbox' ).on( 'change', function () {
-							const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
-							powerBoardHelper.setPaymentMethod( selectedPayment, true );
-						} );
+						$( '#ship-to-different-address-checkbox' ).on(
+							'change',
+							function () {
+								const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+								powerBoardHelper.setPaymentMethod( selectedPayment, true );
+							}
+							);
 						this.form.on(
 							'change',
 							( event ) => {
@@ -537,6 +550,8 @@ jQuery(
 								const currentAddress = this.getAddressData( true );
 								if ( eventTargetId.includes( 'billing_postcode' ) || eventTargetId.includes( 'billing_country' ) || eventTargetId.includes( 'billing_state' ) ) {
 									this.checkIsValidPostCodeAndLoadPayment();
+								} else if ( eventTargetId.includes( 'billing_email' ) ) {
+									this.checkIsValidEmailAndLoadPayment();
 								} else if (
 									this.lastAddressVerified !== currentAddress
 									|| eventTargetId.includes( 'payment_method' )
@@ -554,7 +569,7 @@ jQuery(
 							500
 						);
 					},
-					checkIsValidPostCodeAndLoadPayment( forcePaymentMethodInit = true ) {
+					checkIsValidPostCodeAndLoadPayment( loadPayment = true ) {
 						const postcode = document.getElementById( 'billing_postcode' ).value;
 						const country  = document.getElementById( 'billing_country' ).value;
 						// noinspection JSUnresolvedReference
@@ -580,24 +595,69 @@ jQuery(
 										} else {
 											this.invalidPostcode = true;
 											const postcodeInput  = document.getElementById( 'billing_postcode' );
-											document.querySelector( '.power-board-postcode-error-message' )?.remove();
-											const messageContainer = document.createElement( "div" );
-											messageContainer.setAttribute( 'class', 'classic-checkout-validation-error wc-block-components-validation-error power-board-postcode-error-message' );
-											messageContainer.setAttribute( 'role', 'alert' );
-											const	message   = document.createElement( "p" );
-											message.innerText = response.data.message;
-											messageContainer.appendChild( message );
-											postcodeInput.after( messageContainer );
-											postcodeInput.classList.add( 'power-board-invalid-postcode' );
+											this.addErrorMessageToField( postcodeInput, response.data.message, 'postcode' );
 										}
 
-										this.setPaymentMethod( selectedPaymentMethod, forcePaymentMethodInit );
+										if ( loadPayment ) {
+											this.setPaymentMethod( selectedPaymentMethod, true );
+										}
 									}
 								}
 							);
 						} else {
-							this.setPaymentMethod( selectedPaymentMethod, forcePaymentMethodInit );
+							if ( loadPayment ) {
+								this.setPaymentMethod( selectedPaymentMethod, true );
+							}
 						}
+					},
+					checkIsValidEmailAndLoadPayment( loadPayment = true ) {
+						const email = document.getElementById( 'billing_email' ).value;
+						// noinspection JSUnresolvedReference
+						const selectedPaymentMethod = $( 'input[name="payment_method"]:checked' ).val();
+
+						if ( email ) {
+							// noinspection JSUnresolvedReference
+							jQuery.ajax(
+								{
+									url: '/?wc-ajax=power-board-check-email',
+									type: 'POST',
+									data: {
+										_wpnonce: PowerBoardAjaxCheckout.wpnonce_check_email,
+										email: email,
+									},
+									success: ( response ) => {
+										const emailInput = document.getElementById( 'billing_email' );
+										if ( response.success ) {
+											this.invalidEmail = false;
+											document.querySelector( '.power-board-email-error-message' )?.remove();
+											emailInput.classList.remove( 'power-board-invalid-email' );
+										} else {
+											this.invalidEmail = true;
+											this.addErrorMessageToField( emailInput, response.data.message, 'email' );
+										}
+
+										if ( loadPayment ) {
+											this.setPaymentMethod( selectedPaymentMethod, true );
+										}
+									}
+								}
+							);
+						} else {
+							if ( loadPayment ) {
+								this.setPaymentMethod( selectedPaymentMethod, true );
+							}
+						}
+					},
+					addErrorMessageToField( fieldInput, errorMessage, fieldIdentifier ) {
+						document.querySelector( '.power-board-' + fieldIdentifier + '-error-message' )?.remove();
+						const messageContainer = document.createElement( "div" );
+						messageContainer.setAttribute( 'class', 'classic-checkout-validation-error wc-block-components-validation-error power-board-' + fieldIdentifier + '-error-message' );
+						messageContainer.setAttribute( 'role', 'alert' );
+						const	message   = document.createElement( "p" );
+						message.innerText = errorMessage;
+						messageContainer.appendChild( message );
+						fieldInput.after( messageContainer );
+						fieldInput.classList.add( 'power-board-invalid-' + fieldIdentifier );
 					},
 					handleOrderCommentsChanges( eventTargetId, value ) {
 						if ( eventTargetId.includes( 'order_comments' ) ) {

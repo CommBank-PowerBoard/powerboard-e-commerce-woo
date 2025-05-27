@@ -111,6 +111,12 @@ class WidgetController {
 			}
 		}
 
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! is_email( $billing_address['email'] ) ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address', 'power-board' ) ] );
+		}
+
 		if ( ! empty( $_POST['order_id'] ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$reference = sanitize_text_field( wp_unslash( $_POST['order_id'] ) );

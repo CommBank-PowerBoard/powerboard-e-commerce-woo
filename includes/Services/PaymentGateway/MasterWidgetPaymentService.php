@@ -526,6 +526,28 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		wp_send_json_success( [], 200 );
 	}
 
+	public function check_is_valid_email() {
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-check-email' ) ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$email = isset( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '';
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! is_email( $email ) ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address.', 'power-board' ) ] );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success( [], 200 );
+	}
+
 	/**
 	 * Uses functions (WC and get_woocommerce_currency) from WooCommerce
 	 */

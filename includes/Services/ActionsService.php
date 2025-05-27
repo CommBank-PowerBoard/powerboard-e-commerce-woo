@@ -248,6 +248,10 @@ class ActionsService {
 		add_action( 'wc_ajax_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_nopriv_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		add_action( 'wc_ajax_power-board-check-email', [ $master_widget_payment_service, 'check_is_valid_email' ] );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		add_action( 'wc_ajax_nopriv_power-board-check-email', [ $master_widget_payment_service, 'check_is_valid_email' ] );
 	}
 	public function add_edit_order_actions() {
 		/* @noinspection PhpUndefinedFunctionInspection */

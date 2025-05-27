@@ -68,8 +68,9 @@
 	height: 280px;
 }
 
-#fields-validation-error,
-#intent-creation-error {
+#required-fields-validation-error,
+#intent-creation-error,
+#invalid-fields-error {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -91,7 +92,8 @@
 }
 
 .woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-phone,
-.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-postcode {
+.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-postcode,
+.woocommerce form .form-row.woocommerce-invalid-email input.input-text#billing_email {
 	border-color: #cc1818;
 }
 
