@@ -83,13 +83,16 @@ const initMasterWidgetCheckout = () => {
 		setTimeout( () => toggleOrderButton( true ), 100 );
 
 		// noinspection JSUnresolvedReference
+		const orderId = store.getOrderId();
+
+		// noinspection JSUnresolvedReference
 		jQuery.ajax(
 		{
 			url: '/?wc-ajax=power-board-create-charge-intent',
 			type: 'POST',
 			data: {
 				_wpnonce: PowerBoardAjaxCheckout.wpnonce_intent,
-				order_id: store.getOrderId(),
+				order_id: orderId,
 				total: cart.getCartTotals(),
 				address: cart.getCustomerData().billingAddress,
 				selected_shipping_id: getSelectedShippingValue(),
@@ -124,8 +127,6 @@ const initMasterWidgetCheckout = () => {
 							window.widgetPowerBoard.onPaymentSuccessful(
 								function ( data ) {
 									// noinspection JSUnresolvedReference
-									const orderId = store.getOrderId();
-									// noinspection JSUnresolvedReference
 									jQuery.ajax(
 										{
 											url: '/?wc-ajax=power-board-process-payment-result',
@@ -145,7 +146,7 @@ const initMasterWidgetCheckout = () => {
 													window.widgetPowerBoard = null;
 												} else {
 													// noinspection JSUnresolvedReference
-													window.showWarning( response.data.message );
+													window.showWarning( response.data?.message );
 													initMasterWidgetCheckout();
 												}
 											}

@@ -212,6 +212,11 @@ class WidgetController {
 			[
 				'items'                => $cart->get_cart(),
 				'total'                => $cart->get_total( false ),
+				'discounts'            => [
+					'applied_coupons' => $cart->get_applied_coupons(),
+					'discounts_total' => $cart->get_discount_total(),
+					'tax'             => $cart->get_discount_tax(),
+				],
 				'shipping_total'       => $cart->get_shipping_total(),
 				'selected_shipping_id' => $selected_shipping_id,
 				'selected_shipping'    => $selected_shipping,

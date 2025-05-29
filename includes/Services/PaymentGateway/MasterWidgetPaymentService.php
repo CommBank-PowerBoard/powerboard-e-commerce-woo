@@ -403,6 +403,11 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			);
 
 			/* @noinspection PhpUndefinedFunctionInspection */
+			$session = WC()->session;
+			$session->set( 'order_awaiting_payment', (string) $order_id );
+			$session->set( 'store_api_draft_order', (string) $order_id );
+
+			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_send_json_success(
 				[
 					'order_status' => 'failed',
@@ -988,7 +993,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			$current_order->set_billing_address( $checkout_customer_billing );
 
 			$current_order->calculate_totals();
-			$current_order->save();
 		}
 
 		if ( $current_order_total !== $checkout_order_total ) {
@@ -1030,6 +1034,20 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			}
 
 			$current_order->calculate_totals();
+
+			$current_order_discount  = $current_order->get_discount_total( false );
+			$checkout_order_discount = $checkout_order['discounts']['discounts_total'];
+
+			if ( $current_order_discount !== $checkout_order_discount ) {
+				$coupons = $checkout_order['discounts']['applied_coupons'];
+
+				foreach ( $coupons as $coupon ) {
+					$current_order->apply_coupon( $coupon );
+				}
+				$current_order->set_discount_total( $checkout_order_discount );
+				$current_order->set_discount_tax( $checkout_order['discounts']['tax'] );
+			}
+			$current_order->set_total( $checkout_order_total );
 			$current_order->save();
 		}
 
