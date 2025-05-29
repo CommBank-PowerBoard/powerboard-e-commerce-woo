@@ -28,7 +28,6 @@ class ConnectionValidationService {
 	private ?string $checkout_version           = null;
 	private APIAdapterService $widget_api_adapter_service;
 
-
 	/**
 	 * Uses functions (do_action, update_option and apply_filters) from WordPress
 	 * Uses a method (get_option_key) from WooCommerce
@@ -43,22 +42,6 @@ class ConnectionValidationService {
 		$this->widget_api_adapter_service->initialise( $this->environment_settings, $this->access_token_settings );
 
 		$this->validate();
-		/* @noinspection PhpUndefinedMethodInspection */
-		$option_key = $service->get_option_key();
-		/* @noinspection PhpUndefinedFunctionInspection */
-		do_action( 'woocommerce_update_option', [ 'id' => $option_key ] );
-
-		/**
-		 * Filter
-		 *
-		 * @noinspection PhpUndefinedFunctionInspection
-		 * @since 1.0.0
-		 */
-		update_option(
-			$option_key,
-			apply_filters( 'woocommerce_settings_api_sanitized_fields_' . $service->id, $service->settings ),
-			'yes'
-		);
 	}
 
 	/**
@@ -197,12 +180,14 @@ class ConnectionValidationService {
 			$this->save_old_credential();
 			ConfigService::$access_token = $access_token;
 
-			$access_token_validation_failed = ! $this->get_configuration_templates_for_validation();
+			$access_token_validation_failed = ! $this->is_current_token_valid();
 
 			$this->restore_credential();
 
 			if ( ! $access_token_validation_failed ) {
 				ConfigService::$access_token = $access_token;
+				/* @noinspection PhpUndefinedFunctionInspection */
+				set_transient( 'invalid_access_token', false );
 			}
 		}
 
@@ -213,26 +198,42 @@ class ConnectionValidationService {
 	 * Uses functions (set_transient) from WordPress
 	 */
 	private function get_configuration_templates(): void {
-		$configuration_templates_result = $this->widget_api_adapter_service->get_configuration_templates_ids( $this->checkout_version );
-		$has_error                      = ! empty( $configuration_templates_result['error'] );
-		$configuration_templates        = MasterWidgetTemplatesHelper::map_templates( $configuration_templates_result['resource']['data'], $has_error );
+		$transient_key = 'configuration_templates_' . $this->environment_settings;
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$configuration_templates = get_transient( $transient_key );
+		$has_error               = false;
 
-		if ( ! $has_error ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'configuration_templates_' . $this->environment_settings, $configuration_templates, 60 );
+		if ( $configuration_templates === false ) {
+			$configuration_templates_result = $this->widget_api_adapter_service->get_configuration_templates_ids( $this->checkout_version );
+			$has_error                      = ! empty( $configuration_templates_result['error'] );
+			$configuration_templates        = MasterWidgetTemplatesHelper::map_templates(
+				$configuration_templates_result['resource']['data'],
+				$has_error
+			);
+
+			if ( ! $has_error ) {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				set_transient( $transient_key, $configuration_templates, 60 );
+			}
 		}
 
 		$configuration_id_key = SettingsHelper::get_option_name(
-				$this->service->id,
-				[
-					SettingGroupsEnum::CHECKOUT,
-					MasterWidgetSettingsEnum::CONFIGURATION_ID,
-				]
-			);
-		MasterWidgetTemplatesHelper::validate_or_update_template_id( $configuration_templates, $has_error, $configuration_id_key, MasterWidgetSettingsEnum::CONFIGURATION_ID );
+			$this->service->id,
+			[
+				SettingGroupsEnum::CHECKOUT,
+				MasterWidgetSettingsEnum::CONFIGURATION_ID,
+			]
+		);
+
+		MasterWidgetTemplatesHelper::validate_or_update_template_id(
+			$configuration_templates,
+			$has_error,
+			$configuration_id_key,
+			MasterWidgetSettingsEnum::CONFIGURATION_ID
+		);
 	}
 
-	private function get_configuration_templates_for_validation(): bool {
+	private function is_current_token_valid(): bool {
 		$configuration_templates_result = $this->widget_api_adapter_service->get_configuration_templates_for_validation();
 		$has_error                      = ! empty( $configuration_templates_result['error'] );
 
@@ -243,27 +244,48 @@ class ConnectionValidationService {
 		return true;
 	}
 
+	public static function get_configuration_templates_for_validation( APIAdapterService $widget_api_adapter_service ): array {
+		return $widget_api_adapter_service->get_configuration_templates_for_validation();
+	}
+
 	/**
 	 * Uses functions (set_transient) from WordPress
 	 */
 	private function get_customisation_templates(): void {
-		$customisation_templates_result = $this->widget_api_adapter_service->get_customisation_templates_ids( $this->checkout_version );
-		$has_error                      = ! empty( $customisation_templates_result['error'] );
-		$customisation_templates        = MasterWidgetTemplatesHelper::map_templates( $customisation_templates_result['resource']['data'], $has_error, true );
+		$transient_key = 'customisation_templates_' . $this->environment_settings;
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$customisation_templates = get_transient( $transient_key );
+		$has_error               = false;
 
-		if ( ! $has_error ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'customisation_templates_' . $this->environment_settings, $customisation_templates, 60 );
+		if ( $customisation_templates === false ) {
+			$result                  = $this->widget_api_adapter_service->get_customisation_templates_ids( $this->checkout_version );
+			$has_error               = ! empty( $result['error'] );
+			$customisation_templates = MasterWidgetTemplatesHelper::map_templates(
+				$result['resource']['data'],
+				$has_error,
+				true
+			);
+
+			if ( ! $has_error ) {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				set_transient( $transient_key, $customisation_templates, 60 );
+			}
 		}
 
 		$customisation_id_key = SettingsHelper::get_option_name(
-				$this->service->id,
-				[
-					SettingGroupsEnum::CHECKOUT,
-					MasterWidgetSettingsEnum::CUSTOMISATION_ID,
-				]
-			);
-		MasterWidgetTemplatesHelper::validate_or_update_template_id( $customisation_templates, $has_error, $customisation_id_key, MasterWidgetSettingsEnum::CUSTOMISATION_ID );
+			$this->service->id,
+			[
+				SettingGroupsEnum::CHECKOUT,
+				MasterWidgetSettingsEnum::CUSTOMISATION_ID,
+			]
+		);
+
+		MasterWidgetTemplatesHelper::validate_or_update_template_id(
+			$customisation_templates,
+			$has_error,
+			$customisation_id_key,
+			MasterWidgetSettingsEnum::CUSTOMISATION_ID
+		);
 	}
 
 	private function save_old_credential(): void {
@@ -276,5 +298,9 @@ class ConnectionValidationService {
 
 	public function get_errors(): array {
 		return array_unique( $this->errors );
+	}
+
+	public function has_errors(): bool {
+		return count( array_unique( $this->errors ) ) > 0 || self::$invalid_credentials_shown_global || self::$no_version_selected_shown_global || self::$no_config_template_shown_global;
 	}
 }

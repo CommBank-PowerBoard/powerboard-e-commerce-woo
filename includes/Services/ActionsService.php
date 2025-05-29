@@ -15,9 +15,9 @@ use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use PowerBoard\Controllers\Admin\WidgetController;
 use PowerBoard\Controllers\Integrations\PaymentController;
 use PowerBoard\Helpers\OrderHelper;
-use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use PowerBoard\Enums\SettingsSectionEnum;
 use PowerBoard\Util\MasterWidgetBlock;
+use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use WC_Data_Exception;
 use WC_Order;
 
@@ -46,7 +46,7 @@ class ActionsService {
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'register_payment_method' ] );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'admin_init', [ $this, 'powerboard_refund_messages' ] );
+		add_action( 'admin_init', [ $this, 'powerboard_messages' ] );
 	}
 
 	public function init_before_woocommerce() {
@@ -290,7 +290,9 @@ class ActionsService {
 	 * Handles refund messages on PowerBoard
      * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 */
-	public function powerboard_refund_messages() {
+	public function powerboard_messages() {
+		/* @noinspection PhpUndefinedFunctionInspection */
+		register_setting( 'powerboard_settings', 'powerboard_checkout_version' );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( ! wp_doing_ajax() || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] !== 'woocommerce_refund_line_items' ) ) {
 			return;

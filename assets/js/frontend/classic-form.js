@@ -173,16 +173,16 @@ jQuery(
 								}
 							}
 						);
-						if ( result ) {
-							// noinspection JSUnresolvedReference
-							let isPhoneNumberValid = this.isBillingPhoneValid();
-							// noinspection JSUnresolvedReference
-							const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
-							if ( !useSameBillingAndShipping ) {
-								isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
-							}
-							return isPhoneNumberValid;
+					if ( result ) {
+						// noinspection JSUnresolvedReference
+						let isPhoneNumberValid = this.isBillingPhoneValid();
+						// noinspection JSUnresolvedReference
+						const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
+						if ( !useSameBillingAndShipping ) {
+							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
 						}
+						return isPhoneNumberValid;
+					}
 						return result;
 					},
 					isShippingPhoneValid() {
@@ -257,9 +257,9 @@ jQuery(
 						const initTimestamp       = ( new Date() ).getTime();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
-						let addressData     = this.getAddressData( false );
-						let billingAddress  = addressData.address;
-						let shippingAddress = billingAddress;
+						let addressData      = this.getAddressData( false );
+						let billingAddress   = addressData.address;
+						let shippingAddress  = billingAddress;
 						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
 						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
@@ -381,22 +381,22 @@ jQuery(
 						);
 					},
 					getAddressData( returnJson = true ) {
-						let fieldList    = this.getFieldsList( true, true );
-						let result       = {
+						let fieldList          = this.getFieldsList( true, true );
+						let result             = {
 							shipping_address: {},
 							address: {}
 						};
 						fieldList.forEach(
 							( fieldName ) => {
-								let element = document.getElementById( fieldName );
-								let value = element ? element.value : '';
+								let element    = document.getElementById( fieldName );
+								let value      = element ? element.value : '';
 								let isShipping = fieldName.startsWith( 'shipping_' );
 								result[isShipping ? 'shipping_address' : 'address'][fieldName.replace( 'shipping_', '' ).replace( 'billing_', '' )] = value;
 							}
 						);
-						if ( returnJson ) {
-							return JSON.stringify( result );
-						}
+					if ( returnJson ) {
+						return JSON.stringify( result );
+					}
 						return result;
 					},
 					getConfigs() {
@@ -481,10 +481,13 @@ jQuery(
 						);
 
 						this.form = $( 'form[name="checkout"]' );
-						$( '#ship-to-different-address-checkbox' ).on( 'change', function () {
-							const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
-							powerBoardHelper.setPaymentMethod( selectedPayment, true );
-						} );
+						$( '#ship-to-different-address-checkbox' ).on(
+							'change',
+							function () {
+								const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+								powerBoardHelper.setPaymentMethod( selectedPayment, true );
+							}
+							);
 						this.form.on(
 							'change',
 							( event ) => {

@@ -5,13 +5,12 @@ namespace PowerBoard\Helpers;
 
 use PowerBoard\Enums\APIActionEnum;
 use PowerBoard\Enums\LoggerEnum;
-use PowerBoard\Helpers\JsonHelper;
 
 class LoggerHelper {
 	public static function log_api_request( array $result, string $request_action ): void {
 		$has_error = ! empty( $result['error'] );
 		$context   = [
-			'source'   => POWER_BOARD_PLUGIN_NAME,
+			'source'   => self::normalize_source( POWER_BOARD_PLUGIN_NAME ),
 			'request'  => $result['request'] ?? null,
 			'response' => self::filter_response_by_action(
 				$result['response'] ?? [],
@@ -32,12 +31,13 @@ class LoggerHelper {
 		}
 
 		$log_level = $has_error ? LoggerEnum::ERROR : LoggerEnum::INFORMATION;
+		$context   = self::decode_context( $context );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wc_get_logger()->log(
 			$log_level,
 			$message,
-			JsonHelper::decode_stringified_json( $context )
+			$context
 		);
 	}
 
@@ -68,7 +68,7 @@ class LoggerHelper {
 	public static function log_callback_event( string $title, array $data = [], string $level = 'info' ): void {
 		$context = array_merge(
 			[
-				'source' => POWER_BOARD_PLUGIN_NAME,
+				'source' => self::normalize_source( POWER_BOARD_PLUGIN_NAME ),
 			],
 			$data
 		);
@@ -77,11 +77,51 @@ class LoggerHelper {
 			$title = '[order_id: ' . $data['order_id'] . '] ' . $title;
 		}
 
+		$context = self::decode_context( $context );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wc_get_logger()->log(
 			$level,
 			$title,
-			JsonHelper::decode_stringified_json( $context )
+			$context
 		);
+	}
+
+	public static function log( string $message, string $level = 'info', array $context = [] ): void {
+		$context = array_merge(
+			[
+				'source' => self::normalize_source( POWER_BOARD_PLUGIN_NAME ),
+			],
+			$context
+		);
+
+		$context = self::decode_context( $context );
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wc_get_logger()->log(
+			$level,
+			$message,
+			$context
+		);
+
+		/* @noinspection PhpUndefinedConstantInspection */
+		if ( WP_DEBUG ) {
+			error_log( 'PowerBoard: ' . $message );
+		}
+	}
+
+	public static function normalize_source( string $name ): string {
+		$name = trim( strtolower( $name ) );
+		$name = str_replace( [ ' ', '_', '/', '\\' ], '-', $name );
+		return preg_replace( '/[^a-z0-9\-]/', '', $name );
+	}
+
+	public static function decode_context( array $context ): array {
+		$source = $context['source'];
+		unset( $context['source'] );
+		$context           = JsonHelper::decode_stringified_json( $context );
+		$context['source'] = $source;
+
+		return $context;
 	}
 }
