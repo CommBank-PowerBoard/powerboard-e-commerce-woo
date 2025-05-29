@@ -108,33 +108,23 @@ class ActionsService {
 
 	public function remove_coupon() {
 		$this->calculate_totals_and_save_cookie();
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$cart = WC()->cart;
-		$session = WC()->session;
-		if ( ! empty( $session ) ) {
-			$order_id = $session->get( 'store_api_draft_order' );
-			if ( ! empty( $order_id ) ) {
-				$order = wc_get_order( $order_id );
-				if ( ! empty( $order ) && $order instanceof WC_Order ) {
-					$test = $cart->get_cart_hash();
-					$order->set_cart_hash( $test );
-					$order->calculate_totals();
-					$order->save();
-				}
-			}
-		}
+		$this->update_order_cart_hash();
 	}
 
 	public function add_coupon() {
 		$this->calculate_totals_and_save_cookie();
+		$this->update_order_cart_hash();
+	}
 
+	public function update_order_cart_hash() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$cart = WC()->cart;
+		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
 		if ( ! empty( $session ) ) {
 			$order_id = $session->get( 'store_api_draft_order' );
 			if ( ! empty( $order_id ) ) {
+				/* @noinspection PhpUndefinedFunctionInspection */
 				$order = wc_get_order( $order_id );
 				if ( ! empty( $order ) && $order instanceof WC_Order ) {
 					$test = $cart->get_cart_hash();
