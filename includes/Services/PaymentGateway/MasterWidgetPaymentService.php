@@ -287,6 +287,21 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		if ( ! $valid_payment ) {
 			$failed_message = 'Payment could not be processed due to an error.';
+
+			LoggerHelper::log(
+				'Payment processing failed in process_payment()',
+				'error',
+				[
+					'intent_id'                 => $intent_id,
+					'charge_id'                 => $charge_id,
+					'order_id'                  => $order_id,
+					'order_total'               => $order->get_total( false ),
+					'current_active_intent_ids' => $current_active_intent_ids,
+					'valid_payment'             => $valid_payment,
+					'error_message'             => $failed_message,
+				]
+			);
+
 			if ( ! empty( $charge_id ) ) {
 				$this->refund_charge( $charge_id, $order->get_total( false ) );
 				$order_note_failed_message = $failed_message . ' The charge with id ' . $charge_id . ' has been refunded.';

@@ -4,6 +4,7 @@ declare( strict_types=1 );
 namespace PowerBoard\Controllers\Admin;
 
 use PowerBoard\Helpers\JsonHelper;
+use PowerBoard\Helpers\LoggerHelper;
 use PowerBoard\Helpers\OrderHelper;
 use PowerBoard\Helpers\PaymentMethodHelper;
 use PowerBoard\Services\Settings\APIAdapterService;
@@ -254,6 +255,23 @@ class WidgetController {
 			&& (string) $result['resource']['data']['reference'] === (string) $order_id
 			&& $result['resource']['data']['status'] === 'completed'
 			&& $result['resource']['data']['process_reference'] === $charge_id;
+
+		if ( ! $is_intent_valid ) {
+			LoggerHelper::log_callback_event(
+				'Intent validation failed',
+				[
+					'intent_id'         => $intent_id,
+					'charge_id'         => $charge_id,
+					'order_id'          => $order_id,
+					'order_total'       => $order->get_total( false ),
+					'api_amount'        => $result['resource']['data']['amount']            ?? null,
+					'api_reference'     => $result['resource']['data']['reference']         ?? null,
+					'process_reference' => $result['resource']['data']['process_reference'] ?? null,
+					'api_status'        => $result['resource']['data']['status']            ?? null,
+				],
+				'error'
+			);
+		}
 
 		if ( $is_intent_valid ) {
 			$intent_journey = $result['resource']['data']['journey'];
