@@ -23,6 +23,8 @@ let totalChangesSecondTimeout = null;
 let billingAddress            = null;
 let shippingAddress           = null;
 let lastMasterWidgetInit      = null;
+let shippingChangedTimeout    = null;
+let currentSavedShipping      = null;
 
 const toggleWidgetVisibility = ( hide ) => {
 	// noinspection DuplicatedCode
@@ -399,6 +401,34 @@ const getUIOrderTotal = () => {
 	return orderTotalElement ? +orderTotalElement?.innerText.replace( /[^0-9.,]*/, '' ) : null;
 };
 
+const handleShippingChanged = () => {
+	if (shippingChangedTimeout) {
+		clearTimeout( shippingChangedTimeout );
+	}
+	const selectedShippingMethodId = getSelectedShippingValue();
+
+	if (currentSavedShipping !== selectedShippingMethodId) {
+		shippingChangedTimeout       = setTimeout(
+			() => {
+				currentSavedShipping = selectedShippingMethodId;
+				// noinspection JSUnresolvedReference
+				jQuery.ajax(
+					{
+						url: '/?wc-ajax=power-board-update-shipping',
+						type: 'POST',
+						data: {
+							_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+						}
+					}
+				);
+			},
+			500
+		);
+	} else {
+		handleWidgetDisplay( true );
+	}
+}
+
 const handleFormChanged = ( event ) => {
 	setTimeout(
 		() => {
@@ -413,7 +443,7 @@ const handleFormChanged = ( event ) => {
 				shippingAddress = shippingAddressFormData;
 				handleWidgetDisplay();
 			} else if ( isShippingRateBeingSelected ) {
-				handleWidgetDisplay( true );
+				handleShippingChanged();
 			}
 	},
 		0

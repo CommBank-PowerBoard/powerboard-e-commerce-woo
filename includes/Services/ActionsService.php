@@ -79,15 +79,13 @@ class ActionsService {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_applied_coupon', [ $this, 'add_coupon' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-update-shipping', [ $this, 'classic_order_update_shipping' ] );
+		add_action( 'wc_ajax_power-board-update-shipping', [ $this, 'form_order_update_shipping' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-update-shipping', [ $this, 'classic_order_update_shipping' ] );
+		add_action( 'wc_ajax_nopriv_power-board-update-shipping', [ $this, 'form_order_update_shipping' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_power-board-update-order-notes', [ $this, 'classic_order_update_notes' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_nopriv_power-board-update-order-notes', [ $this, 'classic_order_update_notes' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'woocommerce_update_order_item', [ $this, 'handle_order_update_shipping' ], 10, 3 );
 	}
 
 	public function register_master_widget_block( PaymentMethodRegistry $registry ) {
@@ -136,19 +134,7 @@ class ActionsService {
 		}
 	}
 
-	/**
-	 * Hook woocommerce_update_order_item sends these arguments, but are not needed for this use case
-	 *
-	 * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	 *
-	 * @noinspection PhpUnusedParameterInspection
-	 */
-	public function handle_order_update_shipping( $order_item_id, $order_item, $order_id ) {
-		$this->order_update_shipping();
-	}
-	// phpcs:enable
-
-	public function classic_order_update_shipping() {
+	public function form_order_update_shipping() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
 
@@ -161,9 +147,7 @@ class ActionsService {
 		}
 
 		$this->order_update_shipping();
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		wp_send_json_success( [], 200 );
+		$this->update_order_cart_hash();
 	}
 
 	/**
