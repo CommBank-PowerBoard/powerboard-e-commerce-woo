@@ -102,7 +102,7 @@ Also, we use helper code that not need compile what contained in assets path.
 
 * Compatibility
 
-  - Compatible with WooCommerce version `9.5.2`.
+  - Compatible with WooCommerce version `9.8.1`.
 
 * Bug fixes
 
