@@ -536,10 +536,6 @@ jQuery(
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
-												},
-												success: function () {
-													const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
-													powerBoardHelper.setPaymentMethod( selectedPayment, true );
 												}
 											}
 										);
@@ -567,6 +563,7 @@ jQuery(
 									|| eventTargetId.includes( 'payment_method' )
 									|| eventTargetId.includes( '_woo_additional_terms' )
 									|| eventTargetId.includes( 'terms' )
+									|| eventTargetId.includes( 'shipping_method' )
 								) {
 									this.lastAddressVerified = currentAddress;
 									// noinspection JSUnresolvedReference
