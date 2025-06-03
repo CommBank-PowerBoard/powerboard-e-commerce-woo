@@ -18,6 +18,7 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 			ActionsService::get_instance();
 			FiltersService::get_instance();
 			// Reset button styles inside the widget
+			/* @noinspection PhpUndefinedFunctionInspection */
 			add_action( 'wp_head', [ $this, 'register_style_fixes' ] );
 		}
 

@@ -6,6 +6,7 @@ namespace PowerBoard\Services\Settings;
 use PowerBoard\API\ChargeService;
 use PowerBoard\API\ConfigService;
 use PowerBoard\Helpers\JsonHelper;
+use PowerBoard\Helpers\LoggerHelper;
 
 class APIAdapterService {
 	private ?ChargeService $charge_service      = null;
@@ -33,10 +34,42 @@ class APIAdapterService {
 
 	public function get_plugin_configuration_by_version(): array {
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$body = JsonHelper::decode_stringified_json( wp_remote_get( PLUGIN_VERSIONS_JSON_URL )['body'] );
+		$response = wp_remote_get( PLUGIN_VERSIONS_JSON_URL );
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( is_wp_error( $response ) ) {
+			LoggerHelper::log( 'HTTP request to PLUGIN_VERSIONS_JSON_URL failed: ' . $response->get_error_message(), 'error' );
+			/* @noinspection PhpUndefinedConstantInspection */
+			$fallback_path = ABSPATH . 'wp-content/plugins/power-board/assets/fallback-compatibility.json';
+
+			if ( file_exists( $fallback_path ) ) {
+				LoggerHelper::log( 'Using fallback compatibility file: ' . $fallback_path );
+				$fallback_contents = file_get_contents( $fallback_path );
+
+				if ( ! is_string( $fallback_contents ) || trim( $fallback_contents ) === '' ) {
+					return [];
+				}
+
+				$response_body = $fallback_contents;
+			} else {
+				LoggerHelper::log( 'Fallback json file not found: ' . $fallback_path, 'error' );
+				return [];
+			}
+		} else {
+			$response_body = $response['body'];
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$decoded = JsonHelper::decode_stringified_json( $response_body );
+
+		if ( empty( $decoded ) || ! is_array( $decoded ) || empty( $decoded['woocommerce'][ POWER_BOARD_PLUGIN_VERSION ] ) ) {
+			LoggerHelper::log( 'Invalid or missing configuration for plugin.', 'error' );
+			return [];
+		}
 
 		$result = [];
-		foreach ( $body['woocommerce'][ POWER_BOARD_PLUGIN_VERSION ] as $key => $value ) {
+
+		foreach ( $decoded['woocommerce'][ POWER_BOARD_PLUGIN_VERSION ] as $key => $value ) {
 			if ( $key === 'env' ) {
 				foreach ( $value as $env_value ) {
 					$result['environment_url'][ $env_value['name'] ] = $env_value['client_sdk_url'];

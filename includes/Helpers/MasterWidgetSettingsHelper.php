@@ -6,6 +6,7 @@ namespace PowerBoard\Helpers;
 use PowerBoard\Enums\MasterWidgetSettingsEnum;
 use PowerBoard\Enums\SettingGroupsEnum;
 use PowerBoard\Services\Settings\APIAdapterService;
+use PowerBoard\Services\Validation\ConnectionValidationService;
 
 class MasterWidgetSettingsHelper {
 	public static function get_input_type( string $key ): string {
@@ -57,13 +58,29 @@ class MasterWidgetSettingsHelper {
 		if ( ! empty( $stored_checkout_versions ) ) {
 			$checkout_versions_for_ui = $stored_checkout_versions;
 		} else {
-			$api_adapter_service      = self::init_api_adapter( $env, $access_token );
-			$plugin_configuration     = $api_adapter_service->get_plugin_configuration_by_version();
-			$checkout_versions_for_ui = $plugin_configuration['checkout_versions'];
+			$api_adapter_service  = self::init_api_adapter( $env, $access_token );
+			$plugin_configuration = $api_adapter_service->get_plugin_configuration_by_version();
+
+			if ( empty( $plugin_configuration['checkout_versions'] ) || ! is_array( $plugin_configuration['checkout_versions'] ) ) {
+				LoggerHelper::log( 'No valid checkout versions found in plugin configuration.', 'error' );
+				/* @noinspection PhpUndefinedFunctionInspection */
+				if ( function_exists( 'add_settings_error' ) ) {
+					\add_settings_error(
+						'powerboard_checkout_version',
+						'invalid_checkout_versions',
+						'Failed to load Checkout Versions. Please check the compatibility registry URL or API response.',
+						'error'
+					);
+				}
+				$checkout_versions_for_ui = [];
+			} else {
+				$checkout_versions_for_ui = $plugin_configuration['checkout_versions'];
+			}
+
 			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'checkout_versions', $plugin_configuration['checkout_versions'], 60 );
+			set_transient( 'checkout_versions', $checkout_versions_for_ui, 60 );
 			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'environment_url', $plugin_configuration['environment_url'], 60 );
+			set_transient( 'environment_url', $plugin_configuration['environment_url'] ?? [], 60 );
 		}
 		/* @noinspection PhpUndefinedFunctionInspection */
 		delete_transient( 'is_fetching_versions' );
@@ -87,9 +104,21 @@ class MasterWidgetSettingsHelper {
 		if ( ! empty( $stored_configuration_templates ) ) {
 			$configuration_templates = $stored_configuration_templates;
 		} else {
-			$api_adapter_service     = self::init_api_adapter( $env, $access_token );
-			$result                  = $api_adapter_service->get_configuration_templates_ids( $version );
-			$has_error               = $result['error'];
+			$api_adapter_service = self::init_api_adapter( $env, $access_token );
+			$result              = $api_adapter_service->get_configuration_templates_ids( $version );
+			$has_error           = $result['error'];
+
+			if ( $has_error ) {
+				$widget_api_adapter_service = APIAdapterService::get_instance();
+				$widget_api_adapter_service->initialise( $env, $access_token );
+				$valid_template       = ConnectionValidationService::get_configuration_templates_for_validation( $widget_api_adapter_service );
+				$invalid_access_token = ! empty( $valid_template['error'] ) && $valid_template['status'] === 403;
+				/* @noinspection PhpUndefinedFunctionInspection */
+				set_transient( 'invalid_access_token', $invalid_access_token ? '1' : false );
+			} else {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				set_transient( 'invalid_access_token', false );
+			}
 			$data                    = $result['resource']['data'] ?? [];
 			$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, ! empty( $has_error ) );
 

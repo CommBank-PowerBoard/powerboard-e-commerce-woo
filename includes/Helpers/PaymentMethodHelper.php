@@ -13,11 +13,11 @@ class PaymentMethodHelper {
 			case 'zip_checkout':
 				return 'Zip';
 			case 'applepay_wallet':
-				return 'ApplePay';
+				return 'Apple Pay';
 			case 'googlepay_wallet':
-				return 'GooglePay';
+				return 'Google Pay';
 			case 'paypal_wallet':
-				return 'Paypal';
+				return 'PayPal';
 			default:
 				return $payment_method;
 		}
