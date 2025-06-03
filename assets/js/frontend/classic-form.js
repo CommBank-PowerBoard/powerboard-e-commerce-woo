@@ -30,7 +30,7 @@ jQuery(
 					// noinspection JSUnresolvedReference
 					const phone = $input.val();
 					$input.next( `.${CONFIG.errorMessageClassName}` ).remove();
-					if (phone && !CONFIG.phonePattern.test( phone )) {
+					if ( phone && !CONFIG.phonePattern.test( phone ) ) {
 						$input.after( CONFIG.errorMessageHtml );
 						// noinspection JSUnresolvedReference
 						$input.addClass( 'power-board-invalid-phone' );
@@ -152,42 +152,38 @@ jQuery(
 					isValidForm( paymentMethod ) {
 						this.hideFormValidationError( paymentMethod );
 						let fieldList                 = this.getFieldsList();
-						let result                    = true
+						let result                    = true;
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
 						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
 						}
+						const defaultTermsCheckbox = document.getElementById( 'terms' );
+						if ( defaultTermsCheckbox && !defaultTermsCheckbox.checked ) {
+							result = false;
+						}
 						fieldList.filter( field => !field.includes( 'address_2' ) ).forEach(
 							( fieldName ) => {
-								let element = document.querySelector( `[name="${fieldName}"]` );
-								if (element) {
-									if (element.value) {
-										this.setFieldLikeValid( fieldName );
-									} else {
-										this.setFieldLikeInvalid( fieldName );
-										this.showFormValidationError( paymentMethod );
-										result = false;
-									}
+								const el = document.getElementById( fieldName );
+								if ( el && el.value ) {
+									this.setFieldLikeValid( fieldName );
 								} else {
+									this.setFieldLikeInvalid( fieldName );
+									this.showFormValidationError( paymentMethod );
 									result = false;
 								}
 							}
-						)
-
+						);
 					if ( result ) {
 						// noinspection JSUnresolvedReference
 						let isPhoneNumberValid = this.isBillingPhoneValid();
-
 						// noinspection JSUnresolvedReference
-						let useSameBillingAndShipping = jQuery( '#ship-to-different-address-checkbox' ).checked;
+						const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
 						if ( !useSameBillingAndShipping ) {
 							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
 						}
-
 						return isPhoneNumberValid;
 					}
-
-					return result;
+						return result;
 					},
 					isShippingPhoneValid() {
 						return !document.getElementById( 'shipping_phone' )?.classList?.contains( 'power-board-invalid-phone' );
@@ -261,10 +257,11 @@ jQuery(
 						const initTimestamp       = ( new Date() ).getTime();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
-						let addressData     = this.getAddressData( false );
-						let billingAddress  = addressData.address;
-						let shippingAddress = billingAddress;
-						if ( document.getElementById( 'ship-to-different-address-checkbox' ).checked ) {
+						let addressData      = this.getAddressData( false );
+						let billingAddress   = addressData.address;
+						let shippingAddress  = billingAddress;
+						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
+						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
 						}
 
@@ -384,28 +381,19 @@ jQuery(
 						);
 					},
 					getAddressData( returnJson = true ) {
-						let fieldList    = this.getFieldsList( true, true );
-						let result       = {
+						let fieldList          = this.getFieldsList( true, true );
+						let result             = {
 							shipping_address: {},
 							address: {}
 						};
 						fieldList.forEach(
 							( fieldName ) => {
-								let type = 'input';
-								if ( fieldName.includes( 'state' ) || fieldName.includes( 'country' ) ) {
-									type = 'select'
-
-									if ( fieldName.includes( 'country' ) && document.querySelectorAll( `select[name="${fieldName}"]` ).length === 0 ) {
-										type = 'input'
-									}
-								}
-								let elements   = document.querySelectorAll( `${type}[name="${fieldName}"]` );
-								let value      = elements.length > 0 ? elements[0].value : null;
-								let isShipping = fieldName.includes( 'shipping' );
+								let element    = document.getElementById( fieldName );
+								let value      = element ? element.value : '';
+								let isShipping = fieldName.startsWith( 'shipping_' );
 								result[isShipping ? 'shipping_address' : 'address'][fieldName.replace( 'shipping_', '' ).replace( 'billing_', '' )] = value;
 							}
 						);
-
 					if ( returnJson ) {
 						return JSON.stringify( result );
 					}
@@ -493,6 +481,13 @@ jQuery(
 						);
 
 						this.form = $( 'form[name="checkout"]' );
+						$( '#ship-to-different-address-checkbox' ).on(
+							'change',
+							function () {
+								const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+								powerBoardHelper.setPaymentMethod( selectedPayment, true );
+							}
+							);
 						this.form.on(
 							'change',
 							( event ) => {
@@ -549,6 +544,7 @@ jQuery(
 									this.lastAddressVerified !== currentAddress
 									|| eventTargetId.includes( 'payment_method' )
 									|| eventTargetId.includes( '_woo_additional_terms' )
+									|| eventTargetId.includes( 'terms' )
 								) {
 									this.lastAddressVerified = currentAddress;
 									// noinspection JSUnresolvedReference

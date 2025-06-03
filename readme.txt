@@ -6,7 +6,7 @@ Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
 Tested up to: 6.8
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,31 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 1.4.0 =
+
+* Compatibility
+
+  - Compatible with WooCommerce version `9.8.1`.
+
+* Added
+
+  - Added payment method used for order payment to meta on an order.
+  - Added support for default WooCommerce terms and conditions checkbox on classic checkout.
+  - Added support for hidden checkout fields on classic checkout.
+  - Added improvements to admin settings panel.
+  - Added fallback for configuration file fetch.
+  - Added new logs for issue identification for widget and admin operations.
+  - Added payment method title to orders.
+
+* Bug fixes
+
+  - Fixed an issue in Classic checkout where the payment method would not load if merchant did not collect shipping address on their Checkout page.
+  - Fixed an issue in Classic checkout when an order id failed to retrieve an order causing us not to navigate to order confirmation page post transaction approved.
+  - Fixed an issue in Classic checkout in the sending of new order and processing state emails from WooCommerce.
+  - Fixed overwriting of internal styling of button by external plugin.
+  - Fixed checkout shipping form validation when toggling the "Ship to a different address?" checkbox with empty fields.
+  - Fixed checkout overlay z-index to prevent switching payment methods during an active payment session.
 
 = 1.3.1 =
 

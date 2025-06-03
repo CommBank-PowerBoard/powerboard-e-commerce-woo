@@ -259,6 +259,11 @@ const checkIsFormValid = () => {
 	if ( additionalTerms && !additionalTerms.checked ) {
 		isFormValid = false;
 	}
+	// noinspection JSUnresolvedReference
+	let defaultTerms = document.getElementById( 'terms' );
+	if ( defaultTerms && !defaultTerms.checked ) {
+		isFormValid = false;
+	}
 
 	return isFormValid;
 };
