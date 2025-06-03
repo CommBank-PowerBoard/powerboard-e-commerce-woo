@@ -270,10 +270,10 @@ class WidgetController {
 					'charge_id'         => $charge_id,
 					'order_id'          => $order_id,
 					'order_total'       => $order->get_total( false ),
-					'api_amount'        => $result['resource']['data']['amount']            ?? null,
-					'api_reference'     => $result['resource']['data']['reference']         ?? null,
+					'api_amount'        => $result['resource']['data']['amount'] ?? null,
+					'api_reference'     => $result['resource']['data']['reference'] ?? null,
 					'process_reference' => $result['resource']['data']['process_reference'] ?? null,
-					'api_status'        => $result['resource']['data']['status']            ?? null,
+					'api_status'        => $result['resource']['data']['status'] ?? null,
 				],
 				'error'
 			);
