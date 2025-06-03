@@ -536,6 +536,10 @@ jQuery(
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+												},
+												success: function () {
+													const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+													powerBoardHelper.setPaymentMethod( selectedPayment, true );
 												}
 											}
 										);

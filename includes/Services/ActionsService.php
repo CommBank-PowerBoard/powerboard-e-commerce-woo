@@ -139,6 +139,9 @@ class ActionsService {
 		}
 
 		$this->order_update_shipping();
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success( [], 200 );
 	}
 
 	/**
