@@ -527,9 +527,6 @@ jQuery(
 						}
 						if ( eventTargetId.includes( 'shipping_method' ) ) {
 							if (this.currentSavedShipping !== eventTargetId.value) {
-								// noinspection JSUnresolvedReference
-								const selectedPaymentMethod = $( 'input[name="payment_method"]:checked' ).val();
-
 								this.shippingChangedTimeout = setTimeout(
 									() => {
 										// noinspection JSUnresolvedReference
@@ -539,11 +536,6 @@ jQuery(
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
-												},
-												success: function ( response ) {
-													if (response.success) {
-														this.setPaymentMethod( selectedPaymentMethod, true );
-													}
 												}
 											}
 										);
