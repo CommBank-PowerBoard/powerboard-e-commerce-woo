@@ -520,6 +520,13 @@ jQuery(
 						);
 
 						document.addEventListener( "power_board_cart_total_changed", this.handleCartTotalChanged.bind( this ) );
+
+						$( document.body ).on( 'updated_checkout', () => {
+							const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+							if ( selectedPayment === 'power_board' ) {
+								this.setPaymentMethod( selectedPayment, true );
+							}
+						});
 					},
 					handleShippingChanged( eventTargetId ) {
 						if (this.shippingChangedTimeout) {

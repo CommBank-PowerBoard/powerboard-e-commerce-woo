@@ -188,13 +188,39 @@ class ActionsService {
 		if ( ! empty( $session ) ) {
 			$chosen_methods   = $session->get( 'chosen_shipping_methods' );
 			$current_shipping = is_array( $chosen_methods ) && ! empty( $chosen_methods ) ? $chosen_methods[0] : null;
+
 			if ( $current_shipping !== null && $current_shipping !== $this->last_shipping_id ) {
 				$this->last_shipping_id = $current_shipping;
-				$expiry_time            = time() + 3600;
-				setcookie( 'power_board_selected_shipping', $current_shipping, $expiry_time, '/' );
+
+				/* @noinspection PhpUndefinedFunctionInspection */
+				setcookie(
+					'power_board_selected_shipping',
+					$current_shipping,
+					[
+						'expires'  => time() + 3600,
+						'path'     => '/',
+						'domain'   => $_SERVER['HTTP_HOST'],
+						'secure'   => is_ssl(),
+						'httponly' => false,
+						'samesite' => 'Lax',
+					]
+				);
 			}
 		}
+
 		$this->calculate_totals_and_save_cookie();
+
+		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
+			$cart_total = (string) WC()->cart->get_total( false );
+			echo "<script>
+				document.dispatchEvent(new CustomEvent('power_board_cart_total_changed', {
+					detail: {
+						cartTotal: '" . esc_js( $cart_total ) . "',
+						shippingId: '" . esc_js( $current_shipping ) . "'
+					}
+				}));
+			</script>";
+		}
 	}
 
 	/**
@@ -207,9 +233,20 @@ class ActionsService {
 		if ( ! empty( $cart ) ) {
 			$cart->calculate_totals();
 			$cart_total  = (string) $cart->get_total( false );
-			$expiry_time = time() + 3600;
+
 			/* @noinspection PhpUndefinedFunctionInspection */
-			setcookie( 'power_board_cart_total', $cart_total, $expiry_time, '/' );
+			setcookie(
+				'power_board_cart_total',
+				$cart_total,
+				[
+					'expires'  => time() + 3600,
+					'path'     => '/',
+					'domain'   => $_SERVER['HTTP_HOST'],
+					'secure'   => is_ssl(),
+					'httponly' => false,
+					'samesite' => 'Lax',
+				]
+			);
 		}
 	}
 
