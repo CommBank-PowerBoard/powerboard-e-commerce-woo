@@ -14,10 +14,10 @@ use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use PowerBoard\Controllers\Admin\WidgetController;
 use PowerBoard\Controllers\Integrations\PaymentController;
-use PowerBoard\Helpers\OrderHelper;
 use PowerBoard\Enums\SettingsSectionEnum;
+use PowerBoard\Helpers\OrderHelper;
+use PowerBoard\Helpers\PaymentMethodHelper;
 use PowerBoard\Util\MasterWidgetBlock;
-use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use WC_Data_Exception;
 use WC_Order;
 
@@ -41,10 +41,8 @@ class ActionsService {
 	protected function __construct() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'before_woocommerce_init', [ $this, 'init_before_woocommerce' ] );
-
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'register_payment_method' ] );
-
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'admin_init', [ $this, 'powerboard_messages' ] );
 	}
@@ -184,6 +182,7 @@ class ActionsService {
 	public function order_update_shipping() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
+		$current_shipping = null;
 
 		if ( ! empty( $session ) ) {
 			$chosen_methods   = $session->get( 'chosen_shipping_methods' );
@@ -267,38 +266,56 @@ class ActionsService {
 	 * Uses a function (add_action) from WordPress
 	 */
 	protected function add_order_actions(): void {
-		$order_service                 = new OrderService();
-		$payment_controller            = new PaymentController();
-		$widget_controller             = new WidgetController();
-		$master_widget_payment_service = MasterWidgetPaymentService::get_instance();
+		$order_service      = new OrderService();
+		$payment_controller = new PaymentController();
+		$widget_controller  = new WidgetController();
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_item_add_action_buttons', [ $order_service, 'init_power_board_order_buttons' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_status_changed', [ $order_service, 'status_change_verification' ], 20, 4 );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_create_refund', [ $payment_controller, 'refund_process' ], 10, 2 );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_refunded', [ $payment_controller, 'after_refund_process' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_power-board-create-charge-intent', [ $widget_controller, 'create_checkout_intent' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_nopriv_power-board-create-charge-intent', [ $widget_controller, 'create_checkout_intent' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'admin_init', [ $order_service, 'remove_bulk_action_message' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-process-payment-result', [ $master_widget_payment_service, 'process_payment_result' ] );
+		add_action( 'wc_ajax_power-board-process-payment-result', [ $this, 'process_payment_result_callback' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-process-payment-result', [ $master_widget_payment_service, 'process_payment_result' ] );
+		add_action( 'wc_ajax_nopriv_power-board-process-payment-result', [ $this, 'process_payment_result_callback' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
+		add_action( 'wc_ajax_power-board-check-postcode', [ $this, 'check_postcode_callback' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
+		add_action( 'wc_ajax_nopriv_power-board-check-postcode', [ $this, 'check_postcode_callback' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-check-email', [ $master_widget_payment_service, 'check_is_valid_email' ] );
+		add_action( 'wc_ajax_power-board-check-email', [ $this, 'check_is_valid_email_callback' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-check-email', [ $master_widget_payment_service, 'check_is_valid_email' ] );
+		add_action( 'wc_ajax_nopriv_power-board-check-email', [ $this, 'check_is_valid_email_callback' ] );
 	}
+
+	public function process_payment_result_callback() {
+		PaymentMethodHelper::invoke_gateway_method( 'process_payment_result' );
+	}
+
+	public function check_postcode_callback(): void {
+		PaymentMethodHelper::invoke_gateway_method( 'check_postcode' );
+	}
+
+	public function check_is_valid_email_callback(): void {
+		PaymentMethodHelper::invoke_gateway_method( 'check_is_valid_email' );
+	}
+
 	public function add_edit_order_actions() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_admin_order_data_after_billing_address', [ $this, 'disable_payment_method_custom_field_on_order_page' ] );
@@ -316,10 +333,10 @@ class ActionsService {
 		}
 		echo '<script type="text/javascript">
 			jQuery(document).ready(function($) {
-        		if ( ' . $id . ' !== "" ) {
+				if ( ' . $id . ' !== "" ) {
 					$("#meta-' . $id . '-key").prop("disabled", true);
 					$("#meta-' . $id . '-value").prop("disabled", true);
-        		}
+				}
 			});
 		</script>';
 	}
@@ -338,7 +355,7 @@ class ActionsService {
 	}
 	/**
 	 * Handles refund messages on PowerBoard
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 */
 	public function powerboard_messages() {
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -356,8 +373,8 @@ class ActionsService {
 	/**
 	 * Hook gettext_woocommerce sends these arguments, but are not needed for this use case
 	 *
-     * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-     *  phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	 *  phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @noinspection PhpUnusedParameterInspection
 	 */
@@ -396,5 +413,5 @@ class ActionsService {
 			$formatted_plain_text
 		);
 	}
-    // phpcs:enable
+	// phpcs:enable
 }

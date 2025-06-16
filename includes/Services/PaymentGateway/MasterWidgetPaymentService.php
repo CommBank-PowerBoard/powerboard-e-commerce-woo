@@ -228,6 +228,20 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		return null;
 	}
 
+	public function get_customisation_id(): ?string {
+		$customisation_id = SettingsHelper::get_option_name(
+			$this->id,
+			[
+				SettingGroupsEnum::CHECKOUT,
+				MasterWidgetSettingsEnum::CUSTOMISATION_ID,
+			]
+		);
+		if ( array_key_exists( $customisation_id, $this->settings ) ) {
+			return $this->settings[ $customisation_id ];
+		}
+		return null;
+	}
+
 	public function get_environment(): ?string {
 		$environment_key = SettingsHelper::get_option_name(
 			$this->id,
@@ -470,7 +484,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 	/**
 	 * Returns order id if order was created previously on PowerBoard
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @return string
 	 */
@@ -510,14 +524,14 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		/**
 		 * Disable ValidatedSanitizedInput.MissingUnslash warning to be able to compare original string with unslashed one
-         * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-         * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		 *
 		 * @noinspection PhpUndefinedFunctionInspection
 		 */
 		$original_postcode = $_POST['postcode'] ?? '';
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$sanitized_postcode = isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '';
 
@@ -670,7 +684,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * Uses functions (wp_unslash, do_action, update_option and apply_filters) from WordPress
 	 * Uses a function (wc_clean) from WooCommerce
 	 * Uses methods (init_settings, get_form_fields, get_field_type, validate_text_field, get_option, add_error and get_option_key) from WC_Payment_Gateway
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @noinspection PhpUnused
 	 */
@@ -815,7 +829,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			'yes'
 		);
 	}
-    // phpcs:enable
+	// phpcs:enable
 
 	/**
 	 * This function is used on admin.php template
@@ -1102,7 +1116,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		$version = $this->get_version();
 		$config  = $this->get_configuration_id();
-		$custom  = method_exists( $this, 'get_customisation_id' ) ? $this->get_customisation_id() : '';
+		$custom  = $this->get_customisation_id();
 
 		LoggerHelper::log(
 			$log_title,
