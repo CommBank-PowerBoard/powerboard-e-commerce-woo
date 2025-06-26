@@ -2,49 +2,25 @@
 // noinspection JSUnresolvedReference
 
 jQuery(
-	function ($) {
-		$( document ).ready(
-			function () {
-				const waitForDeactivationButton = () => {
-					let attempts                = 0;
-					const maxAttempts           = 10;
+	function ( $ ) {
+		if ( !window.powerBoardWidgetSettings || !window.powerBoardWidgetSettings.pluginName ) {
+			return;
+		}
 
-					const interval                   = setInterval(
-						() => {
-							const deactivationButton = $( '#deactivate-powerboard-for-woocommerce' );
-							if (deactivationButton.length) {
-								clearInterval( interval );
-								addDeactivationConfirmation( deactivationButton )
-							}
-							if (attempts >= maxAttempts) {
-								clearInterval( interval );
-							}
-							attempts++;
-						},
-						500
-					);
-				};
+		const pluginName = window.powerBoardWidgetSettings.pluginName;
 
-				const addDeactivationConfirmation = ( deactivationButton ) => {
-					deactivationButton.on(
-						'click',
-						function (e) {
-							e.preventDefault();
-
-							// noinspection JSUnresolvedReference
-							let urlRedirect = jQuery( this ).attr( 'href' );
-							// noinspection JSUnresolvedReference
-							let label = jQuery( this ).attr( 'aria-label' );
-
-							if (confirm( 'Are you sure ' + label + ' ?' )) {
-								window.location.href = urlRedirect;
-							}
-						}
-					);
-				};
-
-				waitForDeactivationButton();
+		$( document ).on(
+			'click',
+			'a[href*="plugins.php?action=deactivate"][aria-label="Deactivate ' + pluginName + '"]',
+			function ( e ) {
+				e.preventDefault();
+				// noinspection JSUnresolvedReference
+				const urlRedirect = $( this ).attr( 'href' );
+				// noinspection JSUnresolvedReference
+				if ( confirm( 'Are you sure you want to deactivate ' + pluginName + '?' ) ) {
+					window.location.href = urlRedirect;
+				}
 			}
 		);
 	}
-)
+);
