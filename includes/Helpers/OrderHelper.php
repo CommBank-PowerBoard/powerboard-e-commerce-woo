@@ -19,6 +19,9 @@ class OrderHelper {
 		if ( ! ( $order instanceof WC_Order ) ) {
 			return;
 		}
+
+		self::LogOrderInfo( $order, 'Updating order - initial state' );
+
 		$order->remove_order_items();
 
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -71,6 +74,8 @@ class OrderHelper {
 
 		$order->calculate_totals();
 		$order->save();
+
+		self::LogOrderInfo( $order, 'Updating order - updated state' );
 	}
 
 	/**
@@ -83,5 +88,37 @@ class OrderHelper {
 		$order = wc_get_order( $order_id );
 		$order->set_customer_note( $order_notes ?? '' );
 		$order->save();
+	}
+
+	public static function LogOrderInfo( &$order, $message ) {
+		$order_items = [];
+		foreach ( $order->get_items() as $initial_item ) {
+			$order_items[] = $initial_item->get_data();
+		}
+
+		$coupon_items = [];
+		foreach ( $order->get_coupons() as $initial_coupon ) {
+			$coupon_items[] = $initial_coupon->get_data();
+		}
+
+		LoggerHelper::log(
+			$message,
+			'info',
+			[
+				'order' => [
+					'items'             => $order_items,
+					'total'             => $order->get_total( false ),
+					'discounts'         => [
+						'applied_coupons' => $coupon_items,
+						'discounts_total' => $order->get_discount_total(),
+						'tax'             => $order->get_discount_tax(),
+					],
+					'shipping_total'    => $order->get_shipping_total(),
+					'selected_shipping' => $order->get_shipping_method(),
+					'shipping_address'  => $order->get_formatted_shipping_address(),
+					'billing_address'   => $order->get_formatted_billing_address(),
+				],
+			]
+		);
 	}
 }

@@ -232,6 +232,8 @@ class WidgetController {
 			$session->set( 'power_board_active_checkout_intent_ids', $current_active_intent_ids );
 		}
 
+		$session->save_data();
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_send_json_success(
 			[

@@ -79,7 +79,7 @@ class AdminAssetsService {
 					'powerBoardWidgetSettings',
 					[
 						'pluginUrlPrefix' => POWER_BOARD_PLUGIN_URL,
-						'pluginName' => POWER_BOARD_PLUGIN_NAME,
+						'pluginName'      => POWER_BOARD_PLUGIN_NAME,
 					]
 				);
 			}
