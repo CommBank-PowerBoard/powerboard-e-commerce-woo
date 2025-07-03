@@ -502,7 +502,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 					[
 						'message' => sprintf(
 						// Translators: %s Email address.
-							esc_html__( 'An account is already registered with %s. Please log in or use a different email address.  The associated charge has been refunded, and you will need to complete the payment again.', 'power-board' ),
+							esc_html__( 'An account is already registered with %s. Please log in or use a different email address. The associated charge has been refunded, and you will need to complete the payment again.', 'power-board' ),
 							esc_html( $email )
 						),
 					]

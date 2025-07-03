@@ -62,7 +62,12 @@ jQuery(
 					lastMasterWidgetInit: null,
 					currentSavedShipping: null,
 					showErrorMessage( errorMessage ) {
-						window.showWarning( errorMessage, 'error' );
+						window.scrollTo( { top: 0, behavior: 'smooth' } );
+						let $wrapper = $( '.woocommerce-notices-wrapper' ).first();
+						if ( ! $wrapper.length ) {
+							$wrapper = $( 'form[name="checkout"]' ).prepend( '<div class="woocommerce-notices-wrapper"></div>' ).find( '.woocommerce-notices-wrapper' );
+						}
+						$wrapper.empty().append( '<ul class="woocommerce-error" role="alert">' + '<li>' + errorMessage + '</li>' + '</ul>' );
 					},
 					reInitMasterWidget() {
 						let loading    = $( '#loading' );
@@ -265,7 +270,7 @@ jQuery(
 						}
 					},
 					initMasterWidget() {
-						const initTimestamp       = ( new Date() ).getTime();
+						const initTimestamp       = Date.now();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
 						let addressData      = this.getAddressData( false );
@@ -282,6 +287,10 @@ jQuery(
 							address: billingAddress,
 							shipping_address: shippingAddress,
 						};
+
+						const createCheckbox = document.getElementById('createaccount');
+						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
+
 						// noinspection JSUnresolvedReference
 						jQuery.ajax(
 							{
@@ -309,14 +318,14 @@ jQuery(
 												window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.setEnv( this.getConfigs().environment )
-												const showError          = ( message ) => this.showErrorMessage( message );
+												const showError          = message => this.showErrorMessage( message );
 												const handleWidgetError  = () => this.handleWidgetError();
 												const reInitMasterWidget = () => this.reInitMasterWidget();
 												const submitForm         = () => this.form.submit();
 												const intentId           = response.data.intentId;
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.onPaymentSuccessful(
-													function ( data ) {
+													( data ) => {
 														// noinspection JSUnresolvedReference
 														jQuery.ajax(
 															{
@@ -325,16 +334,15 @@ jQuery(
 																data: {
 																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
 																	payment_response: data,
-																	create_account: document.getElementById( 'createaccount' )?.checked,
+																	create_account: createAccount,
 																},
-																success: function (response) {
-																	if (response.success) {
+																success: ( response ) => {
+																	if ( response.success ) {
 																		// noinspection JSUnresolvedReference
-																		jQuery( '#chargeid' ).val( data['charge_id'] );
+																		jQuery( '#chargeid' ).val( data.charge_id );
 																		// noinspection JSUnresolvedReference
 																		jQuery( '#intentid' ).val( intentId );
 																		submitForm();
-
 																		window.widgetPowerBoard = null;
 																	} else {
 																		showError( response.data.message );
@@ -347,7 +355,7 @@ jQuery(
 												);
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.onPaymentFailure(
-													function ( data ) {
+													( data ) => {
 														// noinspection JSUnresolvedReference
 														jQuery.ajax(
 															{
@@ -355,13 +363,12 @@ jQuery(
 																method: 'POST',
 																data: {
 																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-																	payment_response:
-																		{
-																			...data,
-																			errorMessage: data.message || 'Transaction failed',
+																	payment_response: {
+																		...data,
+																		errorMessage: data.message || 'Transaction failed',
 																	}
 																},
-																success: function () {
+																success: () => {
 																	showError( 'Transaction failed. Please check your payment details or contact your bank' );
 																	handleWidgetError();
 																	window.widgetPowerBoard = null;
@@ -372,7 +379,7 @@ jQuery(
 												);
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.onPaymentExpired(
-													function () {
+													() => {
 														showError( 'Your payment session has expired. Please retry your payment' );
 
 														handleWidgetError();
