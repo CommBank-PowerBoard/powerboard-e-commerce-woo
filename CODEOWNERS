@@ -1,0 +1,5 @@
+# CI file
+.gitlab-ci.yml @paydock/codeowners/platform-codeowners @paydock/codeowners/security-codeowners
+
+* @paydock/codeowners/ecom-codeowners
+
