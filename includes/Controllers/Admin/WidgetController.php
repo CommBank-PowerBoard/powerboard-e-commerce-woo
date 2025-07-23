@@ -42,7 +42,8 @@ class WidgetController {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$cookies_shipping_id = urldecode( sanitize_text_field( wp_unslash( $_COOKIE['power_board_selected_shipping'] ) ) );
 			/* @noinspection PhpUndefinedFunctionInspection */
-			$current_shipping_id = $session->get( 'chosen_shipping_methods' )[0];
+			$chosen_shipping_methods = $session->get( 'chosen_shipping_methods' );
+			$current_shipping_id     = isset( $chosen_shipping_methods[0] ) ? $chosen_shipping_methods[0] : '';
 			if ( $selected_shipping_id === $cookies_shipping_id && $selected_shipping_id !== $current_shipping_id ) {
 				if ( isset( $_POST['total'] ) ) {
 					if ( is_array( $_POST['total'] ) ) {
@@ -84,15 +85,23 @@ class WidgetController {
 		}
 
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$shipping_address = isset( $_POST['shipping_address'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['shipping_address'] ) ) : $session->get( 'customer' )['shipping'];
-		$billing_address  = [];
+		if ( isset( $_POST['shipping_address'] ) ) {
+			$shipping_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['shipping_address'] ) );
+		} else {
+			$customer_data    = $session->get( 'customer' );
+			$shipping_address = isset( $customer_data['shipping'] ) ? $customer_data['shipping'] : [];
+		}
+		$billing_address = [];
 
 		if ( ! empty( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$billing_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['address'] ) );
 		}
 
-		if ( empty( $billing_address['country'] ) || empty( $shipping_address['country'] ) ) {
+		$billing_country  = isset( $billing_address['country'] ) ? $billing_address['country'] : '';
+		$shipping_country = isset( $shipping_address['country'] ) ? $shipping_address['country'] : '';
+
+		if ( empty( $billing_country ) || empty( $shipping_country ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$countries = WC()->countries;
 			if ( ! empty( $countries ) ) {
@@ -101,11 +110,11 @@ class WidgetController {
 				if ( count( $allowed_countries ) === 1 ) {
 					$allowed_country = key( $allowed_countries );
 
-					if ( empty( $billing_address['country'] ) ) {
+					if ( empty( $billing_country ) ) {
 						$billing_address['country'] = $allowed_country;
 					}
 
-					if ( empty( $shipping_address['country'] ) ) {
+					if ( empty( $shipping_country ) ) {
 						$shipping_address['country'] = $allowed_country;
 					}
 				}
@@ -113,7 +122,8 @@ class WidgetController {
 		}
 
 		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! is_email( $billing_address['email'] ) ) {
+		$billing_email = isset( $billing_address['email'] ) ? $billing_address['email'] : '';
+		if ( ! is_email( $billing_email ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address', 'power-board' ) ] );
 		}
@@ -201,9 +211,14 @@ class WidgetController {
 			wp_send_json_error( [ 'message' => __( 'Something went wrong, please refresh the page and try again.', 'power-board' ) ] );
 		}
 
-		$selected_shipping_id = $session->get( 'chosen_shipping_methods' )[0];
+		$chosen_shipping_methods = $session->get( 'chosen_shipping_methods' );
+		$selected_shipping_id    = isset( $chosen_shipping_methods[0] ) ? $chosen_shipping_methods[0] : '';
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$selected_shipping = $session->get( 'shipping_for_package_0' )['rates'][ $selected_shipping_id ];
+		$shipping_package  = $session->get( 'shipping_for_package_0' );
+		$selected_shipping = null;
+		if ( isset( $shipping_package['rates'][ $selected_shipping_id ] ) ) {
+			$selected_shipping = $shipping_package['rates'][ $selected_shipping_id ];
+		}
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$identifier = '_' . wp_create_nonce( 'power-board-checkout-cart' );
 

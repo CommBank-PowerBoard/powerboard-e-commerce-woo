@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.5.0] - 2025-06-20
+## [1.5.0] - 2025-07-25
 
 ### Compatibility
 
@@ -10,6 +10,8 @@
 
 - Enhanced logging: logs now capture environment details, masked access token validity, checkout version, configuration, and customization template IDs during load and save operations.
 - Email validation using a specific regex to prevent the checkout widget from loading with invalid email addresses.
+- Validation for terms and conditions checkbox using block checkout.
+- Refreshing of Checkout page for shipping changes in different tabs in current window on Cart or Checkout pages.
 
 ### Fixed
 

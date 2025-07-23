@@ -17,14 +17,46 @@ const settings = getSetting( 'power_board_data', {} );
 const textDomain   = 'power-board';
 const defaultLabel = __( 'PowerBoard Payments', textDomain );
 
-const label                   = decodeEntities( settings.title ) || defaultLabel;
-let totalChangesTimeout       = null;
-let totalChangesSecondTimeout = null;
-let billingAddress            = null;
-let shippingAddress           = null;
-let lastMasterWidgetInit      = null;
-let shippingChangedTimeout    = null;
-let currentSavedShipping      = null;
+const label                = decodeEntities( settings.title ) || defaultLabel;
+let billingAddress         = null;
+let shippingAddress        = null;
+let lastMasterWidgetInit   = null;
+let shippingChangedTimeout = null;
+let currentSavedShipping   = null;
+
+// Initialize shipping change tracking
+window.powerBoardLastShippingChange = 0; // Reset to clean state
+
+const validateAndRefreshCartTotals = ( callback ) => {
+	// Make an AJAX call to get fresh cart totals from backend
+	jQuery.ajax(
+		{
+			url: '/?wc-ajax=power-board-update-shipping',
+			type: 'POST',
+			data: {
+				_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+				validate_only: true
+			},
+			success: function (response) {
+				if (response.success && response.data.cart_total) {
+					// Create updated cart totals with the fresh backend value
+					const currentCartTotals = cart.getCartTotals() || {};
+					const freshCartTotals   = {
+						...currentCartTotals,
+						total_price: response.data.cart_total * 100 // Convert to cents for WooCommerce
+					};
+					callback( freshCartTotals );
+				} else {
+					callback( null );
+				}
+			},
+			error: function (xhr, status, error) {
+				console.error( 'PowerBoard: Cart validation error:', error );
+				callback( null );
+			}
+	}
+		);
+};
 
 const toggleWidgetVisibility = ( hide ) => {
 	// noinspection DuplicatedCode
@@ -77,9 +109,62 @@ const getSelectedShippingValue = () => {
 	return selectedShipping[0]?.value;
 }
 
-const initMasterWidgetCheckout = () => {
+const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) => {
+	// Use provided cart totals or fall back to cart.getCartTotals()
+	let cartTotals = updatedCartTotals || cart.getCartTotals();
+
+	// Only apply timing logic if we don't have updated cart totals AND this is a fresh call
+	if ( !updatedCartTotals && retryCount === 0 ) {
+		// Check if we recently changed shipping (within last 15 seconds)
+		const lastShippingChange = window.powerBoardLastShippingChange || 0;
+		const currentTime        = Date.now();
+		const timeSinceChange    = currentTime - lastShippingChange;
+
+		// Check for corrupted timestamps (way in the future or impossibly large differences)
+		if ( lastShippingChange > currentTime || timeSinceChange > 1000000 ) {
+			window.powerBoardLastShippingChange = 0;
+		} else if ( lastShippingChange > 0 && timeSinceChange < 15000 ) {
+			// Wait a bit if very recent
+			if ( timeSinceChange < 1000 ) {
+				setTimeout(
+					() => {
+							initMasterWidgetCheckout( null, 1 );
+				},
+					500
+					);
+				return;
+			}
+
+			// Validate with backend if not too old
+			if ( retryCount < 2 ) {
+				validateAndRefreshCartTotals(
+					( freshTotals ) => {
+						if ( freshTotals ) {
+							const frontendTotal = cartTotals?.total_price / 100 || 0;
+							const backendTotal  = freshTotals.total_price / 100;
+
+							if ( Math.abs( frontendTotal - backendTotal ) > 0.01 ) {
+								initMasterWidgetCheckout( freshTotals, retryCount + 1 );
+							} else {
+								initMasterWidgetCheckout( cartTotals, retryCount + 1 );
+							}
+						} else {
+							initMasterWidgetCheckout( cartTotals, retryCount + 1 );
+						}
+				}
+					);
+				return;
+			}
+		}
+
+		// Clear old timestamps if they're more than 30 seconds old
+		if ( lastShippingChange > 0 && timeSinceChange > 30000 ) {
+			window.powerBoardLastShippingChange = 0;
+		}
+	}
+
 	// noinspection JSUnresolvedReference
-	if ( canMakePayment( settings.total_limitation, cart.getCartTotals()?.total_price ) ) {
+	if ( canMakePayment( settings.total_limitation, cartTotals?.total_price ) ) {
 		const initTimestamp  = ( new Date() ).getTime();
 		lastMasterWidgetInit = initTimestamp;
 		setTimeout( () => toggleOrderButton( true ), 100 );
@@ -95,7 +180,7 @@ const initMasterWidgetCheckout = () => {
 			data: {
 				_wpnonce: PowerBoardAjaxCheckout.wpnonce_intent,
 				order_id: orderId,
-				total: cart.getCartTotals(),
+				total: cartTotals,
 				address: cart.getCustomerData().billingAddress,
 				selected_shipping_id: getSelectedShippingValue(),
 			},
@@ -146,9 +231,9 @@ const initMasterWidgetCheckout = () => {
 													orderButton.click();
 													window.widgetPowerBoard = null;
 												} else {
-													const msg = response.data?.message || 'An account is already registered.';
+													const msg     = response.data?.message || 'An account is already registered.';
 													const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
-													let container = document.querySelector('.wc-block-components-notices');
+													let container = document.querySelector( '.wc-block-components-notices' );
 													if ( container ) {
 														container.innerHTML = msgHtml;
 														container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
@@ -262,14 +347,11 @@ const checkIsFormValid = () => {
 	if ( !useSameBillingAndShipping ) {
 		isFormValid = isFormValid && isBillingFormValid() && isBillingPhoneValid();
 	}
+
 	// noinspection JSUnresolvedReference
-	let additionalTerms = document.getElementById( '_woo_additional_terms' );
-	if ( additionalTerms && !additionalTerms.checked ) {
-		isFormValid = false;
-	}
-	// noinspection JSUnresolvedReference
-	let defaultTerms = document.getElementById( 'terms' );
-	if ( defaultTerms && !defaultTerms.checked ) {
+	const termsIds = ['_woo_additional_terms', 'terms-and-conditions'];
+	const wooTerms = termsIds.map( id => document.getElementById( id ) ).find( el => el !== null );
+	if ( wooTerms && !wooTerms.checked ) {
 		isFormValid = false;
 	}
 
@@ -283,7 +365,7 @@ const showInvalidFormError = (loading, error) => {
 	}
 };
 
-const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false ) => {
+const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false, updatedCartTotals = null ) => {
 	let isFormValid       = checkIsFormValid();
 	// noinspection JSUnresolvedReference
 	let error = jQuery( '#required-fields-validation-error' )[0];
@@ -317,7 +399,7 @@ const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false ) => {
 		clearTimeout( window.initWidgetTimer );
 		window.initWidgetTimer = setTimeout(
 			() => {
-				initMasterWidgetCheckout();
+				initMasterWidgetCheckout( updatedCartTotals );
 			},
 			500
 		);
@@ -363,47 +445,10 @@ const isBillingPhoneValid = () => {
 }
 
 const handleCartTotalChanged = (event) => {
-	// noinspection DuplicatedCode
-	if (totalChangesTimeout) {
-		clearTimeout( totalChangesTimeout );
-	}
 	toggleWidgetVisibility( true );
-	totalChangesTimeout     = setTimeout(
-		() => {
-			const spanTotal = getUIOrderTotal();
-			const cartTotal = +event.detail.cartTotal;
-			if (spanTotal) {
-				if (spanTotal !== cartTotal) {
-					if (totalChangesSecondTimeout) {
-						clearTimeout( totalChangesSecondTimeout );
-					}
-					totalChangesSecondTimeout = setTimeout(
-						() => {
-							const spanTotal   = getUIOrderTotal();
-							if (spanTotal) {
-								if (spanTotal !== cartTotal) {
-									window.reloadAfterExternalCartChanges();
-								} else {
-									handleWidgetDisplay();
-								}
-							}
-						},
-						300
-					)
-				} else {
-					handleWidgetDisplay();
-				}
-			}
-	},
-		300
-		)
-};
-
-// noinspection DuplicatedCode
-const getUIOrderTotal = () => {
-	// noinspection JSUnresolvedReference
-	const orderTotalElement = jQuery( '.wc-block-components-totals-footer-item-tax-value' )[0];
-	return orderTotalElement ? +orderTotalElement?.innerText.replace( /[^0-9.,]*/, '' ) : null;
+	// Use the updated cart totals from the event detail if available
+	const updatedCartTotals = event?.detail?.updatedCartTotals || null;
+	handleWidgetDisplay( false, updatedCartTotals );
 };
 
 const handleShippingChanged = () => {
@@ -413,21 +458,55 @@ const handleShippingChanged = () => {
 	const selectedShippingMethodId = getSelectedShippingValue();
 
 	if (currentSavedShipping !== selectedShippingMethodId) {
-		shippingChangedTimeout       = setTimeout(
-			() => {
-				currentSavedShipping = selectedShippingMethodId;
-				// noinspection JSUnresolvedReference
-				jQuery.ajax(
-					{
-						url: '/?wc-ajax=power-board-update-shipping',
-						type: 'POST',
-						data: {
-							_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+		// Mark timestamp of shipping change for staleness detection (only if not already set recently)
+		const currentTime         = Date.now();
+		const lastChange          = window.powerBoardLastShippingChange || 0;
+		const timeSinceLastChange = currentTime - lastChange;
+
+		// Only update timestamp if this is a new shipping change (not a rapid repeat)
+		if ( timeSinceLastChange > 500 || lastChange === 0 ) {
+			window.powerBoardLastShippingChange = currentTime;
+		}
+
+		shippingChangedTimeout   = setTimeout(
+		() => {
+			currentSavedShipping = selectedShippingMethodId;
+			// noinspection JSUnresolvedReference
+			jQuery.ajax(
+				{
+					url: '/?wc-ajax=power-board-update-shipping',
+					type: 'POST',
+					data: {
+						_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+					},
+					success: function (response) {
+						if (response.success && response.data.trigger_event === 'power_board_cart_total_changed') {
+							// Create updated cart totals with the backend value
+							const currentCartTotals = cart.getCartTotals() || {};
+							const updatedCartTotals = {
+								...currentCartTotals,
+								total_price: response.data.cart_total * 100 // Convert to cents for WooCommerce
+							};
+
+							// Dispatch the custom event with updated cart totals in detail
+							const event = new CustomEvent(
+								'power_board_cart_total_changed',
+								{
+									detail: {
+										updatedCartTotals: updatedCartTotals
+									}
+								}
+								);
+							document.dispatchEvent( event );
 						}
+					},
+					error: function (xhr, status, error) {
+						console.error( 'PowerBoard: Error updating shipping:', error );
 					}
-				);
-			},
-			500
+					}
+			);
+		},
+		500
 		);
 	} else {
 		handleWidgetDisplay( true );
@@ -443,7 +522,12 @@ const handleFormChanged = ( event ) => {
 			const shippingAddressFormData = cart.getCustomerData().shippingAddress;
 			// noinspection JSUnresolvedReference
 			const isShippingRateBeingSelected = cart.isShippingRateBeingSelected();
-			if ( billingAddress !== billingAddressFormData || shippingAddress !== shippingAddressFormData || ( event.target.id.includes( '_woo_additional_terms' ) ) ) {
+			if (
+				billingAddress !== billingAddressFormData ||
+				shippingAddress !== shippingAddressFormData ||
+				event.target.id.includes( '_woo_additional_terms' ) ||
+				event.target.id.includes( 'terms-and-conditions' )
+			) {
 				billingAddress  = billingAddressFormData;
 				shippingAddress = shippingAddressFormData;
 				handleWidgetDisplay();

@@ -274,7 +274,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$order         = wc_get_order( $order_id );
 		$initial_order = $order;
 
-		OrderHelper::LogOrderInfo( $initial_order, 'Order received to complete payment' );
+		OrderHelper::log_order_info( $initial_order, 'Order received to complete payment' );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
@@ -1155,7 +1155,8 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	public function log_admin_settings_load(): void {
-		if ( isset( $_GET['section'] ) && $_GET['section'] == $this->id ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking admin page section parameter
+		if ( isset( $_GET['section'] ) && $_GET['section'] === $this->id ) {
 			$this->log_powerboard_admin_load();
 		}
 	}

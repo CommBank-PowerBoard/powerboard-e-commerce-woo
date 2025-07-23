@@ -63,14 +63,14 @@ jQuery(
 					currentSavedShipping: null,
 					showErrorMessage( errorMessage ) {
 						window.scrollTo( { top: 0, behavior: 'smooth' } );
-						let $wrapper = $( '.woocommerce-notices-wrapper' ).first();
+						let $wrapper   = $( '.woocommerce-notices-wrapper' ).first();
 						if ( ! $wrapper.length ) {
 							$wrapper = $( 'form[name="checkout"]' ).prepend( '<div class="woocommerce-notices-wrapper"></div>' ).find( '.woocommerce-notices-wrapper' );
 						}
-						$wrapper.empty().append( '<ul class="woocommerce-error" role="alert">' + '<li>' + errorMessage + '</li>' + '</ul>' );
+						$wrapper.empty().append( '<ul class="woocommerce-error" role="alert"><li>' + errorMessage + '</li></ul>' );
 					},
 					reInitMasterWidget() {
-						let loading    = $( '#loading' );
+						let loading = $( '#loading' );
 						this.toggleWidgetVisibility( true );
 						loading.show();
 						this.initMasterWidget();
@@ -288,7 +288,7 @@ jQuery(
 							shipping_address: shippingAddress,
 						};
 
-						const createCheckbox = document.getElementById('createaccount');
+						const createCheckbox = document.getElementById( 'createaccount' );
 						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
 
 						// noinspection JSUnresolvedReference
@@ -381,7 +381,6 @@ jQuery(
 												window.widgetPowerBoard.onPaymentExpired(
 													() => {
 														showError( 'Your payment session has expired. Please retry your payment' );
-
 														handleWidgetError();
 														window.widgetPowerBoard = null;
 													}
@@ -462,12 +461,8 @@ jQuery(
 												const orderTotal       = this.getUIOrderTotal();
 												if (orderTotal) {
 													if (orderTotal !== cartTotal) {
-														if (this.currentSavedShipping === event.detail.shippingId) {
-															window.reloadAfterExternalCartChanges();
-														} else {
-															// noinspection JSUnresolvedReference
-															$( document.body ).trigger( 'update_checkout' );
-														}
+														// noinspection JSUnresolvedReference
+														$( document.body ).trigger( 'update_checkout' );
 													}
 
 													this.initMasterWidget();
@@ -553,6 +548,23 @@ jQuery(
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+												},
+												success: function (response) {
+													if (response.success && response.data.trigger_event === 'power_board_cart_total_changed') {
+														// Dispatch the custom event with updated cart total in detail
+														const event = new CustomEvent(
+															'power_board_cart_total_changed',
+															{
+																detail: {
+																	cartTotal: response.data.cart_total
+																}
+														}
+															);
+														document.dispatchEvent( event );
+													}
+												},
+												error: function (xhr, status, error) {
+													console.error( 'PowerBoard: Error updating shipping:', error );
 												}
 											}
 										);
@@ -707,6 +719,21 @@ jQuery(
 				powerBoardHelper.init();
 				powerBoardHelper.addBeforeLeavePageListener();
 				initPhoneNumberValidation();
+				// Initialize cart changes helper for cross-tab synchronization
+				if (window.CartChangesHelper) {
+					window.CartChangesHelper.getInstance();
+				} else {
+					// Load cart changes helper dynamically if not already loaded
+					const script  = document.createElement( 'script' );
+					script.src    = window.powerBoardSettings?.assetsUrl + '/js/helpers/cart-changes.helper.js' ||
+								'/wp-content/plugins/power-board/assets/js/helpers/cart-changes.helper.js';
+					script.onload = () => {
+						if (window.CartChangesHelper) {
+							window.CartChangesHelper.getInstance();
+						}
+					};
+					document.head.appendChild( script );
+				}
 			}
 		);
 	}

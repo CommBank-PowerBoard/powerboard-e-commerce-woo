@@ -20,7 +20,7 @@ class OrderHelper {
 			return;
 		}
 
-		self::LogOrderInfo( $order, 'Updating order - initial state' );
+		self::log_order_info( $order, 'Updating order - initial state' );
 
 		$order->remove_order_items();
 
@@ -75,7 +75,7 @@ class OrderHelper {
 		$order->calculate_totals();
 		$order->save();
 
-		self::LogOrderInfo( $order, 'Updating order - updated state' );
+		self::log_order_info( $order, 'Updating order - updated state' );
 	}
 
 	/**
@@ -90,7 +90,7 @@ class OrderHelper {
 		$order->save();
 	}
 
-	public static function LogOrderInfo( &$order, $message ) {
+	public static function log_order_info( &$order, $message ) {
 		$order_items = [];
 		foreach ( $order->get_items() as $initial_item ) {
 			$order_items[] = $initial_item->get_data();

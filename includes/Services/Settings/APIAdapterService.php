@@ -44,7 +44,12 @@ class APIAdapterService {
 
 			if ( file_exists( $fallback_path ) ) {
 				LoggerHelper::log( 'Using fallback compatibility file: ' . $fallback_path );
-				$fallback_contents = file_get_contents( $fallback_path );
+				/* @noinspection PhpUndefinedFunctionInspection */
+				require_once ABSPATH . '/wp-admin/includes/file.php';
+				/* @noinspection PhpUndefinedFunctionInspection */
+				WP_Filesystem();
+				global $wp_filesystem;
+				$fallback_contents = $wp_filesystem->get_contents( $fallback_path );
 
 				if ( ! is_string( $fallback_contents ) || trim( $fallback_contents ) === '' ) {
 					return [];

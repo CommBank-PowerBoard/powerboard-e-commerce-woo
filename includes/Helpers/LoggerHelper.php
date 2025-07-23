@@ -106,6 +106,7 @@ class LoggerHelper {
 
 		/* @noinspection PhpUndefinedConstantInspection */
 		if ( WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging when WP_DEBUG is enabled
 			error_log( 'PowerBoard: ' . $message );
 		}
 	}

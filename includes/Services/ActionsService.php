@@ -144,8 +144,36 @@ class ActionsService {
 			return;
 		}
 
-		$this->order_update_shipping();
-		$this->update_order_cart_hash();
+		// Check if this is just a validation request
+		$validate_only = isset( $_POST['validate_only'] ) && sanitize_text_field( wp_unslash( $_POST['validate_only'] ) );
+
+		if ( ! $validate_only ) {
+			$this->order_update_shipping();
+			$this->update_order_cart_hash();
+		}
+
+		// Send success response with cart total for event triggering
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$cart = WC()->cart;
+		if ( ! empty( $cart ) ) {
+			// Ensure cart totals are calculated
+			$cart->calculate_totals();
+		}
+		$cart_total = ! empty( $cart ) ? (float) $cart->get_total( false ) : 0;
+
+		$response = [
+			'cart_total' => $cart_total,
+		];
+
+		if ( ! $validate_only ) {
+			$response['message']       = __( 'Shipping updated successfully', 'power-board' );
+			$response['trigger_event'] = 'power_board_cart_total_changed';
+		} else {
+			$response['message'] = __( 'Cart totals validated', 'power-board' );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success( $response );
 	}
 
 	/**
@@ -198,7 +226,7 @@ class ActionsService {
 					[
 						'expires'  => time() + 3600,
 						'path'     => '/',
-						'domain'   => $_SERVER['HTTP_HOST'],
+						'domain'   => isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '',
 						'secure'   => is_ssl(),
 						'httponly' => false,
 						'samesite' => 'Lax',
@@ -208,18 +236,6 @@ class ActionsService {
 		}
 
 		$this->calculate_totals_and_save_cookie();
-
-		if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
-			$cart_total = (string) WC()->cart->get_total( false );
-			echo "<script>
-				document.dispatchEvent(new CustomEvent('power_board_cart_total_changed', {
-					detail: {
-						cartTotal: '" . esc_js( $cart_total ) . "',
-						shippingId: '" . esc_js( $current_shipping ) . "'
-					}
-				}));
-			</script>";
-		}
 	}
 
 	/**
@@ -240,7 +256,7 @@ class ActionsService {
 				[
 					'expires'  => time() + 3600,
 					'path'     => '/',
-					'domain'   => $_SERVER['HTTP_HOST'],
+					'domain'   => isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '',
 					'secure'   => is_ssl(),
 					'httponly' => false,
 					'samesite' => 'Lax',
@@ -248,6 +264,8 @@ class ActionsService {
 			);
 		}
 	}
+
+
 
 	/**
 	 * Uses a function (add_action) from WordPress
@@ -333,9 +351,9 @@ class ActionsService {
 		}
 		echo '<script type="text/javascript">
 			jQuery(document).ready(function($) {
-				if ( ' . $id . ' !== "" ) {
-					$("#meta-' . $id . '-key").prop("disabled", true);
-					$("#meta-' . $id . '-value").prop("disabled", true);
+				if ( ' . esc_js( $id ) . ' !== "" ) {
+					$("#meta-' . esc_attr( $id ) . '-key").prop("disabled", true);
+					$("#meta-' . esc_attr( $id ) . '-value").prop("disabled", true);
 				}
 			});
 		</script>';
