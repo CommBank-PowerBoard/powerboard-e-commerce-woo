@@ -101,30 +101,23 @@ class MasterWidgetSettingsHelper {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$stored_configuration_templates = get_transient( 'configuration_templates_' . $env );
 		$has_error                      = false;
-		if ( ! empty( $stored_configuration_templates ) ) {
-			$configuration_templates = $stored_configuration_templates;
-		} else {
-			$api_adapter_service = self::init_api_adapter( $env, $access_token );
-			$result              = $api_adapter_service->get_configuration_templates_ids( $version );
-			$has_error           = $result['error'];
+		$api_adapter_service            = self::init_api_adapter( $env, $access_token );
+		$result                         = $api_adapter_service->get_configuration_templates_ids( $version );
+		$has_error                      = $result['error'];
 
-			if ( $has_error ) {
-				$widget_api_adapter_service = APIAdapterService::get_instance();
-				$widget_api_adapter_service->initialise( $env, $access_token );
-				$valid_template       = ConnectionValidationService::get_configuration_templates_for_validation( $widget_api_adapter_service );
-				$invalid_access_token = ! empty( $valid_template['error'] ) && $valid_template['status'] === 403;
-				/* @noinspection PhpUndefinedFunctionInspection */
-				set_transient( 'invalid_access_token', $invalid_access_token ? '1' : false );
-			} else {
-				/* @noinspection PhpUndefinedFunctionInspection */
-				set_transient( 'invalid_access_token', false );
-			}
-			$data                    = $result['resource']['data'] ?? [];
-			$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ) );
-
+		if ( $has_error ) {
+			$widget_api_adapter_service = APIAdapterService::get_instance();
+			$widget_api_adapter_service->initialise( $env, $access_token );
+			$valid_template       = ConnectionValidationService::get_configuration_templates_for_validation( $widget_api_adapter_service );
+			$invalid_access_token = ! empty( $valid_template['error'] ) && $valid_template['status'] === 403;
 			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'configuration_templates_' . $env, $configuration_templates, 60 );
+			set_transient( 'invalid_access_token', $invalid_access_token ? '1' : false );
+		} else {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			set_transient( 'invalid_access_token', false );
 		}
+		$data                    = $result['resource']['data'] ?? [];
+		$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ) );
 
 		$configuration_id_key = SettingsHelper::get_option_name(
 				POWER_BOARD_PLUGIN_PREFIX,
@@ -154,18 +147,11 @@ class MasterWidgetSettingsHelper {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$stored_customisation_templates = get_transient( 'customisation_templates_' . $env );
 		$has_error                      = false;
-		if ( ! empty( $stored_customisation_templates ) ) {
-			$customisation_templates = $stored_customisation_templates;
-		} else {
-			$api_adapter_service     = self::init_api_adapter( $env, $access_token );
-			$result                  = $api_adapter_service->get_customisation_templates_ids( $version );
-			$has_error               = $result['error'];
-			$data                    = $result['resource']['data'] ?? [];
-			$customisation_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ), true );
-
-			/* @noinspection PhpUndefinedFunctionInspection */
-			set_transient( 'customisation_templates_' . $env, $customisation_templates, 60 );
-		}
+		$api_adapter_service            = self::init_api_adapter( $env, $access_token );
+		$result                         = $api_adapter_service->get_customisation_templates_ids( $version );
+		$has_error                      = $result['error'];
+		$data                           = $result['resource']['data'] ?? [];
+		$customisation_templates        = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ), true );
 
 		$customisation_id_key = SettingsHelper::get_option_name(
 			POWER_BOARD_PLUGIN_PREFIX,
