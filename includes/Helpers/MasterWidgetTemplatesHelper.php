@@ -4,13 +4,21 @@ declare( strict_types=1 );
 namespace PowerBoard\Helpers;
 
 class MasterWidgetTemplatesHelper {
-	public static function map_templates( ?array $data, bool $has_error, bool $is_optional = false ): array {
+	public static function map_templates( ?array $data, ?string $version, bool $has_error, bool $is_optional = false ): array {
 		if ( $has_error || empty( $data ) ) {
 			return [];
 		}
 
+		// Filter by user selected version
+		$filtered_versions = array_filter(
+			$data,
+			function ( $template ) use ( $version ) {
+				return $template['version'] === (int) $version;
+			}
+			);
+
 		$templates = [];
-		foreach ( $data as $template ) {
+		foreach ( $filtered_versions as $template ) {
 			$templates[ $template['_id'] ] = $template['label'] . ' | ' . $template['_id'];
 		}
 

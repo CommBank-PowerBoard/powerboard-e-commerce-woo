@@ -120,7 +120,7 @@ class MasterWidgetSettingsHelper {
 				set_transient( 'invalid_access_token', false );
 			}
 			$data                    = $result['resource']['data'] ?? [];
-			$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, ! empty( $has_error ) );
+			$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ) );
 
 			/* @noinspection PhpUndefinedFunctionInspection */
 			set_transient( 'configuration_templates_' . $env, $configuration_templates, 60 );
@@ -161,7 +161,7 @@ class MasterWidgetSettingsHelper {
 			$result                  = $api_adapter_service->get_customisation_templates_ids( $version );
 			$has_error               = $result['error'];
 			$data                    = $result['resource']['data'] ?? [];
-			$customisation_templates = MasterWidgetTemplatesHelper::map_templates( $data, ! empty( $has_error ), true );
+			$customisation_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ), true );
 
 			/* @noinspection PhpUndefinedFunctionInspection */
 			set_transient( 'customisation_templates_' . $env, $customisation_templates, 60 );
