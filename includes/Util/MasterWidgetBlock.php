@@ -80,16 +80,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			return true;
 		}
 
-		// Fallback check: look for checkout block in the current page content
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$checkout_page_id = wc_get_page_id( 'checkout' );
-		if ( $checkout_page_id && $checkout_page_id > 0 ) {
-			$checkout_page = get_post( $checkout_page_id );
-			if ( $checkout_page && has_block( 'woocommerce/checkout', $checkout_page ) ) {
-				return true;
-			}
-		}
-
 		return false;
 	}
 
