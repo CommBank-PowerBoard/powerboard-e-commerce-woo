@@ -5,6 +5,7 @@ namespace PowerBoard\Controllers\Admin;
 
 use PowerBoard\Helpers\JsonHelper;
 use PowerBoard\Helpers\LoggerHelper;
+use PowerBoard\Helpers\MasterWidgetSettingsHelper;
 use PowerBoard\Helpers\OrderHelper;
 use PowerBoard\Helpers\PaymentMethodHelper;
 use PowerBoard\Services\Settings\APIAdapterService;
@@ -215,7 +216,7 @@ class WidgetController {
 		}
 
 		if ( ! empty( $billing_address['phone'] ) ) {
-			$intent_request_params['customer']['phone'] = $billing_address['phone'];
+			$intent_request_params['customer']['phone'] =  MasterWidgetSettingsHelper::validate_phone_number($billing_address['phone'] );
 		}
 
 		if ( ! empty( $billing_address['address_2'] ) ) {

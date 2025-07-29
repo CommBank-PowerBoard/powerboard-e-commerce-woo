@@ -197,4 +197,30 @@ class MasterWidgetSettingsHelper {
 		return isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'wc-settings' && isset( $_GET['tab'] ) && sanitize_text_field( wp_unslash( $_GET['tab'] ) ) === 'checkout' && isset( $_GET['section'] ) && sanitize_text_field( wp_unslash( $_GET['section'] ) ) === POWER_BOARD_PLUGIN_PREFIX;
 	}
 	// phpcs:enable
+
+
+    /**
+     * @param $phone
+     * @return mixed|string
+     *
+     * format phone number to be sent on the checkout API, the country code is optional on the frontend and mandatory on the API
+     */
+    public static function validate_phone_number($phone){
+
+        if(empty($phone)){
+            return '';
+        }
+
+        //if phone comes with correct format, returns the phone
+        if(preg_match('/^\+[1-9]{1}[0-9]{3,14}$/', $phone)){
+            return $phone;
+        }
+
+        // Remove all non-digit characters except '+'
+        $cleanPhone = preg_replace('/[^\d]/', '', $phone);
+
+        // If starts with 0, remove it, match max length
+        $digits = substr(ltrim($cleanPhone, '0'), 0, 13);
+        return "+61" . $digits;
+    }
 }

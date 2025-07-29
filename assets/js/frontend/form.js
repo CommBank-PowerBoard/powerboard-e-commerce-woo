@@ -10,8 +10,8 @@ jQuery(
 					billing: '#billing-phone',
 				},
 				errorMessageClassName: 'wc-block-components-validation-error',
-				phonePattern: /^\+[1-9]{1}[0-9]{3,14}$/,
-				errorMessageHtml: `<div class ="wc-block-components-validation-error" role="alert"><p>Please enter your phone number in international format, starting with "+"</p></div>`,
+				phonePattern: /^(\+[1-9]{1})?[0-9]{3,14}$/,
+				errorMessageHtml: `<div class ="wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
 			};
 
 			const getPhoneInputs     = () =>
