@@ -320,58 +320,20 @@ jQuery(
 										if (initTimestamp === this.lastMasterWidgetInit) {
 											const showError = message => this.showErrorMessage( message );
 											if (response.success) {
-												// noinspection JSUnresolvedReference
-												this.toggleWidgetVisibility( false );
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.setEnv( this.getConfigs().environment );
-												const handleWidgetError = () => this.handleWidgetError();
-												const submitForm        = () => this.form.submit();
-												const intentId          = response.data.intentId;
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentSuccessful(
-													( data ) => {
-														// noinspection JSUnresolvedReference
-														jQuery( '#chargeid' ).val( data.charge_id );
-														// noinspection JSUnresolvedReference
-														jQuery( '#intentid' ).val( intentId );
-														submitForm();
-														window.widgetPowerBoard = null;
-													}
-												);
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentFailure(
-													( data ) => {
-														// noinspection JSUnresolvedReference
-														jQuery.ajax(
-															{
-																url: '/?wc-ajax=power-board-process-payment-result',
-																method: 'POST',
-																data: {
-																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-																	payment_response: {
-																		...data,
-																		errorMessage: data.message || 'Transaction failed',
-																	}
-																},
-																success: () => {
-																	showError( 'Transaction failed. Please check your payment details or contact your bank' );
-																	handleWidgetError();
-																	window.widgetPowerBoard = null;
-																}
+												const checkoutWrapper = document.getElementById( 'classic-powerBoardCheckout_wrapper' );
+												if (!checkoutWrapper.checkVisibility()) {
+													const widgetVisibilityInterval = setInterval(
+														() => {
+															if (checkoutWrapper.checkVisibility()) {
+																this.loadMasterWidget(response, createAccount);
+																clearInterval( widgetVisibilityInterval );
 															}
-														);
-													}
-												);
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentExpired(
-													() => {
-														showError( 'Your payment session has expired. Please retry your payment' );
-														handleWidgetError();
-														window.widgetPowerBoard = null;
-													}
-												);
+														},
+														2000
+													);
+												} else {
+													this.loadMasterWidget(response, createAccount);
+												}
 											} else {
 												if ( response.data?.code === 'invalid_account_creation' ) {
 													showError( response.data.message );
@@ -389,6 +351,81 @@ jQuery(
 										}
 									}
 								}
+							}
+						);
+					},
+					loadMasterWidget(response, createAccount) {
+						// noinspection JSUnresolvedReference
+						this.toggleWidgetVisibility( false );
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.setEnv( this.getConfigs().environment )
+						const showError          = message => this.showErrorMessage( message );
+						const handleWidgetError  = () => this.handleWidgetError();
+						const reInitMasterWidget = () => this.reInitMasterWidget();
+						const submitForm         = () => this.form.submit();
+						const intentId           = response.data.intentId;
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentSuccessful(
+							( data ) => {
+								// noinspection JSUnresolvedReference
+								jQuery.ajax(
+									{
+										url: '/?wc-ajax=power-board-process-payment-result',
+										method: 'POST',
+										data: {
+											_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+											payment_response: data,
+											create_account: createAccount,
+										},
+										success: ( response ) => {
+											if ( response.success ) {
+												// noinspection JSUnresolvedReference
+												jQuery( '#chargeid' ).val( data.charge_id );
+												// noinspection JSUnresolvedReference
+												jQuery( '#intentid' ).val( intentId );
+												submitForm();
+												window.widgetPowerBoard = null;
+											} else {
+												showError( response.data.message );
+												reInitMasterWidget();
+											}
+										}
+									}
+								);
+							}
+						);
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentFailure(
+							( data ) => {
+								// noinspection JSUnresolvedReference
+								jQuery.ajax(
+									{
+										url: '/?wc-ajax=power-board-process-payment-result',
+										method: 'POST',
+										data: {
+											_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+											payment_response: {
+												...data,
+												errorMessage: data.message || 'Transaction failed',
+											}
+										},
+										success: () => {
+											showError( 'Transaction failed. Please check your payment details or contact your bank' );
+											handleWidgetError();
+											window.widgetPowerBoard = null;
+										}
+									}
+								);
+							}
+						);
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentExpired(
+							() => {
+								showError( 'Your payment session has expired. Please retry your payment' );
+								handleWidgetError();
+								window.widgetPowerBoard = null;
 							}
 						);
 					},
