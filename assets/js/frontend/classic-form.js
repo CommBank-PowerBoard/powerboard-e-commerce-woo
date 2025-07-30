@@ -281,15 +281,16 @@ jQuery(
 							shippingAddress = addressData.shipping_address;
 						}
 
+
+						const createCheckbox = document.getElementById( 'createaccount' );
+						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
 						// noinspection JSUnresolvedReference
 						const data = {
 							_wpnonce: PowerBoardAjaxCheckout.wpnonce_intent,
 							address: billingAddress,
 							shipping_address: shippingAddress,
+							create_account: createAccount
 						};
-
-						const createCheckbox = document.getElementById( 'createaccount' );
-						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
 
 						// noinspection JSUnresolvedReference
 						jQuery.ajax(
@@ -311,46 +312,26 @@ jQuery(
 										error.show();
 									} else {
 										if (initTimestamp === this.lastMasterWidgetInit) {
+											const showError          = message => this.showErrorMessage( message );
 											if (response.success) {
 												// noinspection JSUnresolvedReference
 												this.toggleWidgetVisibility( false );
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
 												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.setEnv( this.getConfigs().environment )
-												const showError          = message => this.showErrorMessage( message );
+												window.widgetPowerBoard.setEnv( this.getConfigs().environment );
 												const handleWidgetError  = () => this.handleWidgetError();
-												const reInitMasterWidget = () => this.reInitMasterWidget();
 												const submitForm         = () => this.form.submit();
 												const intentId           = response.data.intentId;
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.onPaymentSuccessful(
 													( data ) => {
 														// noinspection JSUnresolvedReference
-														jQuery.ajax(
-															{
-																url: '/?wc-ajax=power-board-process-payment-result',
-																method: 'POST',
-																data: {
-																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-																	payment_response: data,
-																	create_account: createAccount,
-																},
-																success: ( response ) => {
-																	if ( response.success ) {
-																		// noinspection JSUnresolvedReference
-																		jQuery( '#chargeid' ).val( data.charge_id );
-																		// noinspection JSUnresolvedReference
-																		jQuery( '#intentid' ).val( intentId );
-																		submitForm();
-																		window.widgetPowerBoard = null;
-																	} else {
-																		showError( response.data.message );
-																		reInitMasterWidget();
-																	}
-																}
-															}
-														);
+														jQuery( '#chargeid' ).val( data.charge_id );
+														// noinspection JSUnresolvedReference
+														jQuery( '#intentid' ).val( intentId );
+														submitForm();
+														window.widgetPowerBoard = null;
 													}
 												);
 												// noinspection JSUnresolvedReference
@@ -386,6 +367,10 @@ jQuery(
 													}
 												);
 											} else {
+												if ( response.data?.code === 'invalid_account_creation' ) {
+													showError( response.data.message );
+												}
+
 												// noinspection JSUnresolvedReference
 												let error = jQuery( '#intent-creation-error' );
 												// noinspection JSUnresolvedReference
@@ -590,6 +575,7 @@ jQuery(
 								} else if (
 									this.lastAddressVerified !== currentAddress
 									|| eventTargetId.includes( 'payment_method' )
+									|| eventTargetId.includes( 'createaccount' )
 									|| eventTargetId.includes( '_woo_additional_terms' )
 									|| eventTargetId.includes( 'terms' )
 								) {

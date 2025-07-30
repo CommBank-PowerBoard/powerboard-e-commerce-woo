@@ -170,6 +170,7 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 				total: cartTotals,
 				address: cart.getCustomerData().billingAddress,
 				selected_shipping_id: getSelectedShippingValue(),
+				create_account: document.querySelector( '.wc-block-components-checkbox.wc-block-checkout__create-account input' )?.checked ? 'true' : 'false',
 			},
 			success: ( response ) => {
 				if ( ! checkIsFormValid() ) {
@@ -201,36 +202,9 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 							window.widgetPowerBoard.onPaymentSuccessful(
 								function ( data ) {
 									// noinspection JSUnresolvedReference
-									jQuery.ajax(
-										{
-											url: '/?wc-ajax=power-board-process-payment-result',
-											method: 'POST',
-											data: {
-												_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-												order_id: orderId,
-												payment_response: data,
-												create_account: document.querySelector( '.wc-block-components-checkbox.wc-block-checkout__create-account input' )?.checked ? 'true' : 'false',
-											},
-											success: function ( response ) {
-												if ( response.success ) {
-													// noinspection JSUnresolvedReference
-													paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
-													orderButton.click();
-													window.widgetPowerBoard = null;
-												} else {
-													const msg     = response.data?.message || 'An account is already registered.';
-													const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
-													let container = document.querySelector( '.wc-block-components-notices' );
-													if ( container ) {
-														container.innerHTML = msgHtml;
-														container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-													}
-													window.widgetPowerBoard = null;
-													initMasterWidgetCheckout();
-												}
-											}
-										}
-									);
+									paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
+									orderButton.click();
+									window.widgetPowerBoard = null;
 								}
 							);
 							// noinspection JSUnresolvedReference
@@ -311,6 +285,17 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 								}
 							);
 						} else {
+							if ( response.data?.code === 'invalid_account_creation' ) {
+								const msg     = response.data?.message || 'An account is already registered.';
+								const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
+								let container = document.querySelector( '.wc-block-components-notices' );
+								if ( container ) {
+									container.innerHTML = msgHtml;
+									container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+								}
+								window.widgetPowerBoard = null;
+							}
+
 							// noinspection JSUnresolvedReference
 							let error = jQuery( '#intent-creation-error' )[0];
 							// noinspection JSUnresolvedReference
@@ -563,7 +548,8 @@ const handleFormChanged = ( event ) => {
 				billingAddress !== billingAddressFormData ||
 				shippingAddress !== shippingAddressFormData ||
 				event.target.id.includes( '_woo_additional_terms' ) ||
-				event.target.id.includes( 'terms-and-conditions' )
+				event.target.id.includes( 'terms-and-conditions' ) ||
+				event.target.closest('div').className.includes('create-account')
 			) {
 				billingAddress  = billingAddressFormData;
 				shippingAddress = shippingAddressFormData;

@@ -35,6 +35,31 @@ class WidgetController {
 		$cart = WC()->cart;
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
+        $billing_address = [];
+
+        if ( ! empty( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
+            /* @noinspection PhpUndefinedFunctionInspection */
+            $billing_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['address'] ) );
+        }
+
+        /* @noinspection PhpUndefinedFunctionInspection */
+        $create_account = ! empty( $_REQUEST['create_account'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['create_account'] ) ) : false;
+        if ( $create_account === 'true' ) {
+            $email = $billing_address['email'];
+            if ( ! $this->check_email( $email ) ) {
+                /* @noinspection PhpUndefinedFunctionInspection */
+                wp_send_json_error(
+                    [
+                        'code' => 'invalid_account_creation',
+                        'message' => sprintf(
+                        // Translators: %s Email address.
+                            esc_html__( 'An account is already registered with %s. Please log in or use a different email address.', 'power-board' ),
+                            esc_html( $email )
+                        ),
+                    ]
+                );
+            }
+        }
 
 		if ( is_object( $session ) && isset( $_POST['selected_shipping_id'] ) && isset( $_COOKIE['power_board_selected_shipping'] ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
@@ -84,18 +109,12 @@ class WidgetController {
 			return;
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( isset( $_POST['shipping_address'] ) ) {
+            /* @noinspection PhpUndefinedFunctionInspection */
 			$shipping_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['shipping_address'] ) );
 		} else {
 			$customer_data    = $session->get( 'customer' );
 			$shipping_address = isset( $customer_data['shipping'] ) ? $customer_data['shipping'] : [];
-		}
-		$billing_address = [];
-
-		if ( ! empty( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$billing_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['address'] ) );
 		}
 
 		$billing_country  = isset( $billing_address['country'] ) ? $billing_address['country'] : '';
@@ -123,6 +142,7 @@ class WidgetController {
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$billing_email = isset( $billing_address['email'] ) ? $billing_address['email'] : '';
+        /* @noinspection PhpUndefinedFunctionInspection */
 		if ( ! is_email( $billing_email ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address', 'power-board' ) ] );
@@ -248,7 +268,8 @@ class WidgetController {
 		}
 
 		$session->save_data();
-
+        $session->set( 'order_awaiting_payment', (string) $reference );
+        $session->set( 'store_api_draft_order', (string) $reference );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_send_json_success(
 			[
@@ -270,6 +291,15 @@ class WidgetController {
 			&& ! empty( $address['country'] )
 			&& ! empty( $address['postcode'] );
 	}
+
+    public function check_email( $email ): bool {
+        /* @noinspection PhpUndefinedFunctionInspection */
+        if ( ! is_user_logged_in() && email_exists( $email ) ) {
+            return false;
+        }
+
+        return true;
+    }
 
 	public static function check_intent_status( $intent_id, $charge_id, $order_id, $order ): bool {
 		$settings = SettingsService::get_instance();
