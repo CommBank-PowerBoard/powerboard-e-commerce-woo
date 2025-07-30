@@ -69,6 +69,12 @@ jQuery(
 						}
 						$wrapper.empty().append( '<ul class="woocommerce-error" role="alert"><li>' + errorMessage + '</li></ul>' );
 					},
+					clearCustomNotices() {
+						const container = document.querySelector( '.woocommerce-notices-wrapper' );
+						if ( container ) {
+							container.innerHTML = '';
+						}
+					},
 					reInitMasterWidget() {
 						let loading = $( '#loading' );
 						this.toggleWidgetVisibility( true );
@@ -276,6 +282,7 @@ jQuery(
 						let addressData      = this.getAddressData( false );
 						let billingAddress   = addressData.address;
 						let shippingAddress  = billingAddress;
+						this.clearCustomNotices();
 						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
 						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;

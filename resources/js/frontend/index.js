@@ -96,6 +96,13 @@ const getSelectedShippingValue = () => {
 	return jQuery( '.wc-block-components-radio-control__input:checked' ).val();
 }
 
+const clearCustomNotices = () => {
+	const noticesContainer = document.querySelector( '.wc-block-components-notices' );
+	if ( noticesContainer ) {
+		noticesContainer.innerHTML = '';
+	}
+}
+
 const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) => {
 	// Use provided cart totals or fall back to cart.getCartTotals()
 	let cartTotals = updatedCartTotals || cart.getCartTotals();
@@ -152,6 +159,7 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 
 	// noinspection JSUnresolvedReference
 	if ( canMakePayment( settings.total_limitation, cartTotals?.total_price ) ) {
+		clearCustomNotices();
 		const initTimestamp  = ( new Date() ).getTime();
 		lastMasterWidgetInit = initTimestamp;
 		setTimeout( () => toggleOrderButton( true ), 100 );
