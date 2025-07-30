@@ -103,6 +103,15 @@ const clearCustomNotices = () => {
 	}
 }
 
+const showErrorMessage = ( message ) => {
+	const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + message + '</li></ul>';
+	let container = document.querySelector( '.wc-block-components-notices' );
+	if ( container ) {
+		container.innerHTML = msgHtml;
+		container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+	}
+}
+
 const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) => {
 	// Use provided cart totals or fall back to cart.getCartTotals()
 	let cartTotals = updatedCartTotals || cart.getCartTotals();
@@ -294,13 +303,7 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 							);
 						} else {
 							if ( response.data?.code === 'invalid_account_creation' ) {
-								const msg     = response.data?.message || 'An account is already registered.';
-								const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
-								let container = document.querySelector( '.wc-block-components-notices' );
-								if ( container ) {
-									container.innerHTML = msgHtml;
-									container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-								}
+								showErrorMessage( response.data?.message || 'An account is already registered.' );
 								window.widgetPowerBoard = null;
 							}
 
