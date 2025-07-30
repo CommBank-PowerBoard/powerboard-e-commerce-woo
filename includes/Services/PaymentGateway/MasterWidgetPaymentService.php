@@ -386,13 +386,13 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		$order->update_meta_data( '_power_board_charge_id', $charge_id );
 
-        LoggerHelper::log_callback_event(
-            'Payment completed',
-            [
-                'order_id'  => $order_id ?? null,
-                'charge_id' => $charge_id ?? null,
-            ]
-        );
+		LoggerHelper::log_callback_event(
+			'Payment completed',
+			[
+				'order_id'  => $order_id ?? null,
+				'charge_id' => $charge_id ?? null,
+			]
+		);
 		/* @noinspection PhpUndefinedFunctionInspection */
 		WC()->cart->empty_cart();
 		$order->save();
@@ -447,39 +447,39 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			wp_send_json_error( [ 'message' => 'Order not found' ] );
 		}
 
-        /* @noinspection PhpUndefinedFunctionInspection */
-        $error_message = ! empty( $payment_data['errorMessage'] ) ? sanitize_text_field( $payment_data['errorMessage'] ) : 'Something went wrong';
-        $order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
-        $order->update_status( 'failed' );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$error_message = ! empty( $payment_data['errorMessage'] ) ? sanitize_text_field( $payment_data['errorMessage'] ) : 'Something went wrong';
+		$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
+		$order->update_status( 'failed' );
 
-        /* @noinspection PhpUndefinedFunctionInspection */
-        $charge_id = ! empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
-        $order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
-        $order->save();
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$charge_id = ! empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
+		$order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
+		$order->save();
 
-        LoggerHelper::log_callback_event(
-            'Payment error',
-            [
-                'order_id'      => $order_id ?? null,
-                'charge_id'     => $charge_id ?? null,
-                'error_message' => $error_message ?? null,
-            ],
-            'error'
-        );
+		LoggerHelper::log_callback_event(
+			'Payment error',
+			[
+				'order_id'      => $order_id ?? null,
+				'charge_id'     => $charge_id ?? null,
+				'error_message' => $error_message ?? null,
+			],
+			'error'
+		);
 
-        /* @noinspection PhpUndefinedFunctionInspection */
-        $session = WC()->session;
-        $session->set( 'order_awaiting_payment', (string) $order_id );
-        $session->set( 'store_api_draft_order', (string) $order_id );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$session = WC()->session;
+		$session->set( 'order_awaiting_payment', (string) $order_id );
+		$session->set( 'store_api_draft_order', (string) $order_id );
 
-        /* @noinspection PhpUndefinedFunctionInspection */
-        wp_send_json_success(
-            [
-                'order_status' => 'failed',
-                'message'      => $error_message,
-            ],
-            200
-        );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success(
+			[
+				'order_status' => 'failed',
+				'message'      => $error_message,
+			],
+			200
+		);
 	}
 
 	public function refund_charge( $charge_id, $amount_to_refund ) {

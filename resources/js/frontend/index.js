@@ -96,7 +96,7 @@ const getSelectedShippingValue = () => {
 	return jQuery( '.wc-block-components-radio-control__input:checked' ).val();
 }
 
-const clearCustomNotices = () => {
+const clearCustomNotices   = () => {
 	const noticesContainer = document.querySelector( '.wc-block-components-notices' );
 	if ( noticesContainer ) {
 		noticesContainer.innerHTML = '';
@@ -104,8 +104,8 @@ const clearCustomNotices = () => {
 }
 
 const showErrorMessage = ( message ) => {
-	const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + message + '</li></ul>';
-	let container = document.querySelector( '.wc-block-components-notices' );
+	const msgHtml      = '<ul class="woocommerce-error" role="alert"><li>' + message + '</li></ul>';
+	let container      = document.querySelector( '.wc-block-components-notices' );
 	if ( container ) {
 		container.innerHTML = msgHtml;
 		container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
@@ -560,7 +560,7 @@ const handleFormChanged = ( event ) => {
 				shippingAddress !== shippingAddressFormData ||
 				event.target.id.includes( '_woo_additional_terms' ) ||
 				event.target.id.includes( 'terms-and-conditions' ) ||
-				event.target.closest('div').className.includes('create-account')
+				event.target.closest( 'div' ).className.includes( 'create-account' )
 			) {
 				billingAddress  = billingAddressFormData;
 				shippingAddress = shippingAddressFormData;

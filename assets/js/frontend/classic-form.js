@@ -279,15 +279,14 @@ jQuery(
 						const initTimestamp       = Date.now();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
-						let addressData      = this.getAddressData( false );
-						let billingAddress   = addressData.address;
-						let shippingAddress  = billingAddress;
+						let addressData     = this.getAddressData( false );
+						let billingAddress  = addressData.address;
+						let shippingAddress = billingAddress;
 						this.clearCustomNotices();
 						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
 						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
 						}
-
 
 						const createCheckbox = document.getElementById( 'createaccount' );
 						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
@@ -319,7 +318,7 @@ jQuery(
 										error.show();
 									} else {
 										if (initTimestamp === this.lastMasterWidgetInit) {
-											const showError          = message => this.showErrorMessage( message );
+											const showError = message => this.showErrorMessage( message );
 											if (response.success) {
 												// noinspection JSUnresolvedReference
 												this.toggleWidgetVisibility( false );
@@ -327,9 +326,9 @@ jQuery(
 												window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.setEnv( this.getConfigs().environment );
-												const handleWidgetError  = () => this.handleWidgetError();
-												const submitForm         = () => this.form.submit();
-												const intentId           = response.data.intentId;
+												const handleWidgetError = () => this.handleWidgetError();
+												const submitForm        = () => this.form.submit();
+												const intentId          = response.data.intentId;
 												// noinspection JSUnresolvedReference
 												window.widgetPowerBoard.onPaymentSuccessful(
 													( data ) => {
