@@ -513,15 +513,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 	// phpcs:enable
 
-	public function check_email( $email ): bool {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! is_user_logged_in() && email_exists( $email ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
 	public function check_postcode() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
