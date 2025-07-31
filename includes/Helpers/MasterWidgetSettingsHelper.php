@@ -211,16 +211,17 @@ class MasterWidgetSettingsHelper {
             return '';
         }
 
+        $phone = preg_replace('/\s+/', '', $phone);
         //if phone comes with correct format, returns the phone
         if(preg_match('/^\+[1-9]{1}[0-9]{3,14}$/', $phone)){
             return $phone;
         }
 
-        // Remove all non-digit characters except '+'
+        // Remove all non-digit characters
         $cleanPhone = preg_replace('/[^\d]/', '', $phone);
 
         // If starts with 0, remove it, match max length
-        $digits = substr(ltrim($cleanPhone, '0'), 0, 13);
+        $digits = substr($cleanPhone, 0, 13);
         return "+61" . $digits;
     }
 }

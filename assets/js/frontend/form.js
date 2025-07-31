@@ -10,7 +10,7 @@ jQuery(
 					billing: '#billing-phone',
 				},
 				errorMessageClassName: 'wc-block-components-validation-error',
-				phonePattern: /^(\+[1-9]{1})?[0-9]{3,14}$/,
+				phonePattern: /^(\+)?([(\(\d\)\s]{1,3})?([\d\s\(\d\)\-]{1,14})$/,
 				errorMessageHtml: `<div class ="wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
 			};
 
