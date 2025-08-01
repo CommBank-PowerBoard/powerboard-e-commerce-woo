@@ -61,6 +61,7 @@ jQuery(
 					shippingChangedTimeout: null,
 					lastMasterWidgetInit: null,
 					currentSavedShipping: null,
+					widgetVisibilityInterval: null,
 					showErrorMessage( errorMessage ) {
 						window.scrollTo( { top: 0, behavior: 'smooth' } );
 						let $wrapper   = $( '.woocommerce-notices-wrapper' ).first();
@@ -298,6 +299,12 @@ jQuery(
 							create_account: createAccount
 						};
 
+						const createCheckbox = document.getElementById( 'createaccount' );
+						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
+
+						if ( this.widgetVisibilityInterval ) {
+							clearInterval( this.widgetVisibilityInterval )
+						}
 						// noinspection JSUnresolvedReference
 						jQuery.ajax(
 							{
@@ -321,12 +328,12 @@ jQuery(
 											const showError = message => this.showErrorMessage( message );
 											if (response.success) {
 												const checkoutWrapper = document.getElementById( 'classic-powerBoardCheckout_wrapper' );
-												if (!checkoutWrapper.checkVisibility()) {
-													const widgetVisibilityInterval = setInterval(
+												if (!checkoutWrapper?.checkVisibility()) {
+													this.widgetVisibilityInterval = setInterval(
 														() => {
-															if (checkoutWrapper.checkVisibility()) {
+															if (checkoutWrapper?.checkVisibility()) {
 																this.loadMasterWidget(response, createAccount);
-																clearInterval( widgetVisibilityInterval );
+																clearInterval( this.widgetVisibilityInterval );
 															}
 														},
 														2000

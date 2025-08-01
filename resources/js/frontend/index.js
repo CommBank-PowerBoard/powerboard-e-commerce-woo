@@ -23,6 +23,7 @@ let shippingAddress        = null;
 let lastMasterWidgetInit   = null;
 let shippingChangedTimeout = null;
 let currentSavedShipping   = null;
+let widgetVisibilityInterval = null;
 
 // Initialize shipping change tracking
 window.powerBoardLastShippingChange = 0; // Reset to clean state
@@ -176,6 +177,11 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 		// noinspection JSUnresolvedReference
 		const orderId = store.getOrderId();
 
+
+		if ( widgetVisibilityInterval ) {
+			clearInterval( widgetVisibilityInterval )
+		}
+
 		// noinspection JSUnresolvedReference
 		jQuery.ajax(
 		{
@@ -199,108 +205,20 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 				} else {
 					if (initTimestamp === lastMasterWidgetInit) {
 						if (response.success) {
-							// noinspection DuplicatedCode
-							toggleWidgetVisibility( false );
-							const widgetSelector = '#powerBoardCheckout_wrapper';
-							// noinspection JSUnresolvedReference
-							if (!jQuery( widgetSelector )[0]) {
-								return;
-							}
-							// noinspection JSUnresolvedReference
-							window.widgetPowerBoard = new cba.Checkout( widgetSelector, response.data.token );
-							// noinspection JSUnresolvedReference
-							window.widgetPowerBoard.setEnv( settings.environment )
-							// noinspection JSUnresolvedReference
-							const orderButton = jQuery( '.wc-block-components-checkout-place-order-button' )[0];
-							// noinspection JSUnresolvedReference
-							const paymentSourceElement = jQuery( '#paymentSourceToken' );
-
-							// noinspection JSUnresolvedReference
-							window.widgetPowerBoard.onPaymentSuccessful(
-								function ( data ) {
-									// noinspection JSUnresolvedReference
-									paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
-									orderButton.click();
-									window.widgetPowerBoard = null;
-								}
-							);
-							// noinspection JSUnresolvedReference
-							window.widgetPowerBoard.onPaymentFailure(
-								function ( data ) {
-									// noinspection JSUnresolvedReference
-									paymentSourceElement.val(
-										JSON.stringify(
-											{
-												errorMessage: 'Transaction failed. Please check your payment details or contact your bank',
-											}
-										)
-									);
-									// noinspection JSUnresolvedReference
-									jQuery.ajax(
-										{
-											url: '/?wc-ajax=power-board-process-payment-result',
-											method: 'POST',
-											data: {
-												_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-												order_id: store.getOrderId(),
-												payment_response:
-													{
-														...data,
-														errorMessage: data.message || 'Transaction failed',
-												}
-											},
-											success: function () {
-												orderButton.click();
-
-												window.widgetPowerBoard = null;
-											}
+							const checkoutWrapper = document.getElementById( 'powerBoardCheckout_wrapper' );
+							if (!checkoutWrapper?.checkVisibility()) {
+								this.widgetVisibilityInterval = setInterval(
+									() => {
+										if (checkoutWrapper?.checkVisibility()) {
+											loadMasterWidget( response, orderId );
+											clearInterval( this.widgetVisibilityInterval );
 										}
-									);
-								}
-							);
-
-							// noinspection JSUnresolvedReference
-							window.widgetPowerBoard.onPaymentExpired(
-								function ( data ) {
-									// noinspection JSUnresolvedReference
-									paymentSourceElement.val(
-										JSON.stringify(
-											{
-												errorMessage: 'Your payment session has expired. Please retry your payment',
-											}
-										)
-									);
-
-									// noinspection JSUnresolvedReference
-									if ( data.charge_id ) {
-										// noinspection JSUnresolvedReference
-										jQuery.ajax(
-											{
-												url: '/?wc-ajax=power-board-process-payment-result',
-												method: 'POST',
-												data: {
-													_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-													order_id: store.getOrderId(),
-													payment_response:
-														{
-															...data,
-															errorMessage: 'Payment session has expired',
-													}
-												},
-												success: function () {
-													orderButton.click();
-
-													window.widgetPowerBoard = null;
-												}
-											}
-										);
-									} else {
-										orderButton.click();
-
-										window.widgetPowerBoard = null;
-									}
-								}
-							);
+									},
+									2000
+								);
+							} else {
+								loadMasterWidget( response, orderId );
+							}
 						} else {
 							if ( response.data?.code === 'invalid_account_creation' ) {
 								showErrorMessage( response.data?.message || 'An account is already registered.' );
@@ -319,6 +237,138 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 			}
 		);
 	}
+}
+
+const loadMasterWidget = ( response, orderId ) => {
+	// noinspection DuplicatedCode
+	toggleWidgetVisibility( false );
+	const widgetSelector = '#powerBoardCheckout_wrapper';
+	// noinspection JSUnresolvedReference
+	if (!jQuery( widgetSelector )[0]) {
+		return;
+	}
+	// noinspection JSUnresolvedReference
+	window.widgetPowerBoard = new cba.Checkout( widgetSelector, response.data.token );
+	// noinspection JSUnresolvedReference
+	window.widgetPowerBoard.setEnv( settings.environment )
+	// noinspection JSUnresolvedReference
+	const orderButton = jQuery( '.wc-block-components-checkout-place-order-button' )[0];
+	// noinspection JSUnresolvedReference
+	const paymentSourceElement = jQuery( '#paymentSourceToken' );
+
+	// noinspection JSUnresolvedReference
+	window.widgetPowerBoard.onPaymentSuccessful(
+		function ( data ) {
+			// noinspection JSUnresolvedReference
+			jQuery.ajax(
+				{
+					url: '/?wc-ajax=power-board-process-payment-result',
+					method: 'POST',
+					data: {
+						_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+						order_id: orderId,
+						payment_response: data,
+						create_account: document.querySelector( '.wc-block-components-checkbox.wc-block-checkout__create-account input' )?.checked ? 'true' : 'false',
+					},
+					success: function ( response ) {
+						if ( response.success ) {
+							// noinspection JSUnresolvedReference
+							paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
+							orderButton.click();
+							window.widgetPowerBoard = null;
+						} else {
+							const msg     = response.data?.message || 'An account is already registered.';
+							const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
+							let container = document.querySelector( '.wc-block-components-notices' );
+							if ( container ) {
+								container.innerHTML = msgHtml;
+								container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+							}
+							window.widgetPowerBoard = null;
+							initMasterWidgetCheckout();
+						}
+					}
+				}
+			);
+		}
+	);
+	// noinspection JSUnresolvedReference
+	window.widgetPowerBoard.onPaymentFailure(
+		function ( data ) {
+			// noinspection JSUnresolvedReference
+			paymentSourceElement.val(
+				JSON.stringify(
+					{
+						errorMessage: 'Transaction failed. Please check your payment details or contact your bank',
+					}
+				)
+			);
+			// noinspection JSUnresolvedReference
+			jQuery.ajax(
+				{
+					url: '/?wc-ajax=power-board-process-payment-result',
+					method: 'POST',
+					data: {
+						_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+						order_id: store.getOrderId(),
+						payment_response:
+							{
+								...data,
+								errorMessage: data.message || 'Transaction failed',
+							}
+					},
+					success: function () {
+						orderButton.click();
+
+						window.widgetPowerBoard = null;
+					}
+				}
+			);
+		}
+	);
+
+	// noinspection JSUnresolvedReference
+	window.widgetPowerBoard.onPaymentExpired(
+		function ( data ) {
+			// noinspection JSUnresolvedReference
+			paymentSourceElement.val(
+				JSON.stringify(
+					{
+						errorMessage: 'Your payment session has expired. Please retry your payment',
+					}
+				)
+			);
+
+			// noinspection JSUnresolvedReference
+			if ( data.charge_id ) {
+				// noinspection JSUnresolvedReference
+				jQuery.ajax(
+					{
+						url: '/?wc-ajax=power-board-process-payment-result',
+						method: 'POST',
+						data: {
+							_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+							order_id: store.getOrderId(),
+							payment_response:
+								{
+									...data,
+									errorMessage: 'Payment session has expired',
+								}
+						},
+						success: function () {
+							orderButton.click();
+
+							window.widgetPowerBoard = null;
+						}
+					}
+				);
+			} else {
+				orderButton.click();
+
+				window.widgetPowerBoard = null;
+			}
+		}
+	);
 }
 
 const checkIsFormValid = () => {
