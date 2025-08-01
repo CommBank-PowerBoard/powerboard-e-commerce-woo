@@ -31,7 +31,7 @@ jQuery(
 			const validatePhone = ($input) => {
 				const phone     = $input.val();
 				$input.next( `.${CONFIG.errorMessageClassName}` ).remove();
-				if (phone && !CONFIG.phonePattern.test( phone )) {
+				if (phone && (!CONFIG.phonePattern.test( phone ) || (phone.match(/\d/g) || []).length < 4 ) )  {
 					$input.after( CONFIG.errorMessageHtml );
 					// noinspection JSUnresolvedReference
 					$input.addClass( 'power-board-invalid-phone' );
