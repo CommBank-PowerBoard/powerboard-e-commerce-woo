@@ -203,6 +203,11 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			'version'      => POWER_BOARD_PLUGIN_VERSION,
 		];
 
+		$js_file = plugin_dir_path( POWER_BOARD_PLUGIN_FILE ) . $script_path;
+		if ( file_exists( $js_file ) ) {
+			$script_asset['version'] = filemtime( $js_file );
+		}
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_register_script(
 			$script_name,

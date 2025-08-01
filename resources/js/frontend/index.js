@@ -5,7 +5,7 @@ import {decodeEntities} from '@wordpress/html-entities';
 import {getSetting} from '@woocommerce/settings';
 import {createElement, useEffect} from 'react';
 // noinspection NpmUsedModulesInstalled
-import {select} from '@wordpress/data';
+import {select,subscribe} from '@wordpress/data';
 // noinspection NpmUsedModulesInstalled
 import {CART_STORE_KEY,CHECKOUT_STORE_KEY} from '@woocommerce/block-data';
 import canMakePayment from "../includes/canMakePayment";
@@ -27,35 +27,30 @@ let currentSavedShipping   = null;
 // Initialize shipping change tracking
 window.powerBoardLastShippingChange = 0; // Reset to clean state
 
-const validateAndRefreshCartTotals = ( callback ) => {
-	// Make an AJAX call to get fresh cart totals from backend
+const validateAndRefreshCartTotals = callback => {
+	if ( typeof PowerBoardAjaxCheckout === 'undefined' ) {
+		callback( null );
+		return;
+	}
 	jQuery.ajax(
 		{
 			url: '/?wc-ajax=power-board-update-shipping',
 			type: 'POST',
 			data: {
 				_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
-				validate_only: true
+				validate_only: true,
 			},
-			success: function (response) {
-				if (response.success && response.data.cart_total) {
-					// Create updated cart totals with the fresh backend value
-					const currentCartTotals = cart.getCartTotals() || {};
-					const freshCartTotals   = {
-						...currentCartTotals,
-						total_price: response.data.cart_total * 100 // Convert to cents for WooCommerce
-					};
-					callback( freshCartTotals );
+			success: response => {
+				if ( response.success && response.data.cart_total ) {
+					const base = select( CART_STORE_KEY ).getCartTotals() || {};
+					callback({ ...base, total_price: response.data.cart_total * 100 });
 				} else {
 					callback( null );
 				}
 			},
-			error: function (xhr, status, error) {
-				console.error( 'PowerBoard: Cart validation error:', error );
-				callback( null );
-			}
-	}
-		);
+			error: () => callback( null ),
+		}
+	);
 };
 
 const toggleWidgetVisibility = ( hide ) => {
@@ -98,15 +93,7 @@ const toggleOrderButton = ( hide ) => {
 
 const getSelectedShippingValue = () => {
 	// noinspection JSUnresolvedReference
-	const selectedShipping = jQuery( '.wc-block-components-radio-control__input:checked' ).filter(
-		function () {
-			// noinspection JSUnresolvedReference
-			const id = jQuery( this ).attr( 'id' )
-			return id.includes( 'rate' ) || id.includes( 'shipping' );
-		}
-	)
-
-	return selectedShipping[0]?.value;
+	return jQuery( '.wc-block-components-radio-control__input:checked' ).val();
 }
 
 const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) => {
@@ -366,6 +353,10 @@ const showInvalidFormError = (loading, error) => {
 };
 
 const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false, updatedCartTotals = null ) => {
+	if ( ! document.querySelector( '.wc-block-components-form' ) ) {
+		return;
+	}
+
 	let isFormValid       = checkIsFormValid();
 	// noinspection JSUnresolvedReference
 	let error = jQuery( '#required-fields-validation-error' )[0];
@@ -405,7 +396,53 @@ const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false, updatedCartT
 		);
 	}
 };
+
 window.handleWidgetDisplay = handleWidgetDisplay;
+
+let lastCartTotal = cart.getCartTotals()?.total_price || 0;
+
+const unsubscribeCart = subscribe(
+	() => {
+		const totals = cart.getCartTotals();
+		const newTotal = totals?.total_price || 0;
+		if ( newTotal !== lastCartTotal ) {
+			lastCartTotal = newTotal;
+			validateAndRefreshCartTotals( freshTotals => {
+				handleWidgetDisplay( false, freshTotals || { total_price: newTotal } );
+			} );
+		}
+	}
+);
+
+window.addEventListener( 'beforeunload', () => unsubscribeCart() );
+
+jQuery( document.body ).on(
+	'change',
+	'.wc-block-components-shipping-rates-control input[type="radio"]',
+	() => {
+		clearTimeout( window.initWidgetTimer );
+		validateAndRefreshCartTotals( freshTotals => {
+			const totals = freshTotals || select( CART_STORE_KEY ).getCartTotals();
+			initMasterWidgetCheckout( totals );
+		} );
+	}
+);
+
+jQuery( document.body ).on(
+	'change',
+	'.wc-block-checkout__create-account input[type="checkbox"]',
+	() => {
+		handleWidgetDisplay( false );
+	}
+);
+
+jQuery( document.body ).on(
+	'input',
+	'.wc-block-components-text-input input[type="password"]',
+	() => {
+		handleWidgetDisplay( false );
+	}
+);
 
 const isBillingFormValid = () => {
 	// noinspection JSUnresolvedReference
