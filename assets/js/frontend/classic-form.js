@@ -328,15 +328,15 @@ jQuery(
 												if (!checkoutWrapper?.checkVisibility()) {
 													this.widgetVisibilityInterval = setInterval(
 														() => {
-															if (checkoutWrapper?.checkVisibility()) {
-																this.loadMasterWidget(response, createAccount);
+															if ( checkoutWrapper?.checkVisibility() ) {
+																this.loadMasterWidget( response );
 																clearInterval( this.widgetVisibilityInterval );
 															}
 														},
 														2000
 													);
 												} else {
-													this.loadMasterWidget(response, createAccount);
+													this.loadMasterWidget( response );
 												}
 											} else {
 												if ( response.data?.code === 'invalid_account_creation' ) {
@@ -358,7 +358,7 @@ jQuery(
 							}
 						);
 					},
-					loadMasterWidget(response, createAccount) {
+					loadMasterWidget(response) {
 						// noinspection JSUnresolvedReference
 						this.toggleWidgetVisibility( false );
 						// noinspection JSUnresolvedReference
@@ -367,37 +367,17 @@ jQuery(
 						window.widgetPowerBoard.setEnv( this.getConfigs().environment )
 						const showError          = message => this.showErrorMessage( message );
 						const handleWidgetError  = () => this.handleWidgetError();
-						const reInitMasterWidget = () => this.reInitMasterWidget();
 						const submitForm         = () => this.form.submit();
 						const intentId           = response.data.intentId;
 						// noinspection JSUnresolvedReference
 						window.widgetPowerBoard.onPaymentSuccessful(
 							( data ) => {
 								// noinspection JSUnresolvedReference
-								jQuery.ajax(
-									{
-										url: '/?wc-ajax=power-board-process-payment-result',
-										method: 'POST',
-										data: {
-											_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-											payment_response: data,
-											create_account: createAccount,
-										},
-										success: ( response ) => {
-											if ( response.success ) {
-												// noinspection JSUnresolvedReference
-												jQuery( '#chargeid' ).val( data.charge_id );
-												// noinspection JSUnresolvedReference
-												jQuery( '#intentid' ).val( intentId );
-												submitForm();
-												window.widgetPowerBoard = null;
-											} else {
-												showError( response.data.message );
-												reInitMasterWidget();
-											}
-										}
-									}
-								);
+								jQuery( '#chargeid' ).val( data.charge_id );
+								// noinspection JSUnresolvedReference
+								jQuery( '#intentid' ).val( intentId );
+								submitForm();
+								window.widgetPowerBoard = null;
 							}
 						);
 						// noinspection JSUnresolvedReference

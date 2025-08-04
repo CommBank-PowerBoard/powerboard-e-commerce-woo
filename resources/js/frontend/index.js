@@ -260,36 +260,9 @@ const loadMasterWidget = ( response, orderId ) => {
 	window.widgetPowerBoard.onPaymentSuccessful(
 		function ( data ) {
 			// noinspection JSUnresolvedReference
-			jQuery.ajax(
-				{
-					url: '/?wc-ajax=power-board-process-payment-result',
-					method: 'POST',
-					data: {
-						_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-						order_id: orderId,
-						payment_response: data,
-						create_account: document.querySelector( '.wc-block-components-checkbox.wc-block-checkout__create-account input' )?.checked ? 'true' : 'false',
-					},
-					success: function ( response ) {
-						if ( response.success ) {
-							// noinspection JSUnresolvedReference
-							paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
-							orderButton.click();
-							window.widgetPowerBoard = null;
-						} else {
-							const msg     = response.data?.message || 'An account is already registered.';
-							const msgHtml = '<ul class="woocommerce-error" role="alert"><li>' + msg + '</li></ul>';
-							let container = document.querySelector( '.wc-block-components-notices' );
-							if ( container ) {
-								container.innerHTML = msgHtml;
-								container.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-							}
-							window.widgetPowerBoard = null;
-							initMasterWidgetCheckout();
-						}
-					}
-				}
-			);
+			paymentSourceElement.val( JSON.stringify( { ...data, orderId: orderId } ) );
+			orderButton.click();
+			window.widgetPowerBoard = null;
 		}
 	);
 	// noinspection JSUnresolvedReference
