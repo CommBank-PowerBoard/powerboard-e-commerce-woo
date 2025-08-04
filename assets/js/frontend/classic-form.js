@@ -299,9 +299,6 @@ jQuery(
 							create_account: createAccount
 						};
 
-						const createCheckbox = document.getElementById( 'createaccount' );
-						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
-
 						if ( this.widgetVisibilityInterval ) {
 							clearInterval( this.widgetVisibilityInterval )
 						}
