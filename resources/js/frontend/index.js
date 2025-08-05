@@ -94,15 +94,6 @@ const toggleWidgetVisibility = ( hide ) => {
 	}
 };
 
-const toggleOrderButton = ( hide ) => {
-	const orderButton   = document.querySelector( '.wc-block-components-checkout-place-order-button' );
-	if ( !orderButton ) {
-		return;
-	}
-
-	orderButton.style.visibility = hide ? 'hidden' : 'visible';
-};
-
 const getSelectedShippingValue = () => {
 	// noinspection JSUnresolvedReference
 	return jQuery( '.wc-block-components-radio-control__input:checked' ).val();

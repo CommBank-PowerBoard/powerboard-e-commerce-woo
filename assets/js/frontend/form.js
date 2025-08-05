@@ -107,14 +107,6 @@ jQuery(
 			}
 		}
 
-		function toggleOrderButton( hide ) {
-			const orderButton = document.querySelector( '.wc-block-components-checkout-place-order-button' );
-			if ( !orderButton ) {
-				return;
-			}
-			orderButton.style.visibility = hide ? 'hidden' : 'visible';
-		}
-
 		function triggerFirstPaymentMethodChanges() {
 			const firstPaymentInterval        = setInterval(
 				() => {
