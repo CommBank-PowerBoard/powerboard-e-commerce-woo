@@ -101,16 +101,8 @@ class FrontendAssetsService {
 			return false;
 		}
 
-		// Check if mini cart is likely present by looking for common theme features
-		global $wp_query;
-
 		// Most themes with mini cart show it on all pages
 		// Check for common mini cart indicators:
-
-		// 1. Check if current theme supports WooCommerce (most themes with mini cart do)
-		if ( ! current_theme_supports( 'woocommerce' ) ) {
-			return false;
-		}
 
 		// 2. Check for common mini cart widgets/blocks in active widgets
 		$active_widgets = wp_get_sidebars_widgets();
