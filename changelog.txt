@@ -7,13 +7,17 @@
 * Added
   - Enhanced logging: logs now capture environment details, masked access token validity, checkout version, configuration, and customization template IDs during load and save operations.
   - Email validation using a specific regex to prevent the checkout widget from loading with invalid email addresses.
+  - Phone validation regex update, avoids customers needing to enter country code format +xx
 
 * Fixed
-  - Issue where applying a coupon after a failed payment caused the transaction to be approved but then refunded (resolved via improved session and cookie handling).
+  - Coupon code handling improvements
   - Duplicate logging on save caused by page reloads.
   - Email format validation in the classic checkout.
-  - Cookie-related bug that occasionally prevented the PowerBoard widget from loading after AJAX-based checkout updates (e.g., changing the shipping method, applying coupons, or modifying the address).
+  - Improved cookie session handling, increasing reliability of widget rendering
   - Removed unused language files.
+  - Loading payment widget only when DOM element is ready
+  - Draft orders fixed on classic payments
+  - Terms and conditions woocommerce plugin on blocks
 
 [1.4.0] - 2025-06-02
 * Compatibility
