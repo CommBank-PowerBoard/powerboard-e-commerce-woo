@@ -102,9 +102,7 @@ jQuery(
 		function setPaymentMethod(method) {
 			if (method !== 'power_board') {
 					window.widgetPowerBoard = null;
-					toggleOrderButton( false );
 			} else {
-				toggleOrderButton( true );
 				window.handleWidgetDisplay();
 			}
 		}
@@ -118,7 +116,6 @@ jQuery(
 		}
 
 		function triggerFirstPaymentMethodChanges() {
-			toggleOrderButton( true );
 			const firstPaymentInterval        = setInterval(
 				() => {
 					const $checkedInput       = $( '.wc-block-components-radio-control__input:checked' );

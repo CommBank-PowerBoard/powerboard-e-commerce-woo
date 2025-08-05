@@ -28,6 +28,17 @@ let widgetVisibilityInterval = null;
 // Initialize shipping change tracking
 window.powerBoardLastShippingChange = 0; // Reset to clean state
 
+function syncPlaceOrderVisibility() {
+	const method = select( 'wc/store/payment' ).getActivePaymentMethod();
+	const btn = document.querySelector( '.wc-block-components-checkout-place-order-button' );
+	if ( btn ) {
+		btn.style.visibility = method === 'power_board' ? 'hidden' : 'visible';
+	}
+}
+
+window.addEventListener( 'load', syncPlaceOrderVisibility );
+const unsubscribe = subscribe( syncPlaceOrderVisibility );
+
 const validateAndRefreshCartTotals = callback => {
 	if ( typeof PowerBoardAjaxCheckout === 'undefined' ) {
 		callback( null );
@@ -172,7 +183,6 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 		clearCustomNotices();
 		const initTimestamp  = ( new Date() ).getTime();
 		lastMasterWidgetInit = initTimestamp;
-		setTimeout( () => toggleOrderButton( true ), 100 );
 
 		// noinspection JSUnresolvedReference
 		const orderId = store.getOrderId();
