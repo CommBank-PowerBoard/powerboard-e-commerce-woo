@@ -207,11 +207,11 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 						if (response.success) {
 							const checkoutWrapper = document.getElementById( 'powerBoardCheckout_wrapper' );
 							if (!checkoutWrapper?.checkVisibility()) {
-								this.widgetVisibilityInterval = setInterval(
+								widgetVisibilityInterval = setInterval(
 									() => {
 										if (checkoutWrapper?.checkVisibility()) {
 											loadMasterWidget( response, orderId );
-											clearInterval( this.widgetVisibilityInterval );
+											clearInterval( widgetVisibilityInterval );
 										}
 									},
 									2000
@@ -386,13 +386,13 @@ const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false, updatedCartT
 	// noinspection JSUnresolvedReference
 	let loading = jQuery( '#loading' )[0];
 	toggleWidgetVisibility( true );
-	intentCreationError.classList.add( 'hide' );
-	invalidFieldsError.classList.add( 'hide' );
+	intentCreationError?.classList.add( 'hide' );
+	invalidFieldsError?.classList.add( 'hide' );
 	if ( isFormValid ) {
-		if ( loading.classList.length > 0 ) {
+		if ( loading?.classList.length > 0 ) {
 			loading.classList.remove( 'hide' );
 		}
-		error.classList.add( 'hide' );
+		error?.classList.add( 'hide' );
 	} else {
 		const validPostcode = document.getElementById( 'shipping-postcode' )?.checkValidity() && document.getElementById( 'billing-postcode' )?.checkValidity();
 		const validEmail    = document.getElementById( 'email' ).checkValidity();

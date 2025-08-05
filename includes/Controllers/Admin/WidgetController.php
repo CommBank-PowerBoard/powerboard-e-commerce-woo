@@ -268,9 +268,8 @@ class WidgetController {
 			$session->set( 'power_board_active_checkout_intent_ids', $current_active_intent_ids );
 		}
 
-		$session->save_data();
-		$session->set( 'order_awaiting_payment', (string) $reference );
 		$session->set( 'store_api_draft_order', (string) $reference );
+		$session->save_data();
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_send_json_success(
 			[

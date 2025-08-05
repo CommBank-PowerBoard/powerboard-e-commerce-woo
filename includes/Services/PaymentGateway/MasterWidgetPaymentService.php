@@ -397,7 +397,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		WC()->cart->empty_cart();
 		$order->save();
 
-		$session->set( 'order_awaiting_payment', null );
 		$session->set( 'store_api_draft_order', null );
 		$session->set( 'power_board_draft_order', null );
 		$session->set( 'order_comments', '' );
@@ -469,7 +468,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
-		$session->set( 'order_awaiting_payment', (string) $order_id );
 		$session->set( 'store_api_draft_order', (string) $order_id );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -504,9 +502,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		if ( $payment_method === POWER_BOARD_PLUGIN_PREFIX ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$custom_order_id = (string) WC()->session->get( 'power_board_draft_order' );
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$order_awaiting_payment = (string) WC()->session->get( 'order_awaiting_payment' );
-			return ! empty( $custom_order_id ) ? $custom_order_id : $order_awaiting_payment;
+			return ! empty( $custom_order_id ) ? $custom_order_id : null;
 		}
 
 		return null;
