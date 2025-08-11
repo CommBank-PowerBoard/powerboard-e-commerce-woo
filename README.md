@@ -11,7 +11,7 @@ With a few quick configuration steps, this plugin provides you with access to Po
 
 **Please note that WooCommerce must be installed and active before this plugin can be used.**
 Prerequisites to install and configure the PowerBoard plugin, you will need a WordPress instance running:
-- WooCommerce version: 9.8.1
+- WooCommerce version: 9.9.3
 - [WooCommerce Server Requirements](https://woocommerce.com/document/server-requirements/)
 - [WooCommerce PHP and WordPress Support](https://woocommerce.com/document/update-php-wordpress/)
 

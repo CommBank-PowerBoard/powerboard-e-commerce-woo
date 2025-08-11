@@ -22,7 +22,7 @@ With a few quick configuration steps, this plugin provides you with access to Po
 Please note that WooCommerce must be installed and active before this plugin can be used.
 Prerequisites to install and configure the PowerBoard plugin, you will need a WordPress instance running:
 
-* WooCommerce version: 9.8.1
+* WooCommerce version: 9.9.3
 * [WooCommerce Server Requirements](https://woocommerce.com/document/server-requirements/)
 * [WooCommerce PHP and WordPress Support](https://woocommerce.com/document/update-php-wordpress/)
 
@@ -72,6 +72,25 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 1.5.0 =
+
+* Compatibility
+
+  - Compatible with WooCommerce version `9.9.3`.
+
+* Added
+
+  - Enhanced logging: logs now capture environment details, masked access token validity, checkout version, configuration, and customization template IDs during load and save operations.
+  - Email validation using a specific regex to prevent the checkout widget from loading with invalid email addresses.
+
+* Bug fixes
+
+  - Issue where applying a coupon after a failed payment caused the transaction to be approved but then refunded (resolved via improved session and cookie handling).
+  - Duplicate logging on save caused by page reloads.
+  - Email format validation in the classic checkout.
+  - Cookie-related bug that occasionally prevented the PowerBoard widget from loading after AJAX-based checkout updates (e.g., changing the shipping method, applying coupons, or modifying the address).
+  - Removed unused language files.
 
 = 1.4.0 =
 

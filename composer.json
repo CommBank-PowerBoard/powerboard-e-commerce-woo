@@ -30,6 +30,17 @@
     },
     "scripts": {
         "phpcs": "phpcs --standard=phpcs.xml -s .",
-        "phpcbf": "phpcbf --standard=phpcs.xml ."
+        "phpcbf": "phpcbf --standard=phpcs.xml .",
+        "test": "vendor/bin/phpunit tests/",
+        "test-testdox": "vendor/bin/phpunit tests/ --testdox",
+        "test-debug": "vendor/bin/phpunit tests/ --debug",
+        "test-stop-on-failure": "vendor/bin/phpunit tests/ --stop-on-failure",
+        "test-coverage": "vendor/bin/phpunit tests/ --coverage-text",
+        "test-clean": [
+            "rm -rf coverage/",
+            "rm -f vendor/bin/.phpunit.result.cache",
+            "rm -f .phpcs.cache"
+        ],
+        "test-no-cache": "vendor/bin/phpunit tests/ --do-not-cache-result"
     }
 }

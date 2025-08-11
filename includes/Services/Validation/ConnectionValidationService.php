@@ -76,7 +76,7 @@ class ConnectionValidationService {
 
 	private function validate(): void {
 		if ( $this->validate_environment() ) {
-			$this->validate_credential();
+			$this->validate_credential( $this->$checkout_version );
 		}
 	}
 
@@ -139,8 +139,8 @@ class ConnectionValidationService {
 				$this->check_access_key_connection( $this->access_token_settings )
 			) {
 				if ( $this->validate_checkout_version() ) {
-					$this->get_configuration_templates();
-					$this->get_customisation_templates();
+					$this->get_configuration_templates( $this->checkout_version );
+					$this->get_customisation_templates( $this->checkout_version );
 				}
 				return;
 			}
@@ -197,7 +197,7 @@ class ConnectionValidationService {
 	/**
 	 * Uses functions (set_transient) from WordPress
 	 */
-	private function get_configuration_templates(): void {
+	private function get_configuration_templates( $checkout_version ): void {
 		$transient_key = 'configuration_templates_' . $this->environment_settings;
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$configuration_templates = get_transient( $transient_key );
@@ -208,6 +208,7 @@ class ConnectionValidationService {
 			$has_error                      = ! empty( $configuration_templates_result['error'] );
 			$configuration_templates        = MasterWidgetTemplatesHelper::map_templates(
 				$configuration_templates_result['resource']['data'],
+				$checkout_version,
 				$has_error
 			);
 
@@ -251,7 +252,7 @@ class ConnectionValidationService {
 	/**
 	 * Uses functions (set_transient) from WordPress
 	 */
-	private function get_customisation_templates(): void {
+	private function get_customisation_templates( $checkout_version ): void {
 		$transient_key = 'customisation_templates_' . $this->environment_settings;
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$customisation_templates = get_transient( $transient_key );
@@ -262,6 +263,7 @@ class ConnectionValidationService {
 			$has_error               = ! empty( $result['error'] );
 			$customisation_templates = MasterWidgetTemplatesHelper::map_templates(
 				$result['resource']['data'],
+				$checkout_version,
 				$has_error,
 				true
 			);

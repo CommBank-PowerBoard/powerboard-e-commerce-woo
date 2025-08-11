@@ -5,6 +5,8 @@ namespace PowerBoard;
 
 use PowerBoard\Services\ActionsService;
 use PowerBoard\Services\FiltersService;
+use PowerBoard\Services\Assets\AdminAssetsService;
+use PowerBoard\Services\Assets\FrontendAssetsService;
 
 if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 
@@ -17,6 +19,32 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 		protected function __construct() {
 			ActionsService::get_instance();
 			FiltersService::get_instance();
+
+			// Initialize admin assets only in admin area
+			if ( is_admin() ) {
+				global $pagenow;
+
+				if (
+					$pagenow === 'plugins.php' ||
+					(
+						$pagenow === 'admin.php' &&
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking page parameters, not processing form data
+						isset( $_GET['page'], $_GET['tab'], $_GET['section'] ) &&
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking page parameters, not processing form data
+						$_GET['page'] === 'wc-settings' &&
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking page parameters, not processing form data
+						$_GET['tab'] === 'checkout' &&
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking page parameters, not processing form data
+						$_GET['section'] === 'power_board'
+					)
+				) {
+					AdminAssetsService::get_instance();
+				}
+			} else {
+				// Initialize frontend assets on frontend pages
+				FrontendAssetsService::get_instance();
+			}
+
 			// Reset button styles inside the widget
 			/* @noinspection PhpUndefinedFunctionInspection */
 			add_action( 'wp_head', [ $this, 'register_style_fixes' ] );

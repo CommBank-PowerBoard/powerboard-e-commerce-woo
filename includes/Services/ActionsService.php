@@ -14,10 +14,10 @@ use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use PowerBoard\Controllers\Admin\WidgetController;
 use PowerBoard\Controllers\Integrations\PaymentController;
-use PowerBoard\Helpers\OrderHelper;
 use PowerBoard\Enums\SettingsSectionEnum;
+use PowerBoard\Helpers\OrderHelper;
+use PowerBoard\Helpers\PaymentMethodHelper;
 use PowerBoard\Util\MasterWidgetBlock;
-use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use WC_Data_Exception;
 use WC_Order;
 
@@ -41,10 +41,8 @@ class ActionsService {
 	protected function __construct() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'before_woocommerce_init', [ $this, 'init_before_woocommerce' ] );
-
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_blocks_loaded', [ $this, 'register_payment_method' ] );
-
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'admin_init', [ $this, 'powerboard_messages' ] );
 	}
@@ -79,15 +77,13 @@ class ActionsService {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_applied_coupon', [ $this, 'add_coupon' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-update-shipping', [ $this, 'classic_order_update_shipping' ] );
+		add_action( 'wc_ajax_power-board-update-shipping', [ $this, 'form_order_update_shipping' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-update-shipping', [ $this, 'classic_order_update_shipping' ] );
+		add_action( 'wc_ajax_nopriv_power-board-update-shipping', [ $this, 'form_order_update_shipping' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_power-board-update-order-notes', [ $this, 'classic_order_update_notes' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_nopriv_power-board-update-order-notes', [ $this, 'classic_order_update_notes' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'woocommerce_update_order_item', [ $this, 'handle_order_update_shipping' ], 10, 3 );
 	}
 
 	public function register_master_widget_block( PaymentMethodRegistry $registry ) {
@@ -108,25 +104,35 @@ class ActionsService {
 
 	public function remove_coupon() {
 		$this->calculate_totals_and_save_cookie();
+		$this->update_order_cart_hash();
 	}
 
 	public function add_coupon() {
 		$this->calculate_totals_and_save_cookie();
+		$this->update_order_cart_hash();
 	}
 
-	/**
-	 * Hook woocommerce_update_order_item sends these arguments, but are not needed for this use case
-	 *
-	 * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	 *
-	 * @noinspection PhpUnusedParameterInspection
-	 */
-	public function handle_order_update_shipping( $order_item_id, $order_item, $order_id ) {
-		$this->order_update_shipping();
+	public function update_order_cart_hash() {
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$cart = WC()->cart;
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$session = WC()->session;
+		if ( ! empty( $session ) ) {
+			$order_id = $session->get( 'store_api_draft_order' );
+			if ( ! empty( $order_id ) ) {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				$order = wc_get_order( $order_id );
+				if ( ! empty( $order ) && $order instanceof WC_Order ) {
+					$test = $cart->get_cart_hash();
+					$order->set_cart_hash( $test );
+					$order->calculate_totals();
+					$order->save();
+				}
+			}
+		}
 	}
-	// phpcs:enable
 
-	public function classic_order_update_shipping() {
+	public function form_order_update_shipping() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
 
@@ -138,7 +144,36 @@ class ActionsService {
 			return;
 		}
 
-		$this->order_update_shipping();
+		// Check if this is just a validation request
+		$validate_only = isset( $_POST['validate_only'] ) && sanitize_text_field( wp_unslash( $_POST['validate_only'] ) );
+
+		if ( ! $validate_only ) {
+			$this->order_update_shipping();
+			$this->update_order_cart_hash();
+		}
+
+		// Send success response with cart total for event triggering
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$cart = WC()->cart;
+		if ( ! empty( $cart ) ) {
+			// Ensure cart totals are calculated
+			$cart->calculate_totals();
+		}
+		$cart_total = ! empty( $cart ) ? (float) $cart->get_total( false ) : 0;
+
+		$response = [
+			'cart_total' => $cart_total,
+		];
+
+		if ( ! $validate_only ) {
+			$response['message']       = __( 'Shipping updated successfully', 'power-board' );
+			$response['trigger_event'] = 'power_board_cart_total_changed';
+		} else {
+			$response['message'] = __( 'Cart totals validated', 'power-board' );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success( $response );
 	}
 
 	/**
@@ -174,17 +209,32 @@ class ActionsService {
 
 	public function order_update_shipping() {
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$session = WC()->session;
+		$session          = WC()->session;
+		$current_shipping = null;
 
 		if ( ! empty( $session ) ) {
 			$chosen_methods   = $session->get( 'chosen_shipping_methods' );
 			$current_shipping = is_array( $chosen_methods ) && ! empty( $chosen_methods ) ? $chosen_methods[0] : null;
+
 			if ( $current_shipping !== null && $current_shipping !== $this->last_shipping_id ) {
 				$this->last_shipping_id = $current_shipping;
-				$expiry_time            = time() + 3600;
-				setcookie( 'power_board_selected_shipping', $current_shipping, $expiry_time, '/' );
+
+				/* @noinspection PhpUndefinedFunctionInspection */
+				setcookie(
+					'power_board_selected_shipping',
+					$current_shipping,
+					[
+						'expires'  => time() + 3600,
+						'path'     => '/',
+						'domain'   => isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '',
+						'secure'   => is_ssl(),
+						'httponly' => false,
+						'samesite' => 'Lax',
+					]
+				);
 			}
 		}
+
 		$this->calculate_totals_and_save_cookie();
 	}
 
@@ -197,12 +247,25 @@ class ActionsService {
 
 		if ( ! empty( $cart ) ) {
 			$cart->calculate_totals();
-			$cart_total  = (string) $cart->get_total( false );
-			$expiry_time = time() + 3600;
+			$cart_total = (string) $cart->get_total( false );
+
 			/* @noinspection PhpUndefinedFunctionInspection */
-			setcookie( 'power_board_cart_total', $cart_total, $expiry_time, '/' );
+			setcookie(
+				'power_board_cart_total',
+				$cart_total,
+				[
+					'expires'  => time() + 3600,
+					'path'     => '/',
+					'domain'   => isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '',
+					'secure'   => is_ssl(),
+					'httponly' => false,
+					'samesite' => 'Lax',
+				]
+			);
 		}
 	}
+
+
 
 	/**
 	 * Uses a function (add_action) from WordPress
@@ -221,34 +284,56 @@ class ActionsService {
 	 * Uses a function (add_action) from WordPress
 	 */
 	protected function add_order_actions(): void {
-		$order_service                 = new OrderService();
-		$payment_controller            = new PaymentController();
-		$widget_controller             = new WidgetController();
-		$master_widget_payment_service = MasterWidgetPaymentService::get_instance();
+		$order_service      = new OrderService();
+		$payment_controller = new PaymentController();
+		$widget_controller  = new WidgetController();
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_item_add_action_buttons', [ $order_service, 'init_power_board_order_buttons' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_status_changed', [ $order_service, 'status_change_verification' ], 20, 4 );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_create_refund', [ $payment_controller, 'refund_process' ], 10, 2 );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_order_refunded', [ $payment_controller, 'after_refund_process' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_power-board-create-charge-intent', [ $widget_controller, 'create_checkout_intent' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'wc_ajax_nopriv_power-board-create-charge-intent', [ $widget_controller, 'create_checkout_intent' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'admin_init', [ $order_service, 'remove_bulk_action_message' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-process-payment-result', [ $master_widget_payment_service, 'process_payment_result' ] );
+		add_action( 'wc_ajax_power-board-process-payment-result', [ $this, 'process_payment_result_callback' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-process-payment-result', [ $master_widget_payment_service, 'process_payment_result' ] );
+		add_action( 'wc_ajax_nopriv_power-board-process-payment-result', [ $this, 'process_payment_result_callback' ] );
+
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
+		add_action( 'wc_ajax_power-board-check-postcode', [ $this, 'check_postcode_callback' ] );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wc_ajax_nopriv_power-board-check-postcode', [ $master_widget_payment_service, 'check_postcode' ] );
+		add_action( 'wc_ajax_nopriv_power-board-check-postcode', [ $this, 'check_postcode_callback' ] );
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		add_action( 'wc_ajax_power-board-check-email', [ $this, 'check_is_valid_email_callback' ] );
+		/* @noinspection PhpUndefinedFunctionInspection */
+		add_action( 'wc_ajax_nopriv_power-board-check-email', [ $this, 'check_is_valid_email_callback' ] );
 	}
+
+	public function process_payment_result_callback() {
+		PaymentMethodHelper::invoke_gateway_method( 'process_payment_result' );
+	}
+
+	public function check_postcode_callback(): void {
+		PaymentMethodHelper::invoke_gateway_method( 'check_postcode' );
+	}
+
+	public function check_is_valid_email_callback(): void {
+		PaymentMethodHelper::invoke_gateway_method( 'check_is_valid_email' );
+	}
+
 	public function add_edit_order_actions() {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_admin_order_data_after_billing_address', [ $this, 'disable_payment_method_custom_field_on_order_page' ] );
@@ -266,10 +351,10 @@ class ActionsService {
 		}
 		echo '<script type="text/javascript">
 			jQuery(document).ready(function($) {
-        		if ( ' . $id . ' !== "" ) {
-					$("#meta-' . $id . '-key").prop("disabled", true);
-					$("#meta-' . $id . '-value").prop("disabled", true);
-        		}
+				if ( ' . esc_js( $id ) . ' !== "" ) {
+					$("#meta-' . esc_attr( $id ) . '-key").prop("disabled", true);
+					$("#meta-' . esc_attr( $id ) . '-value").prop("disabled", true);
+				}
 			});
 		</script>';
 	}
@@ -288,7 +373,7 @@ class ActionsService {
 	}
 	/**
 	 * Handles refund messages on PowerBoard
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 */
 	public function powerboard_messages() {
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -306,8 +391,8 @@ class ActionsService {
 	/**
 	 * Hook gettext_woocommerce sends these arguments, but are not needed for this use case
 	 *
-     * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-     *  phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	 *  phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @noinspection PhpUnusedParameterInspection
 	 */
@@ -346,5 +431,5 @@ class ActionsService {
 			$formatted_plain_text
 		);
 	}
-    // phpcs:enable
+	// phpcs:enable
 }

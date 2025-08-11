@@ -40,8 +40,3 @@ window.showWarning = function (message, type = 'error') {
 		}
 	);
 }
-
-window.reloadAfterExternalCartChanges = () => {
-	clearInterval( window.cartChangeInterval );
-	location.reload();
-}

@@ -9,12 +9,12 @@ use PowerBoard\Helpers\MasterWidgetTemplatesHelper;
 class MasterWidgetTemplatesHelperTest extends TestCase {
 
 	public function test_map_templates_error() {
-		$actual = MasterWidgetTemplatesHelper::map_templates( [ 'error' => 'error' ], true );
+		$actual = MasterWidgetTemplatesHelper::map_templates( [ 'error' => 'error' ], '1', true );
 		$this->assertSame( [], $actual, 'Should return an empty array.' );
 	}
 
 	public function test_map_templates_empty() {
-		$actual = MasterWidgetTemplatesHelper::map_templates( [], false );
+		$actual = MasterWidgetTemplatesHelper::map_templates( [], '1', false );
 		$this->assertSame( [], $actual, 'Should return an empty array.' );
 	}
 
@@ -22,18 +22,22 @@ class MasterWidgetTemplatesHelperTest extends TestCase {
 		$actual   = MasterWidgetTemplatesHelper::map_templates(
 			[
 				[
-					'_id'   => '1234',
-					'label' => 'Test template 1',
+					'_id'     => '1234',
+					'label'   => 'Test template 1',
+					'version' => 1,
 				],
 				[
-					'_id'   => '5678',
-					'label' => 'Test template 2',
+					'_id'     => '5678',
+					'label'   => 'Test template 2',
+					'version' => 1,
 				],
 				[
-					'_id'   => '9123',
-					'label' => 'Test template 3',
+					'_id'     => '9123',
+					'label'   => 'Test template 3',
+					'version' => 1,
 				],
 			],
+			'1',
 			false
 		);
 		$expected = [
@@ -45,22 +49,26 @@ class MasterWidgetTemplatesHelperTest extends TestCase {
 		$this->assertSame( $expected, $actual, 'Should return mapped array with the expected format and "Select a template ID" option added.' );
 	}
 
-	public function test_map_templates_optional() {
+	public function test_map_templates_optional_filter_by_version_1() {
 		$actual   = MasterWidgetTemplatesHelper::map_templates(
 			[
 				[
-					'_id'   => '1234',
-					'label' => 'Test template 1',
+					'_id'     => '1234',
+					'label'   => 'Test template 1',
+					'version' => 1,
 				],
 				[
-					'_id'   => '5678',
-					'label' => 'Test template 2',
+					'_id'     => '5678',
+					'label'   => 'Test template 2',
+					'version' => 1,
 				],
 				[
-					'_id'   => '9123',
-					'label' => 'Test template 3',
+					'_id'     => '9123',
+					'label'   => 'Test template 3',
+					'version' => 2,
 				],
 			],
+			'1',
 			false,
 			true
 		);
@@ -68,6 +76,35 @@ class MasterWidgetTemplatesHelperTest extends TestCase {
 			''     => 'Unselect template ID',
 			'1234' => 'Test template 1 | 1234',
 			'5678' => 'Test template 2 | 5678',
+		];
+		$this->assertSame( $expected, $actual, 'Should return mapped array with the expected format and "Unselect template ID" option added.' );
+	}
+
+	public function test_map_templates_optional_filter_by_version_2() {
+		$actual   = MasterWidgetTemplatesHelper::map_templates(
+			[
+				[
+					'_id'     => '1234',
+					'label'   => 'Test template 1',
+					'version' => 1,
+				],
+				[
+					'_id'     => '5678',
+					'label'   => 'Test template 2',
+					'version' => 1,
+				],
+				[
+					'_id'     => '9123',
+					'label'   => 'Test template 3',
+					'version' => 2,
+				],
+			],
+			'2',
+			false,
+			true
+		);
+		$expected = [
+			''     => 'Unselect template ID',
 			'9123' => 'Test template 3 | 9123',
 		];
 		$this->assertSame( $expected, $actual, 'Should return mapped array with the expected format and "Unselect template ID" option added.' );

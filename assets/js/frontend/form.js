@@ -10,8 +10,8 @@ jQuery(
 					billing: '#billing-phone',
 				},
 				errorMessageClassName: 'wc-block-components-validation-error',
-				phonePattern: /^\+[1-9]{1}[0-9]{3,14}$/,
-				errorMessageHtml: `<div class ="wc-block-components-validation-error" role="alert"><p>Please enter your phone number in international format, starting with "+"</p></div>`,
+				phonePattern: /^(\+)?([(\(\d\)\s]{1,3})?([\d\s\(\d\)\-]{1,14})$/,
+				errorMessageHtml: `<div class ="wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
 			};
 
 			const getPhoneInputs     = () =>
@@ -31,7 +31,7 @@ jQuery(
 			const validatePhone = ($input) => {
 				const phone     = $input.val();
 				$input.next( `.${CONFIG.errorMessageClassName}` ).remove();
-				if (phone && !CONFIG.phonePattern.test( phone )) {
+				if (phone && (!CONFIG.phonePattern.test( phone ) || (phone.match(/\d/g) || []).length < 4 ) )  {
 					$input.after( CONFIG.errorMessageHtml );
 					// noinspection JSUnresolvedReference
 					$input.addClass( 'power-board-invalid-phone' );
@@ -102,23 +102,12 @@ jQuery(
 		function setPaymentMethod(method) {
 			if (method !== 'power_board') {
 					window.widgetPowerBoard = null;
-					toggleOrderButton( false );
 			} else {
-				toggleOrderButton( true );
 				window.handleWidgetDisplay();
 			}
 		}
 
-		function toggleOrderButton( hide ) {
-			const orderButton = document.querySelector( '.wc-block-components-checkout-place-order-button' );
-			if ( !orderButton ) {
-				return;
-			}
-			orderButton.style.visibility = hide ? 'hidden' : 'visible';
-		}
-
 		function triggerFirstPaymentMethodChanges() {
-			toggleOrderButton( true );
 			const firstPaymentInterval        = setInterval(
 				() => {
 					const $checkedInput       = $( '.wc-block-components-radio-control__input:checked' );

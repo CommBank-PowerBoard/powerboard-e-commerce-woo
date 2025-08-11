@@ -10,8 +10,8 @@ jQuery(
 					},
 					baseCheckboxIdName: 'payment_method',
 					errorMessageClassName: 'wc-block-components-validation-error',
-					phonePattern: /^\+[1-9]{1}[0-9]{3,14}$/,
-					errorMessageHtml: `<div class ="classic-checkout-validation-error wc-block-components-validation-error" role="alert"><p>Please enter your phone number in international format, starting with "+"</p></div>`,
+					phonePattern: /^(\+)?([(\(\d\)\s]{1,3})?([\d\s\(\d\)\-]{1,14})$/,
+					errorMessageHtml: `<div class ="classic-checkout-validation-error wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
 				};
 				const getPhoneInputs              = () =>
 					Object.entries( CONFIG.phoneInputIds )
@@ -30,7 +30,7 @@ jQuery(
 					// noinspection JSUnresolvedReference
 					const phone = $input.val();
 					$input.next( `.${CONFIG.errorMessageClassName}` ).remove();
-					if ( phone && !CONFIG.phonePattern.test( phone ) ) {
+					if ( phone && ( !CONFIG.phonePattern.test( phone ) || (phone.match(/\d/g) || []).length < 4 ) ) {
 						$input.after( CONFIG.errorMessageHtml );
 						// noinspection JSUnresolvedReference
 						$input.addClass( 'power-board-invalid-phone' );
@@ -50,6 +50,7 @@ jQuery(
 				};
 				const powerBoardHelper = {
 					invalidPostcode: false,
+					invalidEmail: false,
 					paymentMethodLoaded: null,
 					selectedPaymentMethod: null,
 					form: null,
@@ -60,11 +61,23 @@ jQuery(
 					shippingChangedTimeout: null,
 					lastMasterWidgetInit: null,
 					currentSavedShipping: null,
+					widgetVisibilityInterval: null,
 					showErrorMessage( errorMessage ) {
-						window.showWarning( errorMessage, 'error' );
+						window.scrollTo( { top: 0, behavior: 'smooth' } );
+						let $wrapper   = $( '.woocommerce-notices-wrapper' ).first();
+						if ( ! $wrapper.length ) {
+							$wrapper = $( 'form[name="checkout"]' ).prepend( '<div class="woocommerce-notices-wrapper"></div>' ).find( '.woocommerce-notices-wrapper' );
+						}
+						$wrapper.empty().append( '<ul class="woocommerce-error" role="alert"><li>' + errorMessage + '</li></ul>' );
+					},
+					clearCustomNotices() {
+						const container = document.querySelector( '.woocommerce-notices-wrapper' );
+						if ( container ) {
+							container.innerHTML = '';
+						}
 					},
 					reInitMasterWidget() {
-						let loading    = $( '#loading' );
+						let loading = $( '#loading' );
 						this.toggleWidgetVisibility( true );
 						loading.show();
 						this.initMasterWidget();
@@ -154,7 +167,8 @@ jQuery(
 						let fieldList                 = this.getFieldsList();
 						let result                    = true;
 						const additionalTermsCheckbox = document.getElementById( '_woo_additional_terms' );
-						if ( this.invalidPostcode || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
+						const invalidPhone            = document.getElementById( 'shipping_phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing_phone' )?.className.includes( 'power-board-invalid-phone' );
+						if ( this.invalidPostcode || this.invalidEmail || invalidPhone || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
 						}
 						const defaultTermsCheckbox = document.getElementById( 'terms' );
@@ -210,18 +224,27 @@ jQuery(
 							return;
 						}
 						this.selectedPaymentMethod = methodName;
-						let error                  = $( '#fields-validation-error' );
+						let error                  = $( '#required-fields-validation-error' );
+						let invalidFieldsError     = $( '#invalid-fields-error' );
 						let createIntentError      = $( '#intent-creation-error' );
 						let loading                = $( '#loading' );
 						loading.show();
 						error.hide();
+						invalidFieldsError.hide();
 						createIntentError.hide();
 
 						if ( !this.isValidForm( methodName ) && methodName === 'power_board' ) {
 							this.toggleWidgetVisibility( true );
 							this.toggleOrderButton( true );
 							loading.hide();
-							error.show();
+
+							const invalidPhone = document.getElementById( 'shipping_phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing_phone' )?.className.includes( 'power-board-invalid-phone' );
+							if ( this.invalidPostcode || this.invalidEmail || invalidPhone ) {
+								invalidFieldsError.show();
+							} else {
+								error.show();
+							}
+
 							return;
 						}
 						if (methodName !== 'power_board' ) {
@@ -254,23 +277,31 @@ jQuery(
 						}
 					},
 					initMasterWidget() {
-						const initTimestamp       = ( new Date() ).getTime();
+						const initTimestamp       = Date.now();
 						this.lastMasterWidgetInit = initTimestamp;
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
-						let addressData      = this.getAddressData( false );
-						let billingAddress   = addressData.address;
-						let shippingAddress  = billingAddress;
+						let addressData     = this.getAddressData( false );
+						let billingAddress  = addressData.address;
+						let shippingAddress = billingAddress;
+						this.clearCustomNotices();
 						const shipToCheckbox = document.getElementById( 'ship-to-different-address-checkbox' );
 						if ( shipToCheckbox && shipToCheckbox.checked ) {
 							shippingAddress = addressData.shipping_address;
 						}
 
+						const createCheckbox = document.getElementById( 'createaccount' );
+						const createAccount  = createCheckbox && createCheckbox.checked ? 'true' : 'false';
 						// noinspection JSUnresolvedReference
 						const data = {
 							_wpnonce: PowerBoardAjaxCheckout.wpnonce_intent,
 							address: billingAddress,
 							shipping_address: shippingAddress,
+							create_account: createAccount
 						};
+
+						if ( this.widgetVisibilityInterval ) {
+							clearInterval( this.widgetVisibilityInterval )
+						}
 						// noinspection JSUnresolvedReference
 						jQuery.ajax(
 							{
@@ -279,7 +310,11 @@ jQuery(
 								data: data,
 								success: ( response ) => {
 									if ( !this.isValidForm( 'power_board' ) ) {
-										let error   = $( '#fields-validation-error' );
+										let error = $( '#fields-validation-error' );
+
+										if ( this.invalidPostcode || this.invalidEmail ) {
+											error = $( '#invalid-fields-error' );
+										}
 										let loading = $( '#loading' );
 										this.toggleWidgetVisibility( true );
 										this.toggleOrderButton( true );
@@ -287,84 +322,27 @@ jQuery(
 										error.show();
 									} else {
 										if (initTimestamp === this.lastMasterWidgetInit) {
+											const showError = message => this.showErrorMessage( message );
 											if (response.success) {
-												// noinspection JSUnresolvedReference
-												this.toggleWidgetVisibility( false );
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.setEnv( this.getConfigs().environment )
-												const showError          = ( message ) => this.showErrorMessage( message );
-												const handleWidgetError  = () => this.handleWidgetError();
-												const reInitMasterWidget = () => this.reInitMasterWidget();
-												const submitForm         = () => this.form.submit();
-												const intentId           = response.data.intentId;
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentSuccessful(
-													function ( data ) {
-														// noinspection JSUnresolvedReference
-														jQuery.ajax(
-															{
-																url: '/?wc-ajax=power-board-process-payment-result',
-																method: 'POST',
-																data: {
-																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-																	payment_response: data,
-																	create_account: document.getElementById( 'createaccount' )?.checked,
-																},
-																success: function (response) {
-																	if (response.success) {
-																		// noinspection JSUnresolvedReference
-																		jQuery( '#chargeid' ).val( data['charge_id'] );
-																		// noinspection JSUnresolvedReference
-																		jQuery( '#intentid' ).val( intentId );
-																		submitForm();
-
-																		window.widgetPowerBoard = null;
-																	} else {
-																		showError( response.data.message );
-																		reInitMasterWidget();
-																	}
-																}
+												const checkoutWrapper = document.getElementById( 'classic-powerBoardCheckout_wrapper' );
+												if (!checkoutWrapper?.checkVisibility()) {
+													this.widgetVisibilityInterval = setInterval(
+														() => {
+															if ( checkoutWrapper?.checkVisibility() ) {
+																this.loadMasterWidget( response );
+																clearInterval( this.widgetVisibilityInterval );
 															}
-														);
-													}
-												);
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentFailure(
-													function ( data ) {
-														// noinspection JSUnresolvedReference
-														jQuery.ajax(
-															{
-																url: '/?wc-ajax=power-board-process-payment-result',
-																method: 'POST',
-																data: {
-																	_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
-																	payment_response:
-																		{
-																			...data,
-																			errorMessage: data.message || 'Transaction failed',
-																	}
-																},
-																success: function () {
-																	showError( 'Transaction failed. Please check your payment details or contact your bank' );
-																	handleWidgetError();
-																	window.widgetPowerBoard = null;
-																}
-															}
-														);
-													}
-												);
-												// noinspection JSUnresolvedReference
-												window.widgetPowerBoard.onPaymentExpired(
-													function () {
-														showError( 'Your payment session has expired. Please retry your payment' );
-
-														handleWidgetError();
-														window.widgetPowerBoard = null;
-													}
-												);
+														},
+														2000
+													);
+												} else {
+													this.loadMasterWidget( response );
+												}
 											} else {
+												if ( response.data?.code === 'invalid_account_creation' ) {
+													showError( response.data.message );
+												}
+
 												// noinspection JSUnresolvedReference
 												let error = jQuery( '#intent-creation-error' );
 												// noinspection JSUnresolvedReference
@@ -377,6 +355,61 @@ jQuery(
 										}
 									}
 								}
+							}
+						);
+					},
+					loadMasterWidget(response) {
+						// noinspection JSUnresolvedReference
+						this.toggleWidgetVisibility( false );
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard = new cba.Checkout( '#classic-powerBoardCheckout_wrapper', response.data.token );
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.setEnv( this.getConfigs().environment )
+						const showError          = message => this.showErrorMessage( message );
+						const handleWidgetError  = () => this.handleWidgetError();
+						const submitForm         = () => this.form.submit();
+						const intentId           = response.data.intentId;
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentSuccessful(
+							( data ) => {
+								// noinspection JSUnresolvedReference
+								jQuery( '#chargeid' ).val( data.charge_id );
+								// noinspection JSUnresolvedReference
+								jQuery( '#intentid' ).val( intentId );
+								submitForm();
+								window.widgetPowerBoard = null;
+							}
+						);
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentFailure(
+							( data ) => {
+								// noinspection JSUnresolvedReference
+								jQuery.ajax(
+									{
+										url: '/?wc-ajax=power-board-process-payment-result',
+										method: 'POST',
+										data: {
+											_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
+											payment_response: {
+												...data,
+												errorMessage: data.message || 'Transaction failed',
+											}
+										},
+										success: () => {
+											showError( 'Transaction failed. Please check your payment details or contact your bank' );
+											handleWidgetError();
+											window.widgetPowerBoard = null;
+										}
+									}
+								);
+							}
+						);
+						// noinspection JSUnresolvedReference
+						window.widgetPowerBoard.onPaymentExpired(
+							() => {
+								showError( 'Your payment session has expired. Please retry your payment' );
+								handleWidgetError();
+								window.widgetPowerBoard = null;
 							}
 						);
 					},
@@ -440,12 +473,8 @@ jQuery(
 												const orderTotal       = this.getUIOrderTotal();
 												if (orderTotal) {
 													if (orderTotal !== cartTotal) {
-														if (this.currentSavedShipping === event.detail.shippingId) {
-															window.reloadAfterExternalCartChanges();
-														} else {
-															// noinspection JSUnresolvedReference
-															$( document.body ).trigger( 'update_checkout' );
-														}
+														// noinspection JSUnresolvedReference
+														$( document.body ).trigger( 'update_checkout' );
 													}
 
 													this.initMasterWidget();
@@ -475,6 +504,7 @@ jQuery(
 									this.lastAddressVerified = this.getAddressData( true );
 									clearInterval( paymentMethodInterval );
 									this.checkIsValidPostCodeAndLoadPayment( false );
+									this.checkIsValidEmailAndLoadPayment();
 								}
 							},
 							100
@@ -504,6 +534,16 @@ jQuery(
 						);
 
 						document.addEventListener( "power_board_cart_total_changed", this.handleCartTotalChanged.bind( this ) );
+
+						$( document.body ).on(
+							'updated_checkout',
+							() => {
+								const selectedPayment = $( 'input[name="payment_method"]:checked' ).val();
+								if ( selectedPayment === 'power_board' ) {
+									this.setPaymentMethod( selectedPayment, true );
+								}
+						}
+							);
 					},
 					handleShippingChanged( eventTargetId ) {
 						if (this.shippingChangedTimeout) {
@@ -520,6 +560,23 @@ jQuery(
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
+												},
+												success: function (response) {
+													if (response.success && response.data.trigger_event === 'power_board_cart_total_changed') {
+														// Dispatch the custom event with updated cart total in detail
+														const event = new CustomEvent(
+															'power_board_cart_total_changed',
+															{
+																detail: {
+																	cartTotal: response.data.cart_total
+																}
+														}
+															);
+														document.dispatchEvent( event );
+													}
+												},
+												error: function (xhr, status, error) {
+													console.error( 'PowerBoard: Error updating shipping:', error );
 												}
 											}
 										);
@@ -540,9 +597,12 @@ jQuery(
 								const currentAddress = this.getAddressData( true );
 								if ( eventTargetId.includes( 'billing_postcode' ) || eventTargetId.includes( 'billing_country' ) || eventTargetId.includes( 'billing_state' ) ) {
 									this.checkIsValidPostCodeAndLoadPayment();
+								} else if ( eventTargetId.includes( 'billing_email' ) ) {
+									this.checkIsValidEmailAndLoadPayment();
 								} else if (
 									this.lastAddressVerified !== currentAddress
 									|| eventTargetId.includes( 'payment_method' )
+									|| eventTargetId.includes( 'createaccount' )
 									|| eventTargetId.includes( '_woo_additional_terms' )
 									|| eventTargetId.includes( 'terms' )
 								) {
@@ -557,7 +617,7 @@ jQuery(
 							500
 						);
 					},
-					checkIsValidPostCodeAndLoadPayment( forcePaymentMethodInit = true ) {
+					checkIsValidPostCodeAndLoadPayment( loadPayment = true ) {
 						const postcode = document.getElementById( 'billing_postcode' ).value;
 						const country  = document.getElementById( 'billing_country' ).value;
 						// noinspection JSUnresolvedReference
@@ -583,24 +643,69 @@ jQuery(
 										} else {
 											this.invalidPostcode = true;
 											const postcodeInput  = document.getElementById( 'billing_postcode' );
-											document.querySelector( '.power-board-postcode-error-message' )?.remove();
-											const messageContainer = document.createElement( "div" );
-											messageContainer.setAttribute( 'class', 'classic-checkout-validation-error wc-block-components-validation-error power-board-postcode-error-message' );
-											messageContainer.setAttribute( 'role', 'alert' );
-											const	message   = document.createElement( "p" );
-											message.innerText = response.data.message;
-											messageContainer.appendChild( message );
-											postcodeInput.after( messageContainer );
-											postcodeInput.classList.add( 'power-board-invalid-postcode' );
+											this.addErrorMessageToField( postcodeInput, response.data.message, 'postcode' );
 										}
 
-										this.setPaymentMethod( selectedPaymentMethod, forcePaymentMethodInit );
+										if ( loadPayment ) {
+											this.setPaymentMethod( selectedPaymentMethod, true );
+										}
 									}
 								}
 							);
 						} else {
-							this.setPaymentMethod( selectedPaymentMethod, forcePaymentMethodInit );
+							if ( loadPayment ) {
+								this.setPaymentMethod( selectedPaymentMethod, true );
+							}
 						}
+					},
+					checkIsValidEmailAndLoadPayment( loadPayment = true ) {
+						const email = document.getElementById( 'billing_email' ).value;
+						// noinspection JSUnresolvedReference
+						const selectedPaymentMethod = $( 'input[name="payment_method"]:checked' ).val();
+
+						if ( email ) {
+							// noinspection JSUnresolvedReference
+							jQuery.ajax(
+								{
+									url: '/?wc-ajax=power-board-check-email',
+									type: 'POST',
+									data: {
+										_wpnonce: PowerBoardAjaxCheckout.wpnonce_check_email,
+										email: email,
+									},
+									success: ( response ) => {
+										const emailInput = document.getElementById( 'billing_email' );
+										if ( response.success ) {
+											this.invalidEmail = false;
+											document.querySelector( '.power-board-email-error-message' )?.remove();
+											emailInput.classList.remove( 'power-board-invalid-email' );
+										} else {
+											this.invalidEmail = true;
+											this.addErrorMessageToField( emailInput, response.data.message, 'email' );
+										}
+
+										if ( loadPayment ) {
+											this.setPaymentMethod( selectedPaymentMethod, true );
+										}
+									}
+								}
+							);
+						} else {
+							if ( loadPayment ) {
+								this.setPaymentMethod( selectedPaymentMethod, true );
+							}
+						}
+					},
+					addErrorMessageToField( fieldInput, errorMessage, fieldIdentifier ) {
+						document.querySelector( '.power-board-' + fieldIdentifier + '-error-message' )?.remove();
+						const messageContainer = document.createElement( "div" );
+						messageContainer.setAttribute( 'class', 'classic-checkout-validation-error wc-block-components-validation-error power-board-' + fieldIdentifier + '-error-message' );
+						messageContainer.setAttribute( 'role', 'alert' );
+						const	message   = document.createElement( "p" );
+						message.innerText = errorMessage;
+						messageContainer.appendChild( message );
+						fieldInput.after( messageContainer );
+						fieldInput.classList.add( 'power-board-invalid-' + fieldIdentifier );
 					},
 					handleOrderCommentsChanges( eventTargetId, value ) {
 						if ( eventTargetId.includes( 'order_comments' ) ) {
@@ -627,6 +732,21 @@ jQuery(
 				powerBoardHelper.init();
 				powerBoardHelper.addBeforeLeavePageListener();
 				initPhoneNumberValidation();
+				// Initialize cart changes helper for cross-tab synchronization
+				if (window.CartChangesHelper) {
+					window.CartChangesHelper.getInstance();
+				} else {
+					// Load cart changes helper dynamically if not already loaded
+					const script  = document.createElement( 'script' );
+					script.src    = window.powerBoardSettings?.assetsUrl + '/js/helpers/cart-changes.helper.js' ||
+								'/wp-content/plugins/power-board/assets/js/helpers/cart-changes.helper.js';
+					script.onload = () => {
+						if (window.CartChangesHelper) {
+							window.CartChangesHelper.getInstance();
+						}
+					};
+					document.head.appendChild( script );
+				}
 			}
 		);
 	}

@@ -13,14 +13,14 @@
 	left: 50%;
 	transform: translate(-50%, -50%);
 	z-index: 0;
+}
 
-	p {
-		margin: 0;
-	}
+#loading p {
+	margin: 0;
+}
 
-	&.hide {
-		display: none;
-	}
+#loading.hide {
+	display: none;
 }
 
 #classic-powerBoardCheckout_wrapper {
@@ -52,11 +52,12 @@
 	height: 36px !important;
 	max-height: 36px !important;
 }
-.wc-orders-list-table .status-power-board-p-paid .order_total>span {
+
+.wc-orders-list-table .status-power-board-p-paid .order_total > span {
 	display: none;
 }
 
-#classic-power_board{
+#classic-power_board {
 	min-height: 260px;
 	scrollbar-width: thin;
 	position: relative;
@@ -68,8 +69,9 @@
 	height: 280px;
 }
 
-#fields-validation-error,
-#intent-creation-error {
+#required-fields-validation-error,
+#intent-creation-error,
+#invalid-fields-error {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -78,33 +80,38 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
 
-	&.hide {
-		display: none;
-	}
+#required-fields-validation-error.hide,
+#intent-creation-error.hide,
+#invalid-fields-error.hide {
+	display: none;
+}
 
-	.power-board-validation-error {
-		color: red;
-		text-align: center;
-		margin: 0;
-	}
+#required-fields-validation-error .power-board-validation-error,
+#intent-creation-error .power-board-validation-error,
+#invalid-fields-error .power-board-validation-error {
+	color: red;
+	text-align: center;
+	margin: 0;
 }
 
 .woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-phone,
-.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-postcode {
+.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-postcode,
+.woocommerce form .form-row.woocommerce-invalid-email input.input-text#billing_email {
 	border-color: #cc1818;
 }
 
 .power-board-account-error-message {
 	color: #cc1818;
-	font-size: .75em;
+	font-size: 0.75em;
 	max-width: 100%;
 	min-height: 1em;
 	margin: 8px 0 0;
 	white-space: normal;
 }
 
-.payment_box p{
+.payment_box p {
 	width: 100%;
 }
 
@@ -112,12 +119,10 @@
 	position: relative;
 }
 
-.wc-block-components-notice-banner,
-.wc-block-components-checkout-place-order-button,
-#place_order {
-	&.hide {
-		display: none;
-	}
+.wc-block-components-notice-banner.hide,
+.wc-block-components-checkout-place-order-button.hide,
+#place_order.hide {
+	display: none;
 }
 
 .zipmoney-overlay {

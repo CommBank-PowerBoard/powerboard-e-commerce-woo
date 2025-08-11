@@ -4,6 +4,8 @@ declare( strict_types=1 );
 namespace PowerBoard\Services\Assets;
 
 class AdminAssetsService {
+	private static ?self $instance = null;
+
 	private const SCRIPTS = [
 		'handle-settings-select-option',
 		'handle-environment-changes',
@@ -25,6 +27,13 @@ class AdminAssetsService {
 		 * @noinspection PhpUndefinedFunctionInspection
 		 */
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+	}
+
+	public static function get_instance(): self {
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
 	}
 
 	public function enqueue_scripts( string $hook ): void {
@@ -70,6 +79,7 @@ class AdminAssetsService {
 					'powerBoardWidgetSettings',
 					[
 						'pluginUrlPrefix' => POWER_BOARD_PLUGIN_URL,
+						'pluginName'      => POWER_BOARD_PLUGIN_NAME,
 					]
 				);
 			}

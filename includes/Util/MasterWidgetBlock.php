@@ -57,6 +57,33 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	}
 
 	/**
+	 * Check if the current checkout page uses WooCommerce checkout blocks
+	 * instead of the classic checkout shortcode
+	 *
+	 * @return bool
+	 */
+	private function is_checkout_block_page(): bool {
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! function_exists( 'has_block' ) ) {
+			return false;
+		}
+
+		// Check if the checkout page contains the checkout block
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( has_block( 'woocommerce/checkout' ) ) {
+			return true;
+		}
+
+		// Additional check: if WooCommerce checkout block is rendered
+		global $post;
+		if ( $post && has_block( 'woocommerce/checkout', $post ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * This function is used on AbstractPaymentMethodType
 	 * Uses functions (is_checkout, wp_enqueue_script, wp_localize_script, admin_url, plugin_url, wp_set_script_translations, wp_create_nonce and is_admin) from WordPress
 	 * Uses functions (WC and get_woocommerce_currency) from WooCommerce
@@ -88,15 +115,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 
 			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_enqueue_script(
-				'power-board-cart-changes-helpers',
-				POWER_BOARD_PLUGIN_URL . 'assets/js/helpers/cart-changes.helper.js',
-				[ 'jquery' ],
-				POWER_BOARD_PLUGIN_VERSION,
-				true
-			);
-
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_enqueue_script(
 				'power-board-api',
 				SettingsService::get_instance()->get_widget_script_url(),
 				[],
@@ -104,14 +122,25 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 				true
 			);
 
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_enqueue_script(
-				'power-board-form',
-				POWER_BOARD_PLUGIN_URL . 'assets/js/frontend/form.js',
-				[ 'jquery' ],
-				POWER_BOARD_PLUGIN_VERSION,
-				true
-			);
+			if ( $this->is_checkout_block_page() ) {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				wp_enqueue_script(
+					'power-board-form',
+					POWER_BOARD_PLUGIN_URL . 'assets/js/frontend/form.js',
+					[ 'jquery' ],
+					POWER_BOARD_PLUGIN_VERSION,
+					true
+				);
+			} else {
+				/* @noinspection PhpUndefinedFunctionInspection */
+				wp_enqueue_script(
+					'power-board-classic-form',
+					POWER_BOARD_PLUGIN_URL . '/assets/js/frontend/classic-form.js',
+					[ 'jquery' ],
+					POWER_BOARD_PLUGIN_VERSION,
+					true
+				);
+			}
 
 			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_localize_script(
@@ -123,20 +152,12 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
 					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
 					'wpnonce_check_postcode'     => wp_create_nonce( 'power-board-check-postcode' ),
+					'wpnonce_check_email'        => wp_create_nonce( 'power-board-check-email' ),
 					'wpnonce_process_payment'    => wp_create_nonce( 'power-board-process-payment-result' ),
 				]
 			);
 
 			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_enqueue_script(
-				'power-board-classic-form',
-				POWER_BOARD_PLUGIN_URL . '/assets/js/frontend/classic-form.js',
-				[ 'jquery' ],
-				POWER_BOARD_PLUGIN_VERSION,
-				true
-			);
-
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_localize_script(
 				'power-board-classic-form',
 				'PowerBoardAjaxCheckout',
@@ -146,6 +167,7 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
 					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
 					'wpnonce_check_postcode'     => wp_create_nonce( 'power-board-check-postcode' ),
+					'wpnonce_check_email'        => wp_create_nonce( 'power-board-check-email' ),
 					'wpnonce_process_payment'    => wp_create_nonce( 'power-board-process-payment-result' ),
 				]
 			);
@@ -170,6 +192,11 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			'dependencies' => [],
 			'version'      => POWER_BOARD_PLUGIN_VERSION,
 		];
+
+		$js_file = plugin_dir_path( POWER_BOARD_PLUGIN_FILE ) . $script_path;
+		if ( file_exists( $js_file ) ) {
+			$script_asset['version'] = filemtime( $js_file );
+		}
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_register_script(

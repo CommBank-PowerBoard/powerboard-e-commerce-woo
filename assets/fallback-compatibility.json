@@ -1,18 +1,37 @@
 {
     "woocommerce": {
+        "1.5.0": {
+            "env": [
+                {
+                    "name": "production",
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
+                },
+                {
+                    "name": "preproduction",
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
+                },
+                {
+                    "name": "staging",
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
+                }
+            ],
+            "checkout_version": [
+                1
+            ]
+        },
         "1.4.0": {
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.123.2-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -23,15 +42,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.123.2-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -42,15 +61,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.122.3-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -61,15 +80,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.122.3-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -80,15 +99,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.121.2/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.122.3-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -99,15 +118,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.118.1/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.118.1/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.119.3-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [
@@ -118,15 +137,15 @@
             "env": [
                 {
                     "name": "production",
-                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.118.1/widget.umd.js"
+                    "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "preproduction",
-                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.118.1/widget.umd.js"
+                    "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.123.9/widget.umd.js"
                 },
                 {
                     "name": "staging",
-                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.119.3-beta/widget.umd.js"
+                    "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.125.0-beta/widget.umd.js"
                 }
             ],
             "checkout_version": [

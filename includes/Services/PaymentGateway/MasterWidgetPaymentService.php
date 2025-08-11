@@ -15,6 +15,7 @@ use PowerBoard\Enums\SettingGroupsEnum;
 use PowerBoard\Helpers\EnvironmentSettingsHelper;
 use PowerBoard\Helpers\LoggerHelper;
 use PowerBoard\Helpers\MasterWidgetSettingsHelper;
+use PowerBoard\Helpers\OrderHelper;
 use PowerBoard\Helpers\SettingGroupsHelper;
 use PowerBoard\Helpers\SettingsHelper;
 use PowerBoard\Services\Assets\AdminAssetsService;
@@ -86,7 +87,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		/* @noinspection PhpUndefinedMethodInspection */
 		$this->init_settings();
-		new AdminAssetsService();
 		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( is_admin() ) {
 			$this->title            = $this->method_title;
@@ -228,6 +228,20 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		return null;
 	}
 
+	public function get_customisation_id(): ?string {
+		$customisation_id = SettingsHelper::get_option_name(
+			$this->id,
+			[
+				SettingGroupsEnum::CHECKOUT,
+				MasterWidgetSettingsEnum::CUSTOMISATION_ID,
+			]
+		);
+		if ( array_key_exists( $customisation_id, $this->settings ) ) {
+			return $this->settings[ $customisation_id ];
+		}
+		return null;
+	}
+
 	public function get_environment(): ?string {
 		$environment_key = SettingsHelper::get_option_name(
 			$this->id,
@@ -257,7 +271,10 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 */
 	public function process_payment( $order_id ): array {
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$order = wc_get_order( $order_id );
+		$order         = wc_get_order( $order_id );
+		$initial_order = $order;
+
+		OrderHelper::log_order_info( $initial_order, 'Order received to complete payment' );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$session = WC()->session;
@@ -288,22 +305,73 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		if ( ! $valid_payment ) {
 			$failed_message = 'Payment could not be processed due to an error.';
 
+			$initial_order_items = [];
+			foreach ( $initial_order->get_items() as $initial_item ) {
+				$initial_order_items[] = $initial_item->get_data();
+			}
+
+			$initial_coupon_items = [];
+			foreach ( $initial_order->get_coupons() as $initial_coupon ) {
+				$initial_coupon_items[] = $initial_coupon->get_data();
+			}
+
+			$current_order_items = [];
+			foreach ( $order->get_items() as $current_item ) {
+				$current_order_items[] = $current_item->get_data();
+			}
+
+			$current_coupon_items = [];
+			foreach ( $order->get_coupons() as $current_coupon ) {
+				$current_coupon_items[] = $current_coupon->get_data();
+			}
+
 			LoggerHelper::log(
 				'Payment processing failed in process_payment()',
 				'error',
 				[
 					'intent_id'                 => $intent_id,
+					'current_active_intent_ids' => $current_active_intent_ids,
 					'charge_id'                 => $charge_id,
 					'order_id'                  => $order_id,
 					'order_total'               => $order->get_total( false ),
-					'current_active_intent_ids' => $current_active_intent_ids,
 					'valid_payment'             => $valid_payment,
 					'error_message'             => $failed_message,
+					'initial_order'             => [
+						'items'             => $initial_order_items,
+						'total'             => $initial_order->get_total( false ),
+						'discounts'         => [
+							'applied_coupons' => $initial_coupon_items,
+							'discounts_total' => $initial_order->get_discount_total(),
+							'tax'             => $initial_order->get_discount_tax(),
+						],
+						'shipping_total'    => $initial_order->get_shipping_total(),
+						'selected_shipping' => $initial_order->get_shipping_method(),
+						'shipping_address'  => $initial_order->get_formatted_shipping_address(),
+						'billing_address'   => $initial_order->get_formatted_billing_address(),
+					],
+					'checkout_order'            => $checkout_order,
+					'current_order'             => [
+						'items'             => $current_order_items,
+						'total'             => $order->get_total( false ),
+						'discounts'         => [
+							'applied_coupons' => $current_coupon_items,
+							'discounts_total' => $order->get_discount_total(),
+							'tax'             => $order->get_discount_tax(),
+						],
+						'shipping_total'    => $order->get_shipping_total(),
+						'selected_shipping' => $order->get_shipping_method(),
+						'shipping_address'  => $order->get_formatted_shipping_address(),
+						'billing_address'   => $order->get_formatted_billing_address(),
+					],
 				]
 			);
 
 			if ( ! empty( $charge_id ) ) {
-				$this->refund_charge( $charge_id, $order->get_total( false ) );
+				if ( empty( $checkout_order ) ) {
+					$this->refund_charge( $charge_id, $order->get_total() );
+				} else {
+					$this->refund_charge( $charge_id, $checkout_order['total'] );
+				}
 				$order_note_failed_message = $failed_message . ' The charge with id ' . $charge_id . ' has been refunded.';
 			}
 
@@ -317,16 +385,24 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$order->payment_complete();
 
 		$order->update_meta_data( '_power_board_charge_id', $charge_id );
+
+		LoggerHelper::log_callback_event(
+			'Payment completed',
+			[
+				'order_id'  => $order_id ?? null,
+				'charge_id' => $charge_id ?? null,
+			]
+		);
 		/* @noinspection PhpUndefinedFunctionInspection */
 		WC()->cart->empty_cart();
 		$order->save();
 
-		$session->set( 'order_awaiting_payment', null );
 		$session->set( 'store_api_draft_order', null );
 		$session->set( 'power_board_draft_order', null );
 		$session->set( 'order_comments', '' );
 		$session->set( 'power_board_active_checkout_intent_ids', [] );
 		$session->set( $checkout_order_identifier, null );
+		$session->save_data();
 
 		/* @noinspection PhpUndefinedMethodInspection */
 		return [
@@ -363,17 +439,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$payment_data = ! empty( $_REQUEST['payment_response'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_REQUEST['payment_response'] ) ) : [];
 
-		LoggerHelper::log_callback_event(
-			'Received callback from Checkout',
-			[
-				'order_id'      => $order_id ?? null,
-				'charge_id'     => $payment_data['charge_id'] ?? null,
-				'status'        => $payment_data['status'] ?? null,
-				'error_message' => $payment_data['errorMessage'] ?? null,
-				'raw_data'      => $payment_data,
-			]
-		);
-
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
@@ -382,75 +447,37 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		}
 
 		/* @noinspection PhpUndefinedFunctionInspection */
+		$error_message = ! empty( $payment_data['errorMessage'] ) ? sanitize_text_field( $payment_data['errorMessage'] ) : 'Something went wrong';
+		$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
+		$order->update_status( 'failed' );
+
+		/* @noinspection PhpUndefinedFunctionInspection */
 		$charge_id = ! empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
-
-		if ( ! empty( $payment_data['errorMessage'] ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$error_message = sanitize_text_field( $payment_data['errorMessage'] );
-			$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
-			$order->update_status( 'failed' );
-			$order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
-			$order->save();
-
-			LoggerHelper::log_callback_event(
-				'Payment error',
-				[
-					'order_id'      => $order_id ?? null,
-					'charge_id'     => $charge_id ?? null,
-					'error_message' => $error_message ?? null,
-				],
-				'error'
-			);
-
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_success(
-				[
-					'order_status' => 'failed',
-					'message'      => $error_message,
-				],
-				200
-			);
-		}
-
-		$order->update_meta_data( '_power_board_charge_id', $charge_id );
+		$order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
 		$order->save();
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$create_account = ! empty( $_REQUEST['create_account'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['create_account'] ) ) : false;
-		if ( $create_account === 'true' ) {
-			$email = $order->get_billing_email( false );
-			if ( ! $this->check_email( $email ) ) {
-				$this->refund_charge( $charge_id, $order->get_total( false ) );
-				$order->add_order_note( 'Attempted account creation with ' . $email . ', but this email is already registered. The charge has been refunded.' );
-
-				/* @noinspection PhpUndefinedFunctionInspection */
-				wp_send_json_error(
-					[
-						'message' => sprintf(
-						// Translators: %s Email address.
-							esc_html__( 'An account is already registered with %s. Please log in or use a different email address.  The associated charge has been refunded, and you will need to complete the payment again.', 'power-board' ),
-							esc_html( $email )
-						),
-					]
-				);
-			}
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$session = WC()->session;
-		$session->set( 'order_awaiting_payment', (string) $order_id );
-		$session->set( 'store_api_draft_order', (string) $order_id );
-
 		LoggerHelper::log_callback_event(
-			'Payment completed',
+			'Payment error',
 			[
-				'order_id'  => $order_id ?? null,
-				'charge_id' => $charge_id ?? null,
-			]
+				'order_id'      => $order_id ?? null,
+				'charge_id'     => $charge_id ?? null,
+				'error_message' => $error_message ?? null,
+			],
+			'error'
 		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */
-		wp_send_json_success( [], 200 );
+		$session = WC()->session;
+		$session->set( 'store_api_draft_order', (string) $order_id );
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success(
+			[
+				'order_status' => 'failed',
+				'message'      => $error_message,
+			],
+			200
+		);
 	}
 
 	public function refund_charge( $charge_id, $amount_to_refund ) {
@@ -465,7 +492,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 	/**
 	 * Returns order id if order was created previously on PowerBoard
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @return string
 	 */
@@ -475,23 +502,12 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		if ( $payment_method === POWER_BOARD_PLUGIN_PREFIX ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			$custom_order_id = (string) WC()->session->get( 'power_board_draft_order' );
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$order_awaiting_payment = (string) WC()->session->get( 'order_awaiting_payment' );
-			return ! empty( $custom_order_id ) ? $custom_order_id : $order_awaiting_payment;
+			return ! empty( $custom_order_id ) ? $custom_order_id : null;
 		}
 
 		return null;
 	}
 	// phpcs:enable
-
-	public function check_email( $email ): bool {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! is_user_logged_in() && email_exists( $email ) ) {
-			return false;
-		}
-
-		return true;
-	}
 
 	public function check_postcode() {
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -505,14 +521,14 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		/**
 		 * Disable ValidatedSanitizedInput.MissingUnslash warning to be able to compare original string with unslashed one
-         * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-         * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		 *
 		 * @noinspection PhpUndefinedFunctionInspection
 		 */
 		$original_postcode = $_POST['postcode'] ?? '';
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$sanitized_postcode = isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '';
 
@@ -528,6 +544,28 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		if ( $postcode && ! WC_Validation::is_postcode( $postcode, $country ) ) {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_send_json_error( [ 'message' => __( 'Please enter a valid postcode/ZIP.', 'power-board' ) ] );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		wp_send_json_success( [], 200 );
+	}
+
+	public function check_is_valid_email() {
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-check-email' ) ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
+		}
+
+		/* @noinspection PhpUndefinedFunctionInspection */
+		$email = isset( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '';
+		/* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! is_email( $email ) ) {
+			/* @noinspection PhpUndefinedFunctionInspection */
+			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address.', 'power-board' ) ] );
 		}
 
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -643,7 +681,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * Uses functions (wp_unslash, do_action, update_option and apply_filters) from WordPress
 	 * Uses a function (wc_clean) from WooCommerce
 	 * Uses methods (init_settings, get_form_fields, get_field_type, validate_text_field, get_option, add_error and get_option_key) from WC_Payment_Gateway
-     * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
+	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @noinspection PhpUnused
 	 */
@@ -788,7 +826,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			'yes'
 		);
 	}
-    // phpcs:enable
+	// phpcs:enable
 
 	/**
 	 * This function is used on admin.php template
@@ -952,6 +990,9 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 	private function get_order_to_process_payment( WC_Order $current_order, ?array $checkout_order ): WC_Order {
 		if ( empty( $checkout_order ) ) {
+			LoggerHelper::log(
+				'Checkout order is empty'
+			);
 			return $current_order;
 		}
 
@@ -962,14 +1003,21 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$checkout_customer_billing  = $checkout_order['billing_address'];
 
 		if ( ! empty( $checkout_customer_shipping ) && ! empty( $checkout_customer_billing ) ) {
+			LoggerHelper::log(
+				'Updating Woo order with Checkout shipping and billing address'
+			);
+
 			$current_order->set_shipping_address( $checkout_customer_shipping );
 			$current_order->set_billing_address( $checkout_customer_billing );
 
 			$current_order->calculate_totals();
-			$current_order->save();
 		}
 
 		if ( $current_order_total !== $checkout_order_total ) {
+			LoggerHelper::log(
+				'Updating Woo order with Checkout products, shipping method and coupons'
+			);
+
 			$order_items = $current_order->get_items();
 			foreach ( $order_items as $item_id => $item ) {
 				$current_order->remove_item( $item_id );
@@ -1008,6 +1056,20 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			}
 
 			$current_order->calculate_totals();
+
+			$current_order_discount  = $current_order->get_discount_total( false );
+			$checkout_order_discount = $checkout_order['discounts']['discounts_total'];
+
+			if ( $current_order_discount !== $checkout_order_discount ) {
+				$coupons = $checkout_order['discounts']['applied_coupons'];
+
+				foreach ( $coupons as $coupon ) {
+					$current_order->apply_coupon( $coupon );
+				}
+				$current_order->set_discount_total( $checkout_order_discount );
+				$current_order->set_discount_tax( $checkout_order['discounts']['tax'] );
+			}
+			$current_order->set_total( $checkout_order_total );
 			$current_order->save();
 		}
 
@@ -1035,7 +1097,8 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	public function log_admin_settings_load(): void {
-		if ( isset( $_GET['section'] ) && $_GET['section'] == $this->id ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Just checking admin page section parameter
+		if ( isset( $_GET['section'] ) && $_GET['section'] === $this->id ) {
 			$this->log_powerboard_admin_load();
 		}
 	}
@@ -1062,7 +1125,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		$version = $this->get_version();
 		$config  = $this->get_configuration_id();
-		$custom  = method_exists( $this, 'get_customisation_id' ) ? $this->get_customisation_id() : '';
+		$custom  = $this->get_customisation_id();
 
 		LoggerHelper::log(
 			$log_title,

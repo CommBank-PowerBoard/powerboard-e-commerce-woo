@@ -1,5 +1,24 @@
 *** PowerBoard for WooCommerce Changelog ***
 
+[1.5.0] - 2025-06-20
+* Compatibility
+  - Compatible with WooCommerce version `9.9.3`.
+
+* Added
+  - Enhanced logging: logs now capture environment details, masked access token validity, checkout version, configuration, and customization template IDs during load and save operations.
+  - Email validation using a specific regex to prevent the checkout widget from loading with invalid email addresses.
+  - Phone validation regex update, avoids customers needing to enter country code format +xx
+
+* Fixed
+  - Coupon code handling improvements
+  - Duplicate logging on save caused by page reloads.
+  - Email format validation in the classic checkout.
+  - Improved cookie session handling, increasing reliability of widget rendering
+  - Removed unused language files.
+  - Loading payment widget only when DOM element is ready
+  - Draft orders fixed on classic payments
+  - Terms and conditions woocommerce plugin on blocks
+
 [1.4.0] - 2025-06-02
 * Compatibility
   - Compatible with WooCommerce version `9.8.1`.
