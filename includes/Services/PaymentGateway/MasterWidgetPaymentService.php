@@ -55,6 +55,11 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	private $configuration_id_options                 = [];
 	protected static bool $admin_settings_load_logged = false;
 
+	const DEFAULT_TITLE = 'PowerBoard';
+	const DEFAULT_DESCRIPTION = 'Pay securely via PowerBoard.';
+	const TITLE_MAX = 40;
+	const DESC_MAX = 140;
+
 	public static function get_instance(): self {
 		if ( is_null( self::$instance ) ) {
 			self::$instance = new self();
@@ -75,13 +80,12 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$this->method_title = _x( 'PowerBoard payment', 'PowerBoard payment method', 'power-board' );
 		/* @noinspection PhpUndefinedFunctionInspection */
-		$this->title = __( 'PowerBoard', 'power-board' );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$this->method_description = __(
 			'PowerBoard simplify how you manage your payments. Reduce costs, technical headaches & streamline compliance using PowerBoard\'s payment orchestration.',
 			'power-board'
 		);
-		$this->description        = '';
+		$this->title              = $this->get_option( 'title', self::DEFAULT_TITLE );
+		$this->description        = $this->get_option( 'description', self::DEFAULT_DESCRIPTION );
 		$this->icon               = POWER_BOARD_PLUGIN_URL . 'assets/images/logo.png';
 		// Load the settings
 		$this->init_form_fields();
@@ -146,6 +150,24 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	public function init_form_fields(): void {
+		$this->form_fields['title'] = [
+			'type'        => 'text',
+			'title'       => __( 'Title', 'power-board' ),
+			'description' => sprintf( __( 'Shown at checkout. Max %d chars. Leave empty for default.', 'power-board' ), self::TITLE_MAX ),
+			'default'     => self::DEFAULT_TITLE,
+			'desc_tip'    => true,
+		];
+
+		$this->form_fields['description'] = [
+			'type'        => 'textarea',
+			'title'       => __( 'Description', 'power-board' ),
+			'description' => sprintf( __( 'Short help text. Max %d chars. Leave empty for default.', 'power-board' ), self::DESC_MAX ),
+			'default'     => self::DEFAULT_DESCRIPTION,
+			'desc_tip'    => true,
+			'class'       => 'powerboard-textarea',
+			'css'         => 'width:400px; height:62px;',
+		];
+
 		foreach ( SettingGroupsEnum::cases() as $setting_group ) {
 			$key = SettingsHelper::get_option_name(
 					$this->id,
@@ -586,7 +608,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			'amount'                  => WC()->cart->get_total(),
 			'currency'                => strtoupper( get_woocommerce_currency() ),
 			// Widget.
-			'title'                   => 'PowerBoard',
+			'title'                   => $this->get_title(),
 			// Master Widget Checkout.
 			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
 			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
@@ -818,6 +840,31 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$option_key = $this->get_option_key();
 		/* @noinspection PhpUndefinedFunctionInspection */
 		do_action( 'woocommerce_update_option', [ 'id' => $option_key ] );
+
+		$title = isset( $this->settings['title'] ) ? trim( (string) $this->settings['title'] ) : '';
+		$desc = isset( $this->settings['description'] ) ? trim( (string) $this->settings['description'] ) : '';
+
+		if ( mb_strlen( $title ) > self::TITLE_MAX ) {
+			$title = mb_substr( $title, 0, self::TITLE_MAX );
+		}
+
+		if ( mb_strlen( $desc ) > self::DESC_MAX ) {
+			$desc = mb_substr( $desc, 0, self::DESC_MAX );
+		}
+
+		if ( $title === '' ) {
+			$title = self::DEFAULT_TITLE;
+		}
+
+		if ( $desc  === '' ) {
+			$desc  = self::DEFAULT_DESCRIPTION;
+		}
+
+		$this->settings['title'] = $title;
+		$this->settings['description'] = $desc;
+
+		$this->title = $title;
+		$this->description = $desc;
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return update_option(

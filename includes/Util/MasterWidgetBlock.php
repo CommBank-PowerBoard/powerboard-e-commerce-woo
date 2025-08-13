@@ -13,6 +13,7 @@ namespace PowerBoard\Util;
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 use PowerBoard\Services\SDKAdapterService;
 use PowerBoard\Services\SettingsService;
+use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 
 /**
  * Settings property used comes from the extension AbstractPaymentMethodType from WooCommerce
@@ -244,13 +245,25 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$total = ! is_admin() ? WC()->cart->get_total() : 0;
 
+		$title = isset( $this->settings['title'] ) ? trim( (string) $this->settings['title'] ) : '';
+		$desc = isset( $this->settings['description'] ) ? trim( (string) $this->settings['description'] ) : '';
+
+		if ( $title === '' ) {
+			$title = MasterWidgetPaymentService::DEFAULT_TITLE;
+		}
+
+		if ( $desc === '' ) {
+			$desc = MasterWidgetPaymentService::DEFAULT_DESCRIPTION;
+		}
+
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
 			// Woocommerce data.
 			'amount'                  => $total,
 			'currency'                => strtoupper( get_woocommerce_currency() ),
 			// Widget.
-			'title'                   => 'PowerBoard',
+			'title'                   => esc_html( $title ),
+			'description'             => esc_html( $desc ),
 			// Keys.
 			'environment'             => $settings_service->get_environment(),
 			// Master Widget Checkout.

@@ -10,19 +10,18 @@ import {select,subscribe} from '@wordpress/data';
 import {CART_STORE_KEY,CHECKOUT_STORE_KEY} from '@woocommerce/block-data';
 import canMakePayment from "../includes/canMakePayment";
 
-const store    = select( CHECKOUT_STORE_KEY );
-const cart     = select( CART_STORE_KEY );
-const settings = getSetting( 'power_board_data', {} );
-
-const textDomain   = 'power-board';
-const defaultLabel = __( 'PowerBoard Payments', textDomain );
-
-const label                = decodeEntities( settings.title ) || defaultLabel;
-let billingAddress         = null;
-let shippingAddress        = null;
-let lastMasterWidgetInit   = null;
-let shippingChangedTimeout = null;
-let currentSavedShipping   = null;
+const store                  = select( CHECKOUT_STORE_KEY );
+const cart                   = select( CART_STORE_KEY );
+const settings               = getSetting( 'power_board_data', {} );
+const textDomain             = 'power-board';
+const defaultLabel           = __( 'PowerBoard', textDomain );
+const label                  = decodeEntities( settings.title ) || defaultLabel;
+const description            = settings.description ? decodeEntities( settings.description ) : '';
+let billingAddress           = null;
+let shippingAddress          = null;
+let lastMasterWidgetInit     = null;
+let shippingChangedTimeout   = null;
+let currentSavedShipping     = null;
 let widgetVisibilityInterval = null;
 
 // Initialize shipping change tracking
@@ -763,6 +762,11 @@ const Paydock = {
 						className: 'power-board-payment-method-label-logo'
 					}
 				)
+			),
+			description && createElement(
+				"p",
+				{ className: 'power-board-payment-method-desc' },
+				description
 			)
 	), content: <Content />, edit: <Content />, canMakePayment: () => true, ariaLabel: label, supports: { features: settings.supports }
 };
