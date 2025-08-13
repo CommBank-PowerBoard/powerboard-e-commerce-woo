@@ -134,6 +134,13 @@
 	color: #cc1818;
 }
 
+.power-board-payment-method-desc {
+	margin: 4px 0 8px;
+	font-size: 13px;
+	line-height: 1.4;
+	color: #444;
+}
+
 @media screen and (max-width: 450px) {
 	#powerBoardCheckout_wrapper,
 	#powerBoardCheckout_wrapper #list,

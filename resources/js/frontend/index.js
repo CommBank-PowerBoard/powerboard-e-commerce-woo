@@ -750,25 +750,31 @@ const Paydock = {
 		() =>
 			createElement(
 				"div",
-				{
-					className: 'power-board-payment-method-label'
-				},
-				label,
+				null,
 				createElement(
-					"img",
+					"div",
 					{
-						src: `${window.powerBoardWidgetSettings.pluginUrlPrefix}assets/images/logo.png`,
-						alt: label,
-						className: 'power-board-payment-method-label-logo'
-					}
-				)
-			),
-			description && createElement(
-				"p",
-				{ className: 'power-board-payment-method-desc' },
+						className: "power-board-payment-method-label"
+					},
+					label,
+					createElement(
+						"img", {
+							src: `${window.powerBoardWidgetSettings.pluginUrlPrefix}assets/images/logo.png`,
+							alt: label,
+							className: "power-board-payment-method-label-logo",
+						}
+					)
+				),
 				description
+					? createElement(
+						"p", {
+							className: "power-board-payment-method-desc"
+						},
+						description
+					)
+					: null
 			)
-	), content: <Content />, edit: <Content />, canMakePayment: () => true, ariaLabel: label, supports: { features: settings.supports }
+		), content: <Content />, edit: <Content />, canMakePayment: () => true, ariaLabel: label, supports: { features: settings.supports }
 };
 
 registerPaymentMethod( Paydock );
