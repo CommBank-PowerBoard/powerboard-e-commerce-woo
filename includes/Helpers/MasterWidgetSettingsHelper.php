@@ -210,19 +210,25 @@ class MasterWidgetSettingsHelper {
 		return "+61" . $digits;
 	}
 
-	public static function normalize_setting_string( array $settings, string $key, ?int $maxLen = null ): string {
+	public static function normalize_setting_string( array $settings, string $key, ?int $maxLen = null, ?string $default = null ): string {
 		$val = trim( (string) ( $settings[ $key ] ?? '' ) );
-		if ( $maxLen !== null && $maxLen >= 0 && mb_strlen( $val ) > $maxLen ) {
+
+		if ( $maxLen !== null && $maxLen >= 0 && $val !== '' && mb_strlen( $val ) > $maxLen ) {
 			$val = mb_substr( $val, 0, $maxLen );
 		}
+
+		if ( $val === '' && $default !== null ) {
+			return $default;
+		}
+
 		return $val;
 	}
 
-	public static function get_gateway_title( array $settings, ?int $maxLen = null ): string {
-		return self::normalize_setting_string( $settings, 'title', $maxLen );
+	public static function get_gateway_title( array $settings, ?int $maxLen = null, ?string $default = 'PowerBoard' ): string {
+		return self::normalize_setting_string( $settings, 'title', $maxLen, $default );
 	}
 
-	public static function get_gateway_description( array $settings, ?int $maxLen = null ): string {
-		return self::normalize_setting_string( $settings, 'description', $maxLen );
+	public static function get_gateway_description( array $settings, ?int $maxLen = null, ?string $default = 'Pay securely via PowerBoard.' ): string {
+		return self::normalize_setting_string($settings, 'description', $maxLen, $default);
 	}
 }
