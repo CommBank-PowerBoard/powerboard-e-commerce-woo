@@ -5,9 +5,9 @@ namespace PowerBoard\Helpers;
 
 use PowerBoard\Enums\MasterWidgetSettingsEnum;
 use PowerBoard\Enums\SettingGroupsEnum;
+use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use PowerBoard\Services\Settings\APIAdapterService;
 use PowerBoard\Services\Validation\ConnectionValidationService;
-use PowerBoard\Util\MasterWidgetPaymentService;
 
 class MasterWidgetSettingsHelper {
 	public static function get_input_type( string $key ): string {
@@ -211,7 +211,7 @@ class MasterWidgetSettingsHelper {
 		return "+61" . $digits;
 	}
 
-	private static function normalize_setting_string( array $settings, string $key, int $maxLength ): string {
+	public static function normalize_setting_string( array $settings, string $key, int $maxLength ): string {
 		$value = trim( (string) ( $settings[ $key ] ?? '' ) );
 		if ( $value === '' ) {
 			return '';
