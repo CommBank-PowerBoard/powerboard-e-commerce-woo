@@ -57,8 +57,8 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 	const DEFAULT_TITLE = 'PowerBoard';
 	const DEFAULT_DESCRIPTION = 'Pay securely via PowerBoard.';
-	const TITLE_MAX = 40;
-	const DESC_MAX = 140;
+	const TITLE_MAX = 50;
+	const DESCRIPTION_MAX = 500;
 
 	public static function get_instance(): self {
 		if ( is_null( self::$instance ) ) {
@@ -135,6 +135,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	public function get_title(): string {
 		return trim( $this->title ) ? $this->title : $this->method_title;
 	}
+
 	/**
 	 * This function is used on WC_Payment_Gateway
 	 *
@@ -161,7 +162,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$this->form_fields['description'] = [
 			'type'        => 'textarea',
 			'title'       => __( 'Description', 'power-board' ),
-			'description' => sprintf( __( 'Short help text. Max %d chars. Leave empty for default.', 'power-board' ), self::DESC_MAX ),
+			'description' => sprintf( __( 'Short help text. Max %d chars. Leave empty for default.', 'power-board' ), self::DESCRIPTION_MAX ),
 			'default'     => self::DEFAULT_DESCRIPTION,
 			'desc_tip'    => true,
 			'class'       => 'powerboard-textarea',
@@ -602,14 +603,11 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
-			// Wordpress data.
 			'environment'             => $settings_service->get_environment(),
-			// Woocommerce data.
 			'amount'                  => WC()->cart->get_total(),
 			'currency'                => strtoupper( get_woocommerce_currency() ),
-			// Widget.
-			'title'                   => $this->get_title(),
-			// Master Widget Checkout.
+			'title'                   => MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null ),
+			'description'             => MasterWidgetSettingsHelper::get_gateway_description( $this->settings, self::DESCRIPTION_MAX ?? null ),
 			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
 			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
 			'checkoutConfigurationId' => $settings_service->get_checkout_configuration_id(),
@@ -841,15 +839,15 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		do_action( 'woocommerce_update_option', [ 'id' => $option_key ] );
 
-		$title = isset( $this->settings['title'] ) ? trim( (string) $this->settings['title'] ) : '';
-		$desc = isset( $this->settings['description'] ) ? trim( (string) $this->settings['description'] ) : '';
+		$title = MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null );
+		$desc  = MasterWidgetSettingsHelper::get_gateway_description( $this->settings, self::DESCRIPTION_MAX ?? null );
 
 		if ( mb_strlen( $title ) > self::TITLE_MAX ) {
 			$title = mb_substr( $title, 0, self::TITLE_MAX );
 		}
 
-		if ( mb_strlen( $desc ) > self::DESC_MAX ) {
-			$desc = mb_substr( $desc, 0, self::DESC_MAX );
+		if ( mb_strlen( $desc ) > self::DESCRIPTION_MAX ) {
+			$desc = mb_substr( $desc, 0, self::DESCRIPTION_MAX );
 		}
 
 		if ( $title === '' ) {

@@ -11,6 +11,7 @@ declare( strict_types=1 );
 namespace PowerBoard\Util;
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
+use PowerBoard\Helpers\MasterWidgetSettingsHelper;
 use PowerBoard\Services\SDKAdapterService;
 use PowerBoard\Services\SettingsService;
 use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
@@ -245,8 +246,8 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$total = ! is_admin() ? WC()->cart->get_total() : 0;
 
-		$title = isset( $this->settings['title'] ) ? trim( (string) $this->settings['title'] ) : '';
-		$desc = isset( $this->settings['description'] ) ? trim( (string) $this->settings['description'] ) : '';
+		$title = MasterWidgetSettingsHelper::get_gateway_title( $this->settings, MasterWidgetPaymentService::TITLE_MAX ?? null );
+		$desc  = MasterWidgetSettingsHelper::get_gateway_description( $this->settings, MasterWidgetPaymentService::DESCRIPTION_MAX ?? null );
 
 		if ( $title === '' ) {
 			$title = MasterWidgetPaymentService::DEFAULT_TITLE;
@@ -258,15 +259,11 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
-			// Woocommerce data.
 			'amount'                  => $total,
 			'currency'                => strtoupper( get_woocommerce_currency() ),
-			// Widget.
 			'title'                   => esc_html( $title ),
 			'description'             => esc_html( $desc ),
-			// Keys.
 			'environment'             => $settings_service->get_environment(),
-			// Master Widget Checkout.
 			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
 			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
 			'checkoutConfigurationId' => $settings_service->get_checkout_configuration_id(),

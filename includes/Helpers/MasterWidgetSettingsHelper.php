@@ -184,30 +184,45 @@ class MasterWidgetSettingsHelper {
 	}
 	// phpcs:enable
 
+	/**
+	 * @param $phone
+	 * @return mixed|string
+	 *
+	 * format phone number to be sent on the checkout API, the country code is optional on the frontend and mandatory on the API
+	 */
+	public static function validate_phone_number( $phone ) {
 
-    /**
-     * @param $phone
-     * @return mixed|string
-     *
-     * format phone number to be sent on the checkout API, the country code is optional on the frontend and mandatory on the API
-     */
-    public static function validate_phone_number($phone){
+		if ( empty( $phone ) ) {
+			return '';
+		}
 
-        if(empty($phone)){
-            return '';
-        }
+		$phone = preg_replace( '/\s+/', '', $phone );
+		//if phone comes with correct format, returns the phone
+		if ( preg_match( '/^\+[1-9]{1}[0-9]{3,14}$/', $phone ) ) {
+			return $phone;
+		}
 
-        $phone = preg_replace('/\s+/', '', $phone);
-        //if phone comes with correct format, returns the phone
-        if(preg_match('/^\+[1-9]{1}[0-9]{3,14}$/', $phone)){
-            return $phone;
-        }
+		// Remove all non-digit characters
+		$cleanPhone = preg_replace( '/[^\d]/', '', $phone );
 
-        // Remove all non-digit characters
-        $cleanPhone = preg_replace('/[^\d]/', '', $phone);
+		// If starts with 0, remove it, match max length
+		$digits = substr( $cleanPhone, 0, 13 );
+		return "+61" . $digits;
+	}
 
-        // If starts with 0, remove it, match max length
-        $digits = substr($cleanPhone, 0, 13);
-        return "+61" . $digits;
-    }
+	public static function normalize_setting_string( array $settings, string $key, ?int $maxLen = null ): string {
+		$val = trim( (string) ( $settings[ $key ] ?? '' ) );
+		if ( $maxLen !== null && $maxLen >= 0 && mb_strlen( $val ) > $maxLen ) {
+			$val = mb_substr( $val, 0, $maxLen );
+		}
+		return $val;
+	}
+
+	public static function get_gateway_title( array $settings, ?int $maxLen = null ): string {
+		return self::normalize_setting_string( $settings, 'title', $maxLen );
+	}
+
+	public static function get_gateway_description( array $settings, ?int $maxLen = null ): string {
+		return self::normalize_setting_string( $settings, 'description', $maxLen );
+	}
 }

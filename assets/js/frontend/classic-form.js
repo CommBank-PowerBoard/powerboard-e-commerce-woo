@@ -1,9 +1,9 @@
 // noinspection JSUnresolvedReference
 jQuery(
-	function ($) {
+	function ( $ ) {
 		$( document ).ready(
 			() => {
-				const CONFIG                      = {
+				const CONFIG = {
 					phoneInputIds: {
 						shipping: '#shipping_phone',
 						billing: '#billing_phone',
@@ -13,11 +13,11 @@ jQuery(
 					phonePattern: /^(\+)?([(\(\d\)\s]{1,3})?([\d\s\(\d\)\-]{1,14})$/,
 					errorMessageHtml: `<div class ="classic-checkout-validation-error wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
 				};
-				const getPhoneInputs              = () =>
+				const getPhoneInputs = () =>
 					Object.entries( CONFIG.phoneInputIds )
 					.reduce(
 						( acc, [key, selector] ) => {
-							const $input          = $( selector );
+							const $input = $( selector );
 							if ( $input.length ) {
 								acc[key] = $input;
 							}
