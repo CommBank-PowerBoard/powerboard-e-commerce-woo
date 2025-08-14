@@ -7,6 +7,7 @@ use PowerBoard\Enums\MasterWidgetSettingsEnum;
 use PowerBoard\Enums\SettingGroupsEnum;
 use PowerBoard\Services\Settings\APIAdapterService;
 use PowerBoard\Services\Validation\ConnectionValidationService;
+use PowerBoard\Util\MasterWidgetPaymentService;
 
 class MasterWidgetSettingsHelper {
 	public static function get_input_type( string $key ): string {
@@ -210,25 +211,19 @@ class MasterWidgetSettingsHelper {
 		return "+61" . $digits;
 	}
 
-	public static function normalize_setting_string( array $settings, string $key, ?int $maxLen = null, ?string $default = null ): string {
-		$val = trim( (string) ( $settings[ $key ] ?? '' ) );
-
-		if ( $maxLen !== null && $maxLen >= 0 && $val !== '' && mb_strlen( $val ) > $maxLen ) {
-			$val = mb_substr( $val, 0, $maxLen );
+	private static function normalize_setting_string( array $settings, string $key, int $maxLength ): string {
+		$value = trim( (string) ( $settings[ $key ] ?? '' ) );
+		if ( $value === '' ) {
+			return '';
 		}
-
-		if ( $val === '' && $default !== null ) {
-			return $default;
-		}
-
-		return $val;
+		return mb_substr( $value, 0, $maxLength );
 	}
 
-	public static function get_gateway_title( array $settings, ?int $maxLen = null, ?string $default = 'PowerBoard' ): string {
-		return self::normalize_setting_string( $settings, 'title', $maxLen, $default );
+	public static function get_gateway_title( array $settings ): string {
+		return self::normalize_setting_string( $settings, 'title', MasterWidgetPaymentService::TITLE_MAX ) ?: 'PowerBoard';
 	}
 
-	public static function get_gateway_description( array $settings, ?int $maxLen = null, ?string $default = 'Pay securely via PowerBoard.' ): string {
-		return self::normalize_setting_string($settings, 'description', $maxLen, $default);
+	public static function get_gateway_description( array $settings ): string {
+		return self::normalize_setting_string( $settings, 'description', MasterWidgetPaymentService::DESCRIPTION_MAX ) ?: 'Pay securely via PowerBoard.';
 	}
 }

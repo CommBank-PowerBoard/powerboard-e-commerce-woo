@@ -4,6 +4,7 @@ namespace PowerBoard\Tests\Unit\Helpers\MasterWidgetSettingsHelper;
 
 use PHPUnit\Framework\TestCase;
 use PowerBoard\Helpers\MasterWidgetSettingsHelper as MWHelper;
+use PowerBoard\Util\MasterWidgetPaymentService;
 
 final class GatewayLabelsTest extends TestCase
 {
@@ -26,10 +27,9 @@ final class GatewayLabelsTest extends TestCase
 
 	public function testGetGatewayTitleUsesNormalizationAndLimit(): void
 	{
-		$settings = ['title' => '   PowerBoard — Custom Title   '];
-
-		$out = MWHelper::get_gateway_title($settings, 9);
-		$this->assertSame('PowerBoard', $out);
+		$settings = ['title' => str_repeat('A', MasterWidgetPaymentService::TITLE_MAX + 5)];
+		$result = MWHelper::get_gateway_title($settings);
+		$this->assertSame(str_repeat('A', MasterWidgetPaymentService::TITLE_MAX), $result);
 	}
 
 	public function testGetGatewayTitleFallsBackToDefaultIfEmpty(): void
@@ -42,10 +42,9 @@ final class GatewayLabelsTest extends TestCase
 
 	public function testGetGatewayDescriptionUsesNormalizationAndLimit(): void
 	{
-		$settings = ['description' => '   Pay securely via PowerBoard.   '];
-
-		$out = MWHelper::get_gateway_description($settings, 7);
-		$this->assertSame('Pay sec', $out);
+		$settings = ['description' => str_repeat('B', MasterWidgetPaymentService::DESCRIPTION_MAX + 5)];
+		$result = MWHelper::get_gateway_description($settings);
+		$this->assertSame(str_repeat('B', MasterWidgetPaymentService::DESCRIPTION_MAX), $result);
 	}
 
 	public function testGetGatewayDescriptionFallsBackToDefaultIfEmpty(): void
