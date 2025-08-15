@@ -391,9 +391,9 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 
 			if ( ! empty( $charge_id ) ) {
 				if ( empty( $checkout_order ) ) {
-					$this->refund_charge( $charge_id, $order->get_total() );
+					$this->refund_charge( $charge_id, (float) $order->get_total() );
 				} else {
-					$this->refund_charge( $charge_id, $checkout_order['total'] );
+					$this->refund_charge( $charge_id, (float) $checkout_order['total'] );
 				}
 				$order_note_failed_message = $failed_message . ' The charge with id ' . $charge_id . ' has been refunded.';
 			}
@@ -517,7 +517,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * Returns order id if order was created previously on PowerBoard
 	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
-	 * @return string
+	 * @return ?string
 	 */
 	public function get_order_id(): ?string {
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -604,9 +604,9 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
 			'environment'             => $settings_service->get_environment(),
-			'amount'                  => WC()->cart->get_total(),
-			'currency'                => strtoupper( get_woocommerce_currency() ),
-			'title'                   => MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null ),
+            'amount'                  => (float) WC()->cart->get_totals()['total'],
+            'currency'                => strtoupper( get_woocommerce_currency() ),
+            'title'                   => MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null ),
 			'description'             => MasterWidgetSettingsHelper::get_gateway_description( $this->settings, self::DESCRIPTION_MAX ?? null ),
 			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
 			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
@@ -1052,8 +1052,8 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 				'Updating Woo order with Checkout shipping and billing address'
 			);
 
-			$current_order->set_shipping_address( $checkout_customer_shipping );
-			$current_order->set_billing_address( $checkout_customer_billing );
+			$current_order->set_address( $checkout_customer_shipping, 'shipping' );
+			$current_order->set_address( $checkout_customer_billing, 'billing' );
 
 			$current_order->calculate_totals();
 		}
@@ -1081,20 +1081,25 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			}
 
 			$checkout_shipping = $checkout_order['shipping_total'];
-			$current_shipping  = $current_order->get_shipping_total( false );
+			$current_shipping = $current_order->get_shipping_total( false );
+
 			if ( $current_shipping !== $checkout_shipping ) {
 				$shipping_lines       = $current_order->get_items( 'shipping' );
 				$shipping_id          = explode( ':', $checkout_order['selected_shipping_id'] );
 				$shipping_method_id   = $shipping_id[0];
-				$shipping_instance_id = $shipping_id[1];
+				$shipping_instance_id = (int) $shipping_id[1];
 				$selected_shipping    = $checkout_order['selected_shipping'];
+
 				foreach ( $shipping_lines as $shipping_line ) {
-					if ( $shipping_method_id !== $shipping_line->get_method_id() && $shipping_instance_id !== $shipping_line->get_instance_id() ) {
+					$current_method = $shipping_line->get_method_id();
+					$current_instance = (int) $shipping_line->get_instance_id();
+
+					if ( $shipping_method_id !== $shipping_line->get_method_id() || $shipping_instance_id !== $shipping_line->get_instance_id() ) {
 						$shipping_line->set_meta_data( $selected_shipping );
 						$shipping_line->set_method_id( $shipping_method_id );
 						$shipping_line->set_instance_id( $shipping_instance_id );
 						$shipping_line->set_method_title( $selected_shipping->get_label() );
-						$shipping_line->set_total( $selected_shipping->get_cost() );
+						$shipping_line->set_total( (float) $selected_shipping->get_cost() );
 						$shipping_line->save();
 					}
 				}
@@ -1138,7 +1143,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$access_token     = $this->get_access_token();
 		$configuration_id = $this->get_configuration_id();
 
-		return isset( $version ) && isset( $environment ) && isset( $access_token ) && isset( $configuration_id );
+		return ! empty( $version ) && ! empty( $environment ) && ! empty( $access_token ) && ! empty( $configuration_id );
 	}
 
 	public function log_admin_settings_load(): void {

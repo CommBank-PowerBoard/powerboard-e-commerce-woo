@@ -20,7 +20,7 @@ class APIAdapterService {
 		return self::$instance;
 	}
 
-	public function initialise( $env, $access_token ): void {
+	public function initialise( string $env, string $access_token ): void {
 		ConfigService::init( $env, $access_token );
 	}
 
@@ -87,7 +87,11 @@ class APIAdapterService {
 		return $result;
 	}
 
-	public function get_configuration_templates_ids( string $version ): array {
+	public function get_configuration_templates_ids( ?string $version ): array {
+		if ( ! is_string( $version ) || $version === '' ) {
+			LoggerHelper::log( 'Empty checkout version passed to get_configuration_templates_ids', 'warning' );
+			return [];
+		}
 		return $this->get_charge_service()->get_configuration_templates_ids( $version )->call();
 	}
 
@@ -95,7 +99,11 @@ class APIAdapterService {
 		return $this->get_charge_service()->get_configuration_templates_for_validation()->call();
 	}
 
-	public function get_customisation_templates_ids( string $version ): array {
+	public function get_customisation_templates_ids( ?string $version ): array {
+		if ( ! is_string( $version ) || $version === '' ) {
+			LoggerHelper::log( 'Empty checkout version passed to get_customisation_templates_ids', 'warning' );
+			return [];
+		}
 		return $this->get_charge_service()->get_customisation_templates_ids( $version )->call();
 	}
 

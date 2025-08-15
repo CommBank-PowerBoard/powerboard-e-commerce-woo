@@ -98,12 +98,24 @@ class MasterWidgetSettingsHelper {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		set_transient( 'is_fetching_configuration_templates', true, 60 );
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$stored_configuration_templates = get_transient( 'configuration_templates_' . $env );
-		$has_error                      = false;
-		$api_adapter_service            = self::init_api_adapter( $env, $access_token );
-		$result                         = $api_adapter_service->get_configuration_templates_ids( $version );
-		$has_error                      = $result['error'];
+		$version = is_string( $version ) && $version !== '' ? $version : null;
+		if ( $version === null ) {
+			delete_transient( 'is_fetching_configuration_templates' );
+			if ( function_exists( 'add_settings_error' ) ) {
+				\add_settings_error(
+					'powerboard_checkout_version',
+					'missing_version',
+					'First select the Checkout Version, then the templates will become available.',
+					'error'
+				);
+			}
+			return [];
+		}
+
+		$api_adapter_service = self::init_api_adapter( $env, $access_token );
+		$result = $api_adapter_service->get_configuration_templates_ids( $version ) ?: [];
+
+		$has_error = ! empty( $result['error'] );
 
 		if ( $has_error ) {
 			$widget_api_adapter_service = APIAdapterService::get_instance();
@@ -116,17 +128,21 @@ class MasterWidgetSettingsHelper {
 			/* @noinspection PhpUndefinedFunctionInspection */
 			set_transient( 'invalid_access_token', false );
 		}
-		$data                    = $result['resource']['data'] ?? [];
-		$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ) );
+
+		$data                    = is_array( $result['resource']['data'] ?? null ) ? $result['resource']['data'] : [];
+		$configuration_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, $has_error );
 
 		$configuration_id_key = SettingsHelper::get_option_name(
-				POWER_BOARD_PLUGIN_PREFIX,
-				[
-					SettingGroupsEnum::CHECKOUT,
-					MasterWidgetSettingsEnum::CONFIGURATION_ID,
-				]
-			);
-		MasterWidgetTemplatesHelper::validate_or_update_template_id( $configuration_templates, ! empty( $has_error ), $configuration_id_key, MasterWidgetSettingsEnum::CONFIGURATION_ID );
+			POWER_BOARD_PLUGIN_PREFIX,
+			[ SettingGroupsEnum::CHECKOUT, MasterWidgetSettingsEnum::CONFIGURATION_ID ]
+		);
+
+		MasterWidgetTemplatesHelper::validate_or_update_template_id(
+			$configuration_templates,
+			$has_error,
+			$configuration_id_key,
+			MasterWidgetSettingsEnum::CONFIGURATION_ID
+		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		delete_transient( 'is_fetching_configuration_templates' );
@@ -144,23 +160,28 @@ class MasterWidgetSettingsHelper {
 		/* @noinspection PhpUndefinedFunctionInspection */
 		set_transient( 'is_fetching_customisation_templates', true, 60 );
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$stored_customisation_templates = get_transient( 'customisation_templates_' . $env );
-		$has_error                      = false;
-		$api_adapter_service            = self::init_api_adapter( $env, $access_token );
-		$result                         = $api_adapter_service->get_customisation_templates_ids( $version );
-		$has_error                      = $result['error'];
-		$data                           = $result['resource']['data'] ?? [];
-		$customisation_templates        = MasterWidgetTemplatesHelper::map_templates( $data, $version, ! empty( $has_error ), true );
+		$version = is_string( $version ) && $version !== '' ? $version : null;
+		if ( $version === null ) {
+			delete_transient( 'is_fetching_customisation_templates' );
+			return [];
+		}
+		$api_adapter_service     = self::init_api_adapter( $env, $access_token );
+		$result                  = $api_adapter_service->get_customisation_templates_ids( $version ) ?: [];
+		$has_error               = ! empty( $result['error'] );
+		$data                    = is_array( $result['resource']['data'] ?? null ) ? $result['resource']['data'] : [];
+		$customisation_templates = MasterWidgetTemplatesHelper::map_templates( $data, $version, $has_error, true );
 
 		$customisation_id_key = SettingsHelper::get_option_name(
 			POWER_BOARD_PLUGIN_PREFIX,
-				[
-					SettingGroupsEnum::CHECKOUT,
-					MasterWidgetSettingsEnum::CUSTOMISATION_ID,
-				]
-			);
-		MasterWidgetTemplatesHelper::validate_or_update_template_id( $customisation_templates, ! empty( $has_error ), $customisation_id_key, MasterWidgetSettingsEnum::CUSTOMISATION_ID );
+			[ SettingGroupsEnum::CHECKOUT, MasterWidgetSettingsEnum::CUSTOMISATION_ID ]
+		);
+
+		MasterWidgetTemplatesHelper::validate_or_update_template_id(
+			$customisation_templates,
+			$has_error,
+			$customisation_id_key,
+			MasterWidgetSettingsEnum::CUSTOMISATION_ID
+		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		delete_transient( 'is_fetching_customisation_templates' );
