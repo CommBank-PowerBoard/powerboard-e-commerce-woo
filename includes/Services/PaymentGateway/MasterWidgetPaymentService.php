@@ -150,6 +150,14 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		return parent::is_available();
 	}
 
+
+    /**
+     * Initialise settings form fields.
+     *
+     * Add an array of fields to be displayed on the gateway's settings screen.
+     *
+     * @since  1.0.0
+     */
 	public function init_form_fields(): void {
 		$this->form_fields['title'] = [
 			'type'        => 'text',

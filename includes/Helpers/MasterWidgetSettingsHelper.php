@@ -46,17 +46,16 @@ class MasterWidgetSettingsHelper {
 	}
 
 	public static function get_checkout_versions_for_ui( $env, $access_token ): array {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! self::is_power_board_settings_page() || ! empty( get_transient( 'is_fetching_versions' ) ) ) {
+
+        if ( ! self::is_power_board_settings_page() || empty($env) || empty($access_token) ) {
 			return [];
 		}
-		/* @noinspection PhpUndefinedFunctionInspection */
-		set_transient( 'is_fetching_versions', true, 60 );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$stored_checkout_versions = get_transient( 'checkout_versions' );
 		if ( ! empty( $stored_checkout_versions ) ) {
 			$checkout_versions_for_ui = $stored_checkout_versions;
+
 		} else {
 			$api_adapter_service  = self::init_api_adapter( $env, $access_token );
 			$plugin_configuration = $api_adapter_service->get_plugin_configuration_by_version();
@@ -83,7 +82,6 @@ class MasterWidgetSettingsHelper {
 			set_transient( 'environment_url', $plugin_configuration['environment_url'] ?? [], 60 );
 		}
 		/* @noinspection PhpUndefinedFunctionInspection */
-		delete_transient( 'is_fetching_versions' );
 		return [ '' => 'Select a checkout version' ] + $checkout_versions_for_ui;
 	}
 
@@ -91,16 +89,15 @@ class MasterWidgetSettingsHelper {
 	 * Uses functions (get_transient, delete_transient and set_transient) from WordPress
 	 */
 	public static function get_configuration_ids_for_ui( $env, $access_token, $version ): array {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! self::is_power_board_settings_page() || ! empty( get_transient( 'is_fetching_configuration_templates' ) ) ) {
+
+        /* @noinspection PhpUndefinedFunctionInspection */
+		if ( ! self::is_power_board_settings_page() || empty($env) || empty($access_token) ) {
 			return [];
 		}
-		/* @noinspection PhpUndefinedFunctionInspection */
-		set_transient( 'is_fetching_configuration_templates', true, 60 );
 
 		$version = is_string( $version ) && $version !== '' ? $version : null;
-		if ( $version === null ) {
-			delete_transient( 'is_fetching_configuration_templates' );
+
+        if( empty($version)){
 			if ( function_exists( 'add_settings_error' ) ) {
 				\add_settings_error(
 					'powerboard_checkout_version',
@@ -144,8 +141,6 @@ class MasterWidgetSettingsHelper {
 			MasterWidgetSettingsEnum::CONFIGURATION_ID
 		);
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		delete_transient( 'is_fetching_configuration_templates' );
 		return $configuration_templates;
 	}
 
@@ -154,15 +149,12 @@ class MasterWidgetSettingsHelper {
 	 */
 	public static function get_customisation_ids_for_ui( $env, $access_token, $version ): array {
 		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! self::is_power_board_settings_page() || ! empty( get_transient( 'is_fetching_customisation_templates' ) ) ) {
+		if ( !self::is_power_board_settings_page() || empty($env) || empty($access_token) ) {
 			return [];
 		}
-		/* @noinspection PhpUndefinedFunctionInspection */
-		set_transient( 'is_fetching_customisation_templates', true, 60 );
 
 		$version = is_string( $version ) && $version !== '' ? $version : null;
-		if ( $version === null ) {
-			delete_transient( 'is_fetching_customisation_templates' );
+        if( empty($version)){
 			return [];
 		}
 		$api_adapter_service     = self::init_api_adapter( $env, $access_token );
@@ -184,7 +176,6 @@ class MasterWidgetSettingsHelper {
 		);
 
 		/* @noinspection PhpUndefinedFunctionInspection */
-		delete_transient( 'is_fetching_customisation_templates' );
 		return $customisation_templates;
 	}
 
