@@ -25,7 +25,9 @@ class ConnectionValidationService {
 	private ?string $environment_settings       = null;
 	private ?string $access_token_settings      = null;
 	private ?string $configuration_id_settings  = null;
-	private ?string $checkout_version           = null;
+
+    //default value for version on init load
+    private ?string $checkout_version           = "1";
 	private APIAdapterService $widget_api_adapter_service;
 
 	/**
@@ -76,7 +78,7 @@ class ConnectionValidationService {
 
 	private function validate(): void {
 		if ( $this->validate_environment() ) {
-			$this->validate_credential( $this->$checkout_version );
+			$this->validate_credential( );
 		}
 	}
 
@@ -97,7 +99,10 @@ class ConnectionValidationService {
 				MasterWidgetSettingsEnum::VERSION,
 			]
 		);
-		$this->checkout_version = $this->data[ $version_settings_key ];
+
+        if(!empty($this->data[ $version_settings_key ])){
+		    $this->checkout_version = $this->data[ $version_settings_key ];
+        }
 
 		$access_token_settings_key   = SettingsHelper::get_option_name(
 			$this->service->id,
@@ -128,12 +133,9 @@ class ConnectionValidationService {
 	}
 
 	private function validate_credential(): void {
-		if (
-			$this->access_token_settings === '********************'
-		) {
-			if ( $this->validate_checkout_version() ) {
-				$this->check_is_configuration_template_selected();
-			}
+		if ( $this->access_token_settings === '********************') {
+			$this->validate_checkout_version();
+
 		} else {
 			if (
 				$this->check_access_key_connection( $this->access_token_settings )
@@ -163,15 +165,6 @@ class ConnectionValidationService {
 		}
 
 		return false;
-	}
-
-	private function check_is_configuration_template_selected(): void {
-		if ( empty( $this->configuration_id_settings ) ) {
-			if ( ! self::$no_config_template_shown_global ) {
-				$this->errors[]                        = 'No configuration template ID selected. Please select a template and try again.';
-				self::$no_config_template_shown_global = true;
-			}
-		}
 	}
 
 	private function check_access_key_connection( ?string $access_token ): bool {
