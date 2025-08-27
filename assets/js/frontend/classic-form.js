@@ -12,7 +12,6 @@ jQuery(
 					errorMessageClassName: 'wc-block-components-validation-error',
 					phonePattern: /^(\+)?([(\(\d\)\s]{1,3})?([\d\s\(\d\)\-]{1,14})$/,
 					errorMessageHtml: `<div class ="classic-checkout-validation-error wc-block-components-validation-error" role="alert"><p>Please enter a valid phone number</p></div>`,
-					domain: PowerBoardAjaxCheckout.domain
 				};
 				const getPhoneInputs = () =>
 					Object.entries( CONFIG.phoneInputIds )
@@ -306,7 +305,7 @@ jQuery(
 						// noinspection JSUnresolvedReference
 						jQuery.ajax(
 							{
-								url: CONFIG.domain + '/?wc-ajax=power-board-create-charge-intent',
+								url: '/?wc-ajax=power-board-create-charge-intent',
 								type: 'POST',
 								data: data,
 								success: ( response ) => {
@@ -387,7 +386,7 @@ jQuery(
 								// noinspection JSUnresolvedReference
 								jQuery.ajax(
 									{
-										url: CONFIG.domain + '/?wc-ajax=power-board-process-payment-result',
+										url: '/?wc-ajax=power-board-process-payment-result',
 										method: 'POST',
 										data: {
 											_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
@@ -557,7 +556,7 @@ jQuery(
 										// noinspection JSUnresolvedReference
 										jQuery.ajax(
 											{
-												url: CONFIG.domain + '/?wc-ajax=power-board-update-shipping',
+												url: '/?wc-ajax=power-board-update-shipping',
 												type: 'POST',
 												data: {
 													_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
@@ -628,7 +627,7 @@ jQuery(
 							// noinspection JSUnresolvedReference
 							jQuery.ajax(
 								{
-									url: CONFIG.domain + '/?wc-ajax=power-board-check-postcode',
+									url: '/?wc-ajax=power-board-check-postcode',
 									type: 'POST',
 									data: {
 										_wpnonce: PowerBoardAjaxCheckout.wpnonce_check_postcode,
@@ -668,7 +667,7 @@ jQuery(
 							// noinspection JSUnresolvedReference
 							jQuery.ajax(
 								{
-									url: CONFIG.domain + '/?wc-ajax=power-board-check-email',
+									url: '/?wc-ajax=power-board-check-email',
 									type: 'POST',
 									data: {
 										_wpnonce: PowerBoardAjaxCheckout.wpnonce_check_email,
@@ -713,7 +712,7 @@ jQuery(
 							// noinspection JSUnresolvedReference
 							jQuery.ajax(
 								{
-									url: CONFIG.domain + '/?wc-ajax=power-board-update-order-notes',
+									url: '/?wc-ajax=power-board-update-order-notes',
 									type: 'POST',
 									data: {
 										_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_order_notes,

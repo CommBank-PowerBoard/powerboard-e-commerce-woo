@@ -45,7 +45,7 @@ const validateAndRefreshCartTotals = callback => {
 	}
 	jQuery.ajax(
 		{
-			url: settings.domain + '/?wc-ajax=power-board-update-shipping',
+			url: '/?wc-ajax=power-board-update-shipping',
 			type: 'POST',
 			data: {
 				_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,
@@ -185,7 +185,7 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 		// noinspection JSUnresolvedReference
 		jQuery.ajax(
 		{
-			url:  settings.domain + '/?wc-ajax=power-board-create-charge-intent',
+			url: '/?wc-ajax=power-board-create-charge-intent',
 			type: 'POST',
 			data: {
 				_wpnonce: PowerBoardAjaxCheckout.wpnonce_intent,
@@ -279,7 +279,7 @@ const loadMasterWidget = ( response, orderId ) => {
 			// noinspection JSUnresolvedReference
 			jQuery.ajax(
 				{
-					url: settings.domain + '/?wc-ajax=power-board-process-payment-result',
+					url: '/?wc-ajax=power-board-process-payment-result',
 					method: 'POST',
 					data: {
 						_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
@@ -317,7 +317,7 @@ const loadMasterWidget = ( response, orderId ) => {
 				// noinspection JSUnresolvedReference
 				jQuery.ajax(
 					{
-						url: settings.domain + '/?wc-ajax=power-board-process-payment-result',
+						url: '/?wc-ajax=power-board-process-payment-result',
 						method: 'POST',
 						data: {
 							_wpnonce: PowerBoardAjaxCheckout.wpnonce_process_payment,
@@ -530,7 +530,7 @@ const handleShippingChanged = () => {
 			// noinspection JSUnresolvedReference
 			jQuery.ajax(
 				{
-					url: settings.domain + '/?wc-ajax=power-board-update-shipping',
+					url: '/?wc-ajax=power-board-update-shipping',
 					type: 'POST',
 					data: {
 						_wpnonce: PowerBoardAjaxCheckout.wpnonce_update_shipping,

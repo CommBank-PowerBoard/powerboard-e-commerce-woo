@@ -150,7 +150,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 				'PowerBoardAjaxCheckout',
 				[
 					'url'                        => admin_url( 'admin-ajax.php' ),
-                    'domain'                     => get_site_url(),
 					'wpnonce_intent'             => wp_create_nonce( 'power-board-create-charge-intent' ),
 					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
 					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
@@ -166,8 +165,7 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 				'PowerBoardAjaxCheckout',
 				[
 					'url'                        => admin_url( 'admin-ajax.php' ),
-                    'domain'                     => get_site_url(),
-                    'wpnonce_intent'             => wp_create_nonce( 'power-board-create-charge-intent' ),
+					'wpnonce_intent'             => wp_create_nonce( 'power-board-create-charge-intent' ),
 					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
 					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
 					'wpnonce_check_postcode'     => wp_create_nonce( 'power-board-check-postcode' ),
@@ -265,7 +263,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			'currency'                => strtoupper( get_woocommerce_currency() ),
 			'title'                   => esc_html( $title ),
 			'description'             => esc_html( $desc ),
-            'domain'                  => get_site_url(),
 			'environment'             => $settings_service->get_environment(),
 			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
 			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
