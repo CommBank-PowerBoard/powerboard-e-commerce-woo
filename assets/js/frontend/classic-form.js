@@ -163,21 +163,6 @@ jQuery(
 						)
 						return result;
 					},
-					isCreateAccountChecked() {
-						return document.getElementById( 'createaccount' )?.checked || false;
-					},
-					getAccountPasswordInput() {
-						return document.getElementById( 'account_password' );
-					},
-					isWeakAccountPassword() {
-						if ( !this.isCreateAccountChecked() ) return false;
-						const pwd = this.getAccountPasswordInput();
-						if ( !pwd || !pwd.value.trim() ) return true;
-						const meter = pwd.parentElement?.querySelector( '.woocommerce-password-strength' ) || document.querySelector( '.woocommerce-password-strength' );
-						if ( !meter ) return false;
-						const cls = meter.classList;
-						return cls.contains( 'short' ) || cls.contains( 'bad' );
-					},
 					isValidForm( paymentMethod ) {
 						this.hideFormValidationError( paymentMethod );
 						let fieldList                 = this.getFieldsList();
@@ -186,11 +171,6 @@ jQuery(
 						const invalidPhone            = document.getElementById( 'shipping_phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing_phone' )?.className.includes( 'power-board-invalid-phone' );
 						if ( this.invalidPostcode || this.invalidEmail || invalidPhone || ( additionalTermsCheckbox && !additionalTermsCheckbox.checked ) ) {
 							result = false;
-						}
-						const weakPwd = this.isWeakAccountPassword();
-						if ( weakPwd ) {
-							result = false;
-							this.setFieldLikeInvalid( 'account_password' );
 						}
 						const defaultTermsCheckbox = document.getElementById( 'terms' );
 						if ( defaultTermsCheckbox && !defaultTermsCheckbox.checked ) {
@@ -208,16 +188,16 @@ jQuery(
 								}
 							}
 						);
-						if ( result ) {
-							// noinspection JSUnresolvedReference
-							let isPhoneNumberValid = this.isBillingPhoneValid();
-							// noinspection JSUnresolvedReference
-							const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
-							if ( !useSameBillingAndShipping ) {
-								isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
-							}
-							return isPhoneNumberValid;
+					if ( result ) {
+						// noinspection JSUnresolvedReference
+						let isPhoneNumberValid = this.isBillingPhoneValid();
+						// noinspection JSUnresolvedReference
+						const useSameBillingAndShipping = document.getElementById( 'ship-to-different-address-checkbox' )?.checked;
+						if ( !useSameBillingAndShipping ) {
+							isPhoneNumberValid = isPhoneNumberValid && this.isShippingPhoneValid();
 						}
+						return isPhoneNumberValid;
+					}
 						return result;
 					},
 					isShippingPhoneValid() {
@@ -260,9 +240,7 @@ jQuery(
 							loading.hide();
 
 							const invalidPhone = document.getElementById( 'shipping_phone' )?.className.includes( 'power-board-invalid-phone' ) || document.getElementById( 'billing_phone' )?.className.includes( 'power-board-invalid-phone' );
-							const weakPwd = this.isWeakAccountPassword && this.isWeakAccountPassword();
-
-							if ( this.invalidPostcode || this.invalidEmail || invalidPhone || weakPwd ) {
+							if ( this.invalidPostcode || this.invalidEmail || invalidPhone ) {
 								invalidFieldsError.show();
 							} else {
 								error.show();
@@ -302,18 +280,6 @@ jQuery(
 					initMasterWidget() {
 						const initTimestamp       = Date.now();
 						this.lastMasterWidgetInit = initTimestamp;
-						if ( !this.isValidForm('power_board') ) {
-							this.toggleWidgetVisibility( true );
-							this.toggleOrderButton( true );
-							$( '#loading' ).hide();
-							const weakPwd = this.isWeakAccountPassword();
-							if ( this.invalidPostcode || this.invalidEmail || weakPwd ) {
-								$( '#invalid-fields-error' ).show();
-							} else {
-								$( '#required-fields-validation-error' ).show();
-							}
-							return;
-						}
 						setTimeout( () => this.toggleOrderButton( true ), 100 );
 						let addressData     = this.getAddressData( false );
 						let billingAddress  = addressData.address;
@@ -765,18 +731,6 @@ jQuery(
 				}
 
 				powerBoardHelper.init();
-
-				const revalidatePowerBoard = () => {
-					const selected = jQuery( 'input[name="payment_method"]:checked' ).val();
-					if ( selected === 'power_board' ) {
-						powerBoardHelper.setPaymentMethod( selected, true );
-					}
-				};
-
-				jQuery( '#createaccount' ).on( 'change', revalidatePowerBoard );
-
-				jQuery( document.body ).on( 'keyup input change', '#account_password', revalidatePowerBoard );
-
 				powerBoardHelper.addBeforeLeavePageListener();
 				initPhoneNumberValidation();
 				// Initialize cart changes helper for cross-tab synchronization

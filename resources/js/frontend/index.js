@@ -118,14 +118,6 @@ const initMasterWidgetCheckout = ( updatedCartTotals = null, retryCount = 0 ) =>
 	// Use provided cart totals or fall back to cart.getCartTotals()
 	let cartTotals = updatedCartTotals || cart.getCartTotals();
 
-	if ( !checkIsFormValid() ) {
-		toggleWidgetVisibility( true );
-		const loading = jQuery( '#loading' )[0];
-		const error = jQuery( '#required-fields-validation-error' )[0];
-		showInvalidFormError( loading, error );
-		return;
-	}
-
 	// Only apply timing logic if we don't have updated cart totals AND this is a fresh call
 	if ( !updatedCartTotals && retryCount === 0 ) {
 		// Check if we recently changed shipping (within last 15 seconds)
@@ -352,26 +344,6 @@ const loadMasterWidget = ( response, orderId ) => {
 	);
 }
 
-const isCreateAccountChecked = () =>
-	document.querySelector( '.wc-block-checkout__create-account input[type="checkbox"]' )?.checked || false;
-
-const getAccountPasswordInput = () =>
-	document.querySelector( '.wc-block-components-text-input input[type="password"], input#account_password' );
-
-const hasPasswordValidationError = () => {
-	const pwd = getAccountPasswordInput();
-	if (!pwd) return false;
-	const wrap = pwd.closest( '.wc-block-components-text-input' ) || pwd.parentElement;
-	return !!wrap?.querySelector( '.wc-block-components-validation-error' );
-};
-
-const isWeakAccountPassword = () => {
-	if ( !isCreateAccountChecked() ) return false;
-	const pwd = getAccountPasswordInput();
-	const empty = !pwd || !pwd.value.trim();
-	return empty || hasPasswordValidationError();
-};
-
 const checkIsFormValid = () => {
 	// noinspection JSUnresolvedReference
 	let isFormValid = jQuery( '.wc-block-components-form' )[0].checkValidity() && isShippingFormValid() && isShippingPhoneValid();
@@ -386,10 +358,6 @@ const checkIsFormValid = () => {
 	const termsIds = ['_woo_additional_terms', 'terms-and-conditions'];
 	const wooTerms = termsIds.map( id => document.getElementById( id ) ).find( el => el !== null );
 	if ( wooTerms && !wooTerms.checked ) {
-		isFormValid = false;
-	}
-
-	if ( isWeakAccountPassword() ) {
 		isFormValid = false;
 	}
 
@@ -429,8 +397,7 @@ const handleWidgetDisplay = ( waitForExternalWidgetDisplay = false, updatedCartT
 		const validPostcode = document.getElementById( 'shipping-postcode' )?.checkValidity() && document.getElementById( 'billing-postcode' )?.checkValidity();
 		const validEmail    = document.getElementById( 'email' ).checkValidity();
 		const validPhone    = !document.getElementById( 'shipping-phone' )?.className.includes( 'power-board-invalid-phone' ) && !document.getElementById( 'billing-phone' )?.className.includes( 'power-board-invalid-phone' );
-		const invalidPass   = isWeakAccountPassword();
-		if ( !validPostcode || !validEmail || !validPhone || invalidPass ) {
+		if ( !validPostcode || !validEmail || !validPhone ) {
 			error.classList.add( 'hide' );
 			// noinspection JSUnresolvedReference
 			error = invalidFieldsError;
