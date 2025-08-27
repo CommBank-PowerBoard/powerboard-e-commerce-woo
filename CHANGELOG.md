@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0] - 2025-08-27
+
+### Compatibility
+
+- Compatible with WooCommerce version `9.9.3`.
+
+### Added
+
+- Added support for custom title & description in the plugin settings page.
+
+### Fixed
+
+- Fixed an error in the plugin settings page.
+
 ## [1.5.0] - 2025-07-25
 
 ### Compatibility
