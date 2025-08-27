@@ -514,11 +514,6 @@ const isBillingFormValid = () => {
 const isShippingFormValid = () => {
 	// noinspection JSUnresolvedReference
 	const shippingAddressFormData = cart.getCustomerData().shippingAddress
-
-	const shippingFormVisible = !!document.querySelector( '#shipping-postcode' );
-
-	if ( !shippingFormVisible ) return true;
-
 	// noinspection JSUnresolvedReference
 	return !!shippingAddressFormData
 	&& !!shippingAddressFormData.address_1
