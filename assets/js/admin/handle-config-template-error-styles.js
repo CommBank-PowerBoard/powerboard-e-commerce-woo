@@ -1,11 +1,15 @@
-const checkoutTemplatesSelectBoxes = ['woocommerce_power_board_power_board_CREDENTIALS_ACCESS_KEY', 'woocommerce_power_board_power_board_CHECKOUT_CONFIGURATION_ID', 'woocommerce_power_board_power_board_CHECKOUT_CUSTOMISATION_ID'];
+const checkoutTemplatesSelectBoxes = [
+	'woocommerce_power_board_power_board_CREDENTIALS_ACCESS_KEY',
+	'woocommerce_power_board_power_board_CHECKOUT_CONFIGURATION_ID',
+	'woocommerce_power_board_power_board_CHECKOUT_CUSTOMISATION_ID'
+];
 // noinspection JSUnresolvedReference
 jQuery( document ).ready(
-	function () {
+	function() {
 		checkoutTemplatesSelectBoxes.map(
 			templateSelectBoxId => {
 				const element            = document.getElementById( templateSelectBoxId );
-				const descriptionElement = element.parentElement.querySelector( 'p.description' )
+				const descriptionElement = element.parentElement.querySelector( 'p.description' );
 				if ( descriptionElement ) {
 					if ( !element.classList.contains( 'grey-description' ) ) {
 						descriptionElement.style.color = 'red';
@@ -20,6 +24,6 @@ jQuery( document ).ready(
 					);
 				}
 			}
-		)
+		);
 	}
 );

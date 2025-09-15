@@ -5,6 +5,7 @@ namespace PowerBoard;
 
 use PowerBoard\Services\ActionsService;
 use PowerBoard\Services\FiltersService;
+use PowerBoard\Services\ModalService;
 use PowerBoard\Services\Assets\AdminAssetsService;
 use PowerBoard\Services\Assets\FrontendAssetsService;
 
@@ -19,6 +20,7 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 		protected function __construct() {
 			ActionsService::get_instance();
 			FiltersService::get_instance();
+			ModalService::get_instance();
 
 			// Initialize admin assets only in admin area
 			if ( is_admin() ) {
@@ -46,7 +48,6 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 			}
 
 			// Reset button styles inside the widget
-			/* @noinspection PhpUndefinedFunctionInspection */
 			add_action( 'wp_head', [ $this, 'register_style_fixes' ] );
 		}
 

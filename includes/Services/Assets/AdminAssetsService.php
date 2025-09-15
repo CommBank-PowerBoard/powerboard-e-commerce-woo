@@ -23,8 +23,6 @@ class AdminAssetsService {
 	public function __construct() {
 		/**
 		 * Use hook admin_enqueue_scripts
-		 *
-		 * @noinspection PhpUndefinedFunctionInspection
 		 */
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 	}
@@ -46,7 +44,6 @@ class AdminAssetsService {
 		foreach ( self::SCRIPTS as $script ) {
 			$script_name = $this->get_script_name( $script );
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_register_script(
 				$script_name,
 				plugins_url( $this->get_script_path( $script ), POWER_BOARD_PLUGIN_FILE ),
@@ -64,15 +61,11 @@ class AdminAssetsService {
 				( isset( $_GET['tab'], $_GET['section'] ) && $_GET['tab'] === 'checkout' && $_GET['section'] === 'power_board' ) ) {
 				/**
 				 * Use hook wp_enqueue_script
-				 *
-				 * @noinspection PhpUndefinedFunctionInspection
 				 */
 				wp_enqueue_script( $script_name );
 
 				/**
 				 * Use function wp_localize_script
-				 *
-				 * @noinspection PhpUndefinedFunctionInspection
 				 */
 				wp_localize_script(
 					$script_name,

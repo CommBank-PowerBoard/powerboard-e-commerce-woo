@@ -16,37 +16,81 @@ include:
   - project: 'paydock/platform/gitlab-templates'
     file: '/code_quality.yml'
 
-run_tests:
+run_php_tests:
   image: composer:lts
   stage: test
   script:
     - composer install
-    - ./vendor/bin/phpunit ./tests
-
-run_phpcs:
-  image: composer:lts
-  stage: quality
-  script:
-    - composer install
-    - ./vendor/bin/phpcs --report=json . > phpcs-report.json || true
-    - ls phpcs-report.json
+    - ./vendor/bin/phpunit ./tests --log-junit phpunit-junit.xml
   artifacts:
-    name: phpcs-report.json
+    name: phpunit-reports
     paths:
-      - phpcs-report.json
-
-phpcs_report:
-  image: python:3.9-slim
-  stage: quality
-  needs:
-    - job: run_phpcs
-      artifacts: true
-  script:
-    - python phpcs2codeclimate.py
-  artifacts:
+      - phpunit-junit.xml
     reports:
-      codequality:
-        - code_climate_phpcs_report.json
+      junit: phpunit-junit.xml
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+run_js_tests:
+  image: node:18-alpine
+  stage: test
+  script:
+    - npm ci
+    - npm run test:js -- --ci
+  artifacts:
+    name: jest-reports
+    paths:
+      - jest-junit.xml
+    reports:
+      junit: jest-junit.xml
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+quality_scan:
+  image: php:8.1-cli
+  stage: quality
+  before_script:
+    - apt-get update && apt-get install -y python3 python3-pip nodejs npm git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  script:
+    - python3 scripts/run-quality-scan.py
+  artifacts:
+    name: code-quality-reports
+    paths:
+      - gl-code-quality-report.json
+      - phpcs-report.json
+      - eslint-report.json
+    reports:
+      codequality: gl-code-quality-report.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+run_npm_audit:
+  image: node:18-alpine
+  stage: quality
+  script:
+    - npm ci --omit=dev
+    - npm audit --json > npm-audit-report.json || true
+    - npm audit > npm-audit-summary.txt || true
+    - echo "NPM Audit analysis completed"
+    - echo "Production dependencies security scan results:"
+    - npm audit || true
+    - ls -la npm-audit-*.json npm-audit-*.txt || true
+  artifacts:
+    name: npm-audit-reports
+    paths:
+      - npm-audit-report.json
+      - npm-audit-summary.txt
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 prepare_power_board_version:
   stage: publish

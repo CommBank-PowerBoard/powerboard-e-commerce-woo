@@ -7,12 +7,16 @@
 
     <!-- Exclude the Node Modules directory. -->
     <exclude-pattern>/node_modules/*</exclude-pattern>
+    
     <!-- Exclude the generated files' directory. -->
     <exclude-pattern>/assets/build/*</exclude-pattern>
     <!-- Exclude minified Javascript files. -->
     <exclude-pattern>*.min.js</exclude-pattern>
 
     <exclude-pattern>*/assets/build/js/*</exclude-pattern>
+
+    <!-- Exclude code coverage reports -->
+    <exclude-pattern>/coverage/*</exclude-pattern>
 
     <exclude-pattern>*/.git/*</exclude-pattern>
 
@@ -28,10 +32,14 @@
     <!-- Configs -->
     <config name="minimum_supported_wp_version" value="6.5" />
 
-    <!-- Rules -->
-    <rule ref="WooCommerce-Core" />
+    <!-- PHP Files: Use WordPress/WooCommerce standards -->
+    <rule ref="WooCommerce-Core">
+        <include-pattern>*.php</include-pattern>
+    </rule>
 
     <rule ref="WordPress-Extra">
+        <include-pattern>*.php</include-pattern>
+        
         <!-- Disable dot of end string docblock -->
         <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
 
@@ -74,29 +82,78 @@
         <!-- Allow strict declaration in PHP file before comment -->
         <exclude name="PSR12.Files.FileHeader.IncorrectOrder" />
     </rule>
+    
+    <!-- JavaScript files are now handled by ESLint with WordPress standards -->
+    <!-- Exclude ALL JavaScript files from phpcs -->
+    <exclude-pattern>*.js</exclude-pattern>
+    <exclude-pattern>/assets/js/*</exclude-pattern>
+    <exclude-pattern>/resources/js/*</exclude-pattern>
+    <exclude-pattern>/tests/frontend/*</exclude-pattern>
 
-    <!-- AutoEscaped functions -->
+    <!-- Security rules (PHP only) -->
     <rule ref="WordPress.Security.EscapeOutput">
+        <include-pattern>*.php</include-pattern>
         <properties>
             <property name="customAutoEscapedFunctions" type="array">
                 <element value="rd_render_attributes" />
                 <element value="rd_get_picture_html" />
             </property>
+            <property name="customEscapingFunctions" type="array">
+                <!-- Override to use modern syntax -->
+            </property>
         </properties>
     </rule>
 
-    <!-- Disallow long array syntax. -->
-    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <include-pattern>*.php</include-pattern>
+        <properties>
+            <property name="customSanitizingFunctions" type="array">
+                <!-- Override to use modern syntax -->
+            </property>
+        </properties>
+    </rule>
 
-    <!-- Prohibit Yoda Conditions expressions -->
-    <rule ref="Generic.ControlStructures.DisallowYodaConditions"/>
+    <!-- PHP-only rules -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax">
+        <include-pattern>*.php</include-pattern>
+    </rule>
+
+    <rule ref="Generic.ControlStructures.DisallowYodaConditions">
+        <include-pattern>*.php</include-pattern>
+    </rule>
 
     <rule ref="WordPress.WP.I18n">
+        <include-pattern>*.php</include-pattern>
         <properties>
-            <property name="text_domain" type="array" value="power-board" />
+            <property name="text_domain" type="array">
+                <element value="power-board" />
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Add WooCommerce custom capabilities -->
+    <rule ref="WordPress.WP.Capabilities">
+        <include-pattern>*.php</include-pattern>
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="edit_shop_orders" />
+                <element value="manage_woocommerce" />
+                <element value="view_woocommerce_reports" />
+                <element value="edit_shop_coupons" />
+                <element value="edit_products" />
+                <element value="read_private_shop_orders" />
+                <element value="edit_private_shop_orders" />
+                <element value="delete_private_shop_orders" />
+                <element value="manage_product_terms" />
+                <element value="edit_product_terms" />
+                <element value="delete_product_terms" />
+                <element value="assign_product_terms" />
+            </property>
         </properties>
     </rule>
 
     <config name="testVersion" value="7.4-"/>
-    <rule ref="PHPCompatibility" />
+    <rule ref="PHPCompatibility">
+        <include-pattern>*.php</include-pattern>
+    </rule>
 </ruleset>

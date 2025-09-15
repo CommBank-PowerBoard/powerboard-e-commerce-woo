@@ -12,24 +12,20 @@ namespace PowerBoard\Services\PaymentGateway;
 use PowerBoard\Enums\EnvironmentSettingsEnum;
 use PowerBoard\Enums\MasterWidgetSettingsEnum;
 use PowerBoard\Enums\SettingGroupsEnum;
-use PowerBoard\Helpers\EnvironmentSettingsHelper;
-use PowerBoard\Helpers\LoggerHelper;
-use PowerBoard\Helpers\MasterWidgetSettingsHelper;
-use PowerBoard\Helpers\OrderHelper;
-use PowerBoard\Helpers\SettingGroupsHelper;
-use PowerBoard\Helpers\SettingsHelper;
-use PowerBoard\Services\Assets\AdminAssetsService;
+use PowerBoard\Helpers\AdminPanelHelpers\EnvironmentSettingsHelper;
+use PowerBoard\Helpers\AdminPanelHelpers\MasterWidgetSettingsHelper;
+use PowerBoard\Helpers\AdminPanelHelpers\SettingGroupsHelper;
+use PowerBoard\Helpers\AvailablePaymentMethodsHelper;
+use PowerBoard\Helpers\DBSettingsHelper;
+use PowerBoard\Helpers\Util\LoggerHelper;
+use PowerBoard\Helpers\Util\NonceHelper;
 use PowerBoard\Services\HashService;
 use PowerBoard\Services\SDKAdapterService;
-use PowerBoard\Services\SettingsService;
 use PowerBoard\Services\TemplateService;
 use PowerBoard\Services\Validation\ConnectionValidationService;
-use PowerBoard\Controllers\Admin\WidgetController;
 use Exception;
 use WC_Admin_Settings;
-use WC_Order;
 use WC_Payment_Gateway;
-use WC_Validation;
 
 /**
  * Some properties used comes from the extension WC_Payment_Gateway from WooCommerce
@@ -48,25 +44,16 @@ use WC_Validation;
  * @property string $plugin_id
  */
 class MasterWidgetPaymentService extends WC_Payment_Gateway {
-	private static ?MasterWidgetPaymentService $instance = null;
 	protected TemplateService $template_service;
 	protected const  NOT_AVAILABLE_TEMPLATE_ERROR     = 'The selected template is no longer available.';
 	protected const  INVALID_TOKEN_ERROR              = 'The previously saved access token is no longer valid.';
-	private $configuration_id_options                 = [];
+	private array $configuration_id_options           = [];
 	protected static bool $admin_settings_load_logged = false;
 
-	const DEFAULT_TITLE = 'PowerBoard';
+	const DEFAULT_TITLE       = 'PowerBoard';
 	const DEFAULT_DESCRIPTION = 'Pay securely via PowerBoard.';
-	const TITLE_MAX = 50;
-	const DESCRIPTION_MAX = 500;
-
-	public static function get_instance(): self {
-		if ( is_null( self::$instance ) ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
-	}
+	const TITLE_MAX           = 50;
+	const DESCRIPTION_MAX     = 500;
 
 	/**
 	 * Uses functions (__, _x, add_action) from WordPress
@@ -74,57 +61,52 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * Uses a property (method_description) from WC_Payment_Gateway
 	 */
 	public function __construct() {
-		$this->id         = POWER_BOARD_PLUGIN_PREFIX;
-		$this->has_fields = true;
-		$this->supports   = [ 'products', 'default_credit_card_form' ];
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$this->method_title = _x( 'PowerBoard payment', 'PowerBoard payment method', 'power-board' );
-		/* @noinspection PhpUndefinedFunctionInspection */
+		$this->id                 = POWER_BOARD_PLUGIN_PREFIX;
+		$this->has_fields         = true;
+		$this->supports           = [ 'products', 'default_credit_card_form' ];
+		$this->method_title       = _x( 'PowerBoard payment', 'PowerBoard payment method', 'power-board' );
 		$this->method_description = __(
 			'PowerBoard simplify how you manage your payments. Reduce costs, technical headaches & streamline compliance using PowerBoard\'s payment orchestration.',
 			'power-board'
 		);
 		$this->title              = $this->get_option( 'title', self::DEFAULT_TITLE );
 		$this->description        = $this->get_option( 'description', self::DEFAULT_DESCRIPTION );
-		$this->icon               = POWER_BOARD_PLUGIN_URL . 'assets/images/logo.png';
+		$this->icon               = POWER_BOARD_PLUGIN_URL . 'assets/images/logo.svg';
+
 		// Load the settings
 		$this->init_form_fields();
-		/* @noinspection PhpUndefinedMethodInspection */
 		$this->init_settings();
-		/* @noinspection PhpUndefinedFunctionInspection */
+
 		if ( is_admin() ) {
 			$this->title            = $this->method_title;
 			$this->template_service = new TemplateService( $this );
 
-			$key = SettingsHelper::get_option_name(
-				$this->id,
-				[ SettingGroupsEnum::CREDENTIALS, 'ACCESS_KEY' ]
-			);
-
-			if ( ! empty( $this->settings[ $key ] ) ) {
-				try {
-					$decrypted_key = HashService::decrypt( $this->settings[ $key ] );
-				} catch ( Exception $error ) {
-					$decrypted_key = null;
-				}
-
-				$this->settings[ $key ] = $decrypted_key;
-			}
+			// TODO: Why do we need this?
+			$this->settings[ DBSettingsHelper::get_access_token_key() ] = DBSettingsHelper::get_access_token();
+			$this->update_available_payment_methods();
 		}
 
-		// woo hooks
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wp_ajax_nopriv_power_board_create_error_notice', [ $this, 'power_board_create_error_notice' ], 20 );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'wp_ajax_power_board_create_error_notice', [ $this, 'power_board_create_error_notice' ], 20 );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_action( 'woocommerce_checkout_fields', [ $this, 'setup_phone_fields_settings' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
-		add_filter( 'woocommerce_create_order', [ $this, 'get_order_id' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_settings_page_init', [ $this, 'log_admin_settings_load' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, [ $this, 'process_admin_options_with_logging' ] );
+		add_action( 'set_logged_in_cookie', [ $this, 'set_cookie_on_current_request' ] );
+		add_action( 'woocommerce_order_get_payment_method_title', [ $this, 'admin_display_order_pmt_type' ], 10, 2 );
+	}
+
+	/**
+	 * Clears the available_payment_methods from settings when there's no configuration template
+	 * Adds fallback for users with already saved settings before available_payment_methods feature was implemented
+	 * */
+	private function update_available_payment_methods() {
+		$config_template           = DBSettingsHelper::get_configuration_id();
+		$available_payment_methods = DBSettingsHelper::get_available_payment_methods();
+
+		if ( empty( $available_payment_methods ) ) {
+			$this->handle_available_payment_methods_settings(); // can be removed in the future
+			update_option( 'woocommerce_power_board_settings', $this->settings );
+		} elseif ( empty( $config_template ) ) {
+			$this->settings[ DBSettingsHelper::get_available_payment_methods_key() ] = [];
+			update_option( 'woocommerce_power_board_settings', $this->settings );
+		}
 	}
 
 	/**
@@ -150,18 +132,18 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		return parent::is_available();
 	}
 
-
-    /**
-     * Initialise settings form fields.
-     *
-     * Add an array of fields to be displayed on the gateway's settings screen.
-     *
-     * @since  1.0.0
-     */
+	/**
+	 * Initialise settings form fields.
+	 *
+	 * Add an array of fields to be displayed on the gateway's settings screen.
+	 *
+	 * @since  1.0.0
+	 */
 	public function init_form_fields(): void {
 		$this->form_fields['title'] = [
 			'type'        => 'text',
 			'title'       => __( 'Title', 'power-board' ),
+			/* translators: %d: maximum number of characters allowed for the title */
 			'description' => sprintf( __( 'Shown at checkout. Max %d chars. Leave empty for default.', 'power-board' ), self::TITLE_MAX ),
 			'default'     => self::DEFAULT_TITLE,
 			'desc_tip'    => true,
@@ -170,6 +152,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		$this->form_fields['description'] = [
 			'type'        => 'textarea',
 			'title'       => __( 'Description', 'power-board' ),
+			/* translators: %d: maximum number of characters allowed for the description */
 			'description' => sprintf( __( 'Short help text. Max %d chars. Leave empty for default.', 'power-board' ), self::DESCRIPTION_MAX ),
 			'default'     => self::DEFAULT_DESCRIPTION,
 			'desc_tip'    => true,
@@ -178,8 +161,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		];
 
 		foreach ( SettingGroupsEnum::cases() as $setting_group ) {
-			$key = SettingsHelper::get_option_name(
-					$this->id,
+			$key = DBSettingsHelper::get_option_name(
 					[
 						$setting_group,
 						'label',
@@ -210,90 +192,10 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		}
 	}
 
-	public function get_version(): ?string {
-		$version_key = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CHECKOUT,
-				MasterWidgetSettingsEnum::VERSION,
-			]
-		);
-		$settings    = $this->get_db_settings();
-		if ( array_key_exists( $version_key, $settings ) ) {
-			return $settings[ $version_key ];
-		}
-		return null;
-	}
-
-	public function get_access_token(): ?string {
-		$token_key = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CREDENTIALS,
-				'ACCESS_KEY',
-			]
-		);
-		$settings  = $this->get_db_settings();
-		if ( array_key_exists( $token_key, $settings ) ) {
-			try {
-				$decrypted_key = HashService::decrypt( $settings[ $token_key ] );
-			} catch ( Exception $error ) {
-				$decrypted_key = null;
-			}
-			return $decrypted_key;
-		}
-		return null;
-	}
-
-	public function get_configuration_id(): ?string {
-		$configuration_id = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CHECKOUT,
-				MasterWidgetSettingsEnum::CONFIGURATION_ID,
-			]
-		);
-		if ( array_key_exists( $configuration_id, $this->settings ) ) {
-			return $this->settings[ $configuration_id ];
-		}
-		return null;
-	}
-
-	public function get_customisation_id(): ?string {
-		$customisation_id = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CHECKOUT,
-				MasterWidgetSettingsEnum::CUSTOMISATION_ID,
-			]
-		);
-		if ( array_key_exists( $customisation_id, $this->settings ) ) {
-			return $this->settings[ $customisation_id ];
-		}
-		return null;
-	}
-
-	public function get_environment(): ?string {
-		$environment_key = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::ENVIRONMENT,
-				EnvironmentSettingsEnum::ENVIRONMENT,
-			]
-		);
-		$settings        = $this->get_db_settings();
-		if ( array_key_exists( $environment_key, $settings ) ) {
-			return $settings[ $environment_key ];
-		}
-		return null;
-	}
-
 	/**
+	 * Called only for Classic Checkout
 	 * Process the payment and return the result.
 	 * This function is used on WC_Payment_Gateway
-	 * Uses a function (sanitize_text_field) from WordPress
-	 * Uses functions (wc_get_order, WC and get_return_url) from WooCommerce
-	 * Uses method (get_return_url) from WC_Payment_Gateway
 	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
 	 *
 	 * @noinspection PhpUnused
@@ -301,373 +203,102 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * @since 1.0.0
 	 */
 	public function process_payment( $order_id ): array {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$order         = wc_get_order( $order_id );
-		$initial_order = $order;
+		add_action( 'set_logged_in_cookie', [ $this, 'set_cookie_on_current_request' ] );
 
-		OrderHelper::log_order_info( $initial_order, 'Order received to complete payment' );
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$session = WC()->session;
-
-		if ( $order->get_status() !== 'pending' && ! empty( $session->get( 'power_board_draft_order' ) ) ) {
-			$order->set_status( 'pending' );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$checkout_order_identifier = 'power_board_checkout_cart_' . wp_create_nonce( 'power-board-checkout-cart' );
-		$checkout_order            = $session->get( $checkout_order_identifier );
-		$order                     = $this->get_order_to_process_payment( $order, $checkout_order );
-
-		$current_active_intent_ids = $session->get( 'power_board_active_checkout_intent_ids' ) ?? [];
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$charge_id = isset( $_POST['chargeid'] ) ? sanitize_text_field( wp_unslash( $_POST['chargeid'] ) ) : '';
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$intent_id = isset( $_POST['intentid'] ) ? sanitize_text_field( wp_unslash( $_POST['intentid'] ) ) : '';
-
-		if ( ! empty( $charge_id ) && ! empty( $intent_id ) && in_array( $intent_id, $current_active_intent_ids, true ) ) {
-			$valid_payment = WidgetController::check_intent_status( $intent_id, $charge_id, $order_id, $order );
-		} else {
-			$valid_payment = false;
-		}
-
-		if ( ! $valid_payment ) {
-			$failed_message = 'Payment could not be processed due to an error.';
-
-			$initial_order_items = [];
-			foreach ( $initial_order->get_items() as $initial_item ) {
-				$initial_order_items[] = $initial_item->get_data();
-			}
-
-			$initial_coupon_items = [];
-			foreach ( $initial_order->get_coupons() as $initial_coupon ) {
-				$initial_coupon_items[] = $initial_coupon->get_data();
-			}
-
-			$current_order_items = [];
-			foreach ( $order->get_items() as $current_item ) {
-				$current_order_items[] = $current_item->get_data();
-			}
-
-			$current_coupon_items = [];
-			foreach ( $order->get_coupons() as $current_coupon ) {
-				$current_coupon_items[] = $current_coupon->get_data();
-			}
-
-			LoggerHelper::log(
-				'Payment processing failed in process_payment()',
-				'error',
-				[
-					'intent_id'                 => $intent_id,
-					'current_active_intent_ids' => $current_active_intent_ids,
-					'charge_id'                 => $charge_id,
-					'order_id'                  => $order_id,
-					'order_total'               => $order->get_total( false ),
-					'valid_payment'             => $valid_payment,
-					'error_message'             => $failed_message,
-					'initial_order'             => [
-						'items'             => $initial_order_items,
-						'total'             => $initial_order->get_total( false ),
-						'discounts'         => [
-							'applied_coupons' => $initial_coupon_items,
-							'discounts_total' => $initial_order->get_discount_total(),
-							'tax'             => $initial_order->get_discount_tax(),
-						],
-						'shipping_total'    => $initial_order->get_shipping_total(),
-						'selected_shipping' => $initial_order->get_shipping_method(),
-						'shipping_address'  => $initial_order->get_formatted_shipping_address(),
-						'billing_address'   => $initial_order->get_formatted_billing_address(),
-					],
-					'checkout_order'            => $checkout_order,
-					'current_order'             => [
-						'items'             => $current_order_items,
-						'total'             => $order->get_total( false ),
-						'discounts'         => [
-							'applied_coupons' => $current_coupon_items,
-							'discounts_total' => $order->get_discount_total(),
-							'tax'             => $order->get_discount_tax(),
-						],
-						'shipping_total'    => $order->get_shipping_total(),
-						'selected_shipping' => $order->get_shipping_method(),
-						'shipping_address'  => $order->get_formatted_shipping_address(),
-						'billing_address'   => $order->get_formatted_billing_address(),
-					],
-				]
-			);
-
-			if ( ! empty( $charge_id ) ) {
-				if ( empty( $checkout_order ) ) {
-					$this->refund_charge( $charge_id, (float) $order->get_total() );
-				} else {
-					$this->refund_charge( $charge_id, (float) $checkout_order['total'] );
-				}
-				$order_note_failed_message = $failed_message . ' The charge with id ' . $charge_id . ' has been refunded.';
-			}
-
-			$order->update_status( 'failed', $order_note_failed_message ?? $failed_message );
-			$order->save();
-			/* @noinspection PhpUndefinedFunctionInspection */
-			throw new Exception( esc_html( $failed_message ) );
-		}
-
-		$order->add_order_note( 'Payment succeeded. Charge ID: ' . $charge_id );
-		$order->payment_complete();
-
-		$order->update_meta_data( '_power_board_charge_id', $charge_id );
-
-		LoggerHelper::log_callback_event(
-			'Payment completed',
-			[
-				'order_id'  => $order_id ?? null,
-				'charge_id' => $charge_id ?? null,
-			]
-		);
-		/* @noinspection PhpUndefinedFunctionInspection */
-		WC()->cart->empty_cart();
-		$order->save();
-
-		$session->set( 'store_api_draft_order', null );
-		$session->set( 'power_board_draft_order', null );
-		$session->set( 'order_comments', '' );
-		$session->set( 'power_board_active_checkout_intent_ids', [] );
-		$session->set( $checkout_order_identifier, null );
-		$session->save_data();
-
-		/* @noinspection PhpUndefinedMethodInspection */
+		/**
+		 * Process payment for classic checkout
+		 *
+		 * For classic checkout: use redirect mechanism
+		 */
 		return [
-			'result'   => 'success',
-			'redirect' => $this->get_return_url( $order ),
+			'result'                 => 'success',
+			'redirect'               => 'powerboard_show_modal',
+			'order_id'               => $order_id,
+			'_wpnonce_intent'        => wp_create_nonce( 'power-board-create-charge-intent' ),
+			'_wpnonce_widget_event'  => wp_create_nonce( 'power-board-widget-event' ),
+			'_wpnonce_success_order' => wp_create_nonce( 'power-board-successful-order' ),
+			'message'                => 'Please complete your payment in the PowerBoard modal.',
 		];
 	}
 	// phpcs:enable
 
+
 	/**
-	 * Processing the payment result from the widget: error / success.
-	 * Called on the "Place Order" button or via AJAX.
+	 * Proceed with current request using new login session (to ensure consistent nonce).
 	 */
-	public function process_payment_result() {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
+	public function set_cookie_on_current_request( $cookie ) {
+		$_COOKIE[ LOGGED_IN_COOKIE ] = $cookie;
+	}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-process-payment-result' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
+	public function admin_display_order_pmt_type( $title, $order ) {
+		if ( $order instanceof WC_Order ) {
+			$pb = $order->get_meta( '_power_board_payment_type' );
+			if ( $pb ) {
+				return $pb;
+			}
+		}
+		return $title;
+	}
 
+	/**
+	 * Called to retrieve url to navigate to
+	 */
+	public function process_successful_order() {
+		// Validate nonce for security
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
+		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-successful-order' );
+		if ( ! $valid_nonce ) {
 			return;
 		}
 
-		if ( ! empty( $_REQUEST['order_id'] ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$order_id = absint( $_REQUEST['order_id'] );
-		} else {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$order_id = (string) WC()->session->get( 'power_board_draft_order' );
-		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification is performed by NonceHelper which handles sanitization and validation
+		$order_id = isset( $_REQUEST['order_id'] ) ? absint( $_REQUEST['order_id'] ) : 0;
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$payment_data = ! empty( $_REQUEST['payment_response'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_REQUEST['payment_response'] ) ) : [];
-
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
+			LoggerHelper::log_callback_event(
+				'Error: Payment was processed but order was not found',
+				[
+					'order_id' => $order_id ?? null,
+				],
+				'error'
+			);
 			wp_send_json_error( [ 'message' => 'Order not found' ] );
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$error_message = ! empty( $payment_data['errorMessage'] ) ? sanitize_text_field( $payment_data['errorMessage'] ) : 'Something went wrong';
-		$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
-		$order->update_status( 'failed' );
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$charge_id = ! empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
-		$order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
-		$order->save();
+		$redirect_url = $this->get_return_url( $order );
 
 		LoggerHelper::log_callback_event(
-			'Payment error',
+			'Order processed successfully',
 			[
-				'order_id'      => $order_id ?? null,
-				'charge_id'     => $charge_id ?? null,
-				'error_message' => $error_message ?? null,
+				'order_id'     => $order_id ?? null,
+				'order_status' => $order->get_status(),
 			],
-			'error'
 		);
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$session = WC()->session;
-		$session->set( 'store_api_draft_order', (string) $order_id );
-
-		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_send_json_success(
 			[
-				'order_status' => 'failed',
-				'message'      => $error_message,
+				'redirect_url' => $redirect_url,
+				'order_id'     => $order_id,
+				'order_status' => $order->get_status(),
 			],
 			200
 		);
 	}
 
-	public function refund_charge( $charge_id, $amount_to_refund ) {
-		$sdk_adapter = SDKAdapterService::get_instance();
-		$sdk_adapter->refunds(
-			[
-				'charge_id' => $charge_id,
-				'amount'    => $amount_to_refund,
-			]
-			);
-	}
-
-	/**
-	 * Returns order id if order was created previously on PowerBoard
-	 * phpcs:disable WordPress.Security.NonceVerification -- processed through the WooCommerce form handler
-	 *
-	 * @return ?string
-	 */
-	public function get_order_id(): ?string {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$payment_method = isset( $_POST['payment_method'] ) ? sanitize_text_field( wp_unslash( $_POST['payment_method'] ) ) : '';
-		if ( $payment_method === POWER_BOARD_PLUGIN_PREFIX ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$custom_order_id = (string) WC()->session->get( 'power_board_draft_order' );
-			return ! empty( $custom_order_id ) ? $custom_order_id : null;
-		}
-
-		return null;
-	}
-	// phpcs:enable
-
-	public function check_postcode() {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-check-postcode' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
-		}
-
-		/**
-		 * Disable ValidatedSanitizedInput.MissingUnslash warning to be able to compare original string with unslashed one
-		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-		 * @phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		 *
-		 * @noinspection PhpUndefinedFunctionInspection
-		 */
-		$original_postcode = $_POST['postcode'] ?? '';
-		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$sanitized_postcode = isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '';
-
-		if ( $original_postcode !== $sanitized_postcode ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Please enter a valid postcode/ZIP.', 'power-board' ) ] );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$country  = isset( $_POST['country'] ) ? sanitize_text_field( wp_unslash( $_POST['country'] ) ) : '';
-		$postcode = $sanitized_postcode;
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( $postcode && ! WC_Validation::is_postcode( $postcode, $country ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Please enter a valid postcode/ZIP.', 'power-board' ) ] );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		wp_send_json_success( [], 200 );
-	}
-
-	public function check_is_valid_email() {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-check-email' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$email = isset( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '';
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! is_email( $email ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Please enter a valid email address.', 'power-board' ) ] );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		wp_send_json_success( [], 200 );
-	}
-
-	/**
-	 * Uses functions (WC and get_woocommerce_currency) from WooCommerce
-	 */
 	public function get_settings(): array {
-		$settings_service = SettingsService::get_instance();
+		$powerboard_settings = DBSettingsHelper::get_powerboard_settings();
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
-			'environment'             => $settings_service->get_environment(),
-            'amount'                  => (float) WC()->cart->get_totals()['total'],
-            'currency'                => strtoupper( get_woocommerce_currency() ),
-            'title'                   => MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null ),
-			'description'             => MasterWidgetSettingsHelper::get_gateway_description( $this->settings, self::DESCRIPTION_MAX ?? null ),
-			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
-			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
-			'checkoutConfigurationId' => $settings_service->get_checkout_configuration_id(),
+			// Widget.
+			'title'                     => MasterWidgetSettingsHelper::get_gateway_title( $this->settings, self::TITLE_MAX ?? null ),
+			'description'               => MasterWidgetSettingsHelper::get_gateway_description( $this->settings, self::DESCRIPTION_MAX ?? null ),
+			// Master Widget Checkout.
+			'environment'               => $powerboard_settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ],
+			'checkout_template_version' => $powerboard_settings[ DBSettingsHelper::LOCAL_VERSION_ID ],
+			'checkout_customisation_id' => $powerboard_settings[ DBSettingsHelper::LOCAL_CUSTOMISATION_TEMPLATE_ID ],
+			'checkout_configuration_id' => $powerboard_settings[ DBSettingsHelper::LOCAL_CONFIGURATION_TEMPLATE_ID ],
+			'available_payment_methods' => $powerboard_settings[ DBSettingsHelper::LOCAL_AVAILABLE_PAYMENT_METHODS_ID ],
 		];
-	}
-
-	/**
-	 * Ajax function
-	 * Uses functions (sanitize_text_field, wp_verify_nonce, __ and wp_json_error) from WordPress
-	 * Uses functions (wc_add_notice and wc_print_notices) from WooCommerce
-	 */
-	public function power_board_create_error_notice(): ?array {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$wp_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : null;
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! wp_verify_nonce( $wp_nonce, 'power-board-create-error-notice' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wp_send_json_error( [ 'message' => __( 'Error: Security check', 'power-board' ) ] );
-
-			return null;
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$message = isset( $_POST['message'] ) ? sanitize_text_field( wp_unslash( $_POST['message'] ) ) : '';
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$notice_type = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : 'error';
-		if ( $message ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wc_clear_notices();
-			/* @noinspection PhpUndefinedFunctionInspection */
-			wc_add_notice( esc_html( $message ), $notice_type );
-		}
-
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$response['data'] = wc_print_notices();
-
-		return $response;
-	}
-
-	public function setup_phone_fields_settings( $address_fields ): array {
-		$address_fields['billing']['billing_phone']['required'] = false;
-		$address_fields['shipping']['shipping_phone']           = [
-			'label'        => 'Phone',
-			'type'         => 'tel',
-			'required'     => false,
-			'class'        => [ 'form-row-wide' ],
-			'validate'     => [ 'phone' ],
-			'autocomplete' => 'tel',
-			'priority'     => 95,
-		];
-		return $address_fields;
 	}
 
 	/**
@@ -681,14 +312,11 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		SDKAdapterService::get_instance();
 
 		$settings = $this->get_settings();
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$nonce = wp_create_nonce( 'power-board-create-charge-intent' );
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$data = [
 			'description' => $this->description,
 			'id'          => $this->id,
-			'nonce'       => $nonce,
 			'settings'    => wp_json_encode( $settings ),
 		];
 		$template->include_checkout_html(
@@ -721,126 +349,13 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		/* @noinspection PhpUndefinedMethodInspection */
 		$this->init_settings();
 
-		$validation_service = new ConnectionValidationService( $this );
-
-		$errors = $validation_service->get_errors();
-		if ( ! empty( $errors ) ) {
-			foreach ( $errors as $error ) {
-				if ( strpos( $error, 'Invalid credentials' ) !== false ) {
-					/* @noinspection PhpUndefinedFunctionInspection */
-					WC_Admin_Settings::add_error( __( 'You have entered an invalid access token. Your changes have not been saved.', 'power-board' ) );
-				} else {
-					WC_Admin_Settings::add_error( $error );
-				}
-				break;
-			}
+		if ( $this->has_validation_errors_to_show() ) {
 			return false;
 		}
 
-		$hashed_credential_keys = [];
-		$settings_keys          = [];
-
-		$access_key = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CREDENTIALS,
-				'ACCESS_KEY',
-			]
-		);
-
-		$hashed_credential_keys[ $access_key ] = 'ACCESS_KEY';
-		$settings_keys[ $access_key ]          = 'ACCESS_KEY';
-
-		foreach ( EnvironmentSettingsEnum::cases() as $environment_settings ) {
-			$key                   = SettingsHelper::get_option_name(
-				$this->id,
-				[
-					SettingGroupsEnum::ENVIRONMENT,
-					$environment_settings,
-				]
-			);
-			$settings_keys[ $key ] = $environment_settings;
-		}
-
-		foreach ( MasterWidgetSettingsEnum::cases() as $master_widget_settings ) {
-			$key                   = SettingsHelper::get_option_name(
-				$this->id,
-				[
-					SettingGroupsEnum::CHECKOUT,
-					$master_widget_settings,
-				]
-			);
-			$settings_keys[ $key ] = $master_widget_settings;
-		}
-
-		$empty_template_fields = false;
-		/* @noinspection PhpUndefinedMethodInspection */
-		foreach ( $this->get_form_fields() as $key => $field ) {
-			/* @noinspection PhpUndefinedMethodInspection */
-			$type = $this->get_field_type( $field );
-
-			$option_key = $this->plugin_id . $this->id . '_' . $key;
-
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$value = ! empty( $_POST[ $option_key ] ) ? wc_clean( wp_unslash( $_POST[ $option_key ] ) ) : null;
-
-			if ( method_exists( $this, 'validate_' . $type . '_field' ) ) {
-				$value = $this->{'validate_' . $type . '_field'}( $key, $value );
-			} else {
-				/* @noinspection PhpUndefinedMethodInspection */
-				$value = $this->validate_text_field( $key, $value );
-			}
-
-			if ( array_key_exists( $key, $settings_keys ) ) {
-				if ( $key === 'power_board_CREDENTIALS_ACCESS_KEY' && !$validation_service->has_errors() &&
-					$value !== '********************' ) {
-					$empty_template_fields = true;
-				}
-
-				if ( $validation_service->has_errors() || $value === '********************' ) {
-					/* @noinspection PhpUndefinedMethodInspection */
-					$value = $this->get_option( $key );
-				}
-			}
-
-			if ( $empty_template_fields &&
-				( $key === 'power_board_CHECKOUT_CONFIGURATION_ID' ||
-					$key === 'power_board_CHECKOUT_CUSTOMISATION_ID' ) ) {
-				$this->settings[ $key ] = '';
-			} else {
-				$this->settings[ $key ] = $value;
-			}
-		}
-
-		foreach ( $hashed_credential_keys as $key => $credential_settings ) {
-			try {
-				$decrypted_key = HashService::decrypt( $this->settings[ $key ] );
-			} catch ( Exception $error ) {
-				$decrypted_key = null;
-				/* @noinspection PhpUndefinedMethodInspection */
-				$this->add_error( $error );
-				WC_Admin_Settings::add_error( $error );
-			}
-			$is_encrypted = $decrypted_key !== $this->settings[ $key ];
-
-			if ( ! empty( $this->settings[ $key ] ) && ! $is_encrypted ) {
-				try {
-					$encrypted_key = HashService::encrypt( $this->settings[ $key ] );
-				} catch ( Exception $error ) {
-					$encrypted_key = null;
-					/* @noinspection PhpUndefinedMethodInspection */
-					$this->add_error( $error );
-					WC_Admin_Settings::add_error( $error );
-				}
-				$this->settings[ $key ] = $encrypted_key;
-			}
-		}
-
-		foreach ( $validation_service->get_errors() as $error ) {
-			/* @noinspection PhpUndefinedMethodInspection */
-			$this->add_error( $error );
-			WC_Admin_Settings::add_error( $error );
-		}
+		$this->save_settings();
+		$this->save_hashed_settings();
+		$this->handle_available_payment_methods_settings();
 
 		/* @noinspection PhpUndefinedMethodInspection */
 		$option_key = $this->get_option_key();
@@ -862,14 +377,14 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			$title = self::DEFAULT_TITLE;
 		}
 
-		if ( $desc  === '' ) {
-			$desc  = self::DEFAULT_DESCRIPTION;
+		if ( $desc === '' ) {
+			$desc = self::DEFAULT_DESCRIPTION;
 		}
 
-		$this->settings['title'] = $title;
+		$this->settings['title']       = $title;
 		$this->settings['description'] = $desc;
 
-		$this->title = $title;
+		$this->title       = $title;
 		$this->description = $desc;
 
 		/* @noinspection PhpUndefinedFunctionInspection */
@@ -880,6 +395,22 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		);
 	}
 	// phpcs:enable
+
+	private function handle_available_payment_methods_settings() {
+		$available_payment_methods = [];
+		$configuration_id          = $this->settings[ DBSettingsHelper::get_configuration_template_key() ];
+
+		if ( !empty( $configuration_id ) ) {
+			$available_payment_methods = AvailablePaymentMethodsHelper::fetch_available_payment_methods( $configuration_id );
+		}
+
+		$this->settings[ DBSettingsHelper::get_available_payment_methods_key() ] = $available_payment_methods;
+	}
+
+	public function add_error( $error ) {
+		parent::add_error( $error );
+		WC_Admin_Settings::add_error( $error );
+	}
 
 	/**
 	 * This function is used on admin.php template
@@ -902,7 +433,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			$form_fields = $this->get_form_fields();
 		}
 
-		$credential_key                    = SettingsHelper::get_option_name( $this->id, [ SettingGroupsEnum::CREDENTIALS, 'ACCESS_KEY' ] );
+		$credential_key                    = DBSettingsHelper::get_access_token_key();
 		$this->settings[ $credential_key ] = ! empty( $this->settings[ $credential_key ] ) ? '********************' : '';
 		$form_fields                       = compact( 'form_fields' );
 
@@ -925,19 +456,9 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	private function get_credential_options(): array {
-		$access_token = $this->get_access_token();
-		$environment  = $this->get_environment();
-		$version      = $this->get_version();
+		$this->configuration_id_options = MasterWidgetSettingsHelper::get_options_for_ui( MasterWidgetSettingsEnum::CONFIGURATION_ID );
 
-		$this->configuration_id_options = MasterWidgetSettingsHelper::get_options_for_ui( MasterWidgetSettingsEnum::CONFIGURATION_ID, $environment, $access_token, $version );
-
-		$key = SettingsHelper::get_option_name(
-			$this->id,
-			[
-				SettingGroupsEnum::CREDENTIALS,
-				'ACCESS_KEY',
-			]
-		);
+		$key = DBSettingsHelper::get_access_token_key();
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		$invalid_access_token = get_transient( 'invalid_access_token' );
@@ -958,15 +479,11 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	private function get_checkout_options(): array {
-		$fields       = [];
-		$access_token = $this->get_access_token();
-		$environment  = $this->get_environment();
-		$version      = $this->get_version();
+		$fields = [];
 
 		foreach ( MasterWidgetSettingsEnum::cases() as $checkout_settings ) {
 			$add_error = false;
-			$key       = SettingsHelper::get_option_name(
-				$this->id,
+			$key       = DBSettingsHelper::get_option_name(
 				[
 					SettingGroupsEnum::CHECKOUT,
 					$checkout_settings,
@@ -994,17 +511,18 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 				'title'       => preg_replace( [ '/ Id/', '/ id/' ], ' ID', MasterWidgetSettingsHelper::get_label( $checkout_settings ) ),
 				'description' => $description,
 			];
+			$environment    = DBSettingsHelper::get_environment();
 
 			if ( MasterWidgetSettingsEnum::VERSION === $checkout_settings || ! empty( $environment ) ) {
 				if ( $checkout_settings === MasterWidgetSettingsEnum::CONFIGURATION_ID ) {
 					$options = $this->configuration_id_options;
 				} else {
-					$options = MasterWidgetSettingsHelper::get_options_for_ui( $checkout_settings, $environment, $access_token, $version );
+					$options = MasterWidgetSettingsHelper::get_options_for_ui( $checkout_settings );
 				}
 
 				if ( ! empty( $options ) && ( MasterWidgetSettingsHelper::get_input_type( $checkout_settings ) ) === 'select' ) {
 					$fields[ $key ]['options'] = $options;
-					$fields[ $key ]['class']   = POWER_BOARD_PLUGIN_PREFIX . '-settings' . ( MasterWidgetSettingsEnum::CUSTOMISATION_ID === $checkout_settings ? ' grey-description' : '' );
+					$fields[ $key ]['class']   = POWER_BOARD_PLUGIN_PREFIX . '-settings' . ( MasterWidgetSettingsEnum::CUSTOMISATION_ID === $checkout_settings ? ' is-optional grey-description' : '' );
 					$fields[ $key ]['default'] = '';
 				}
 			}
@@ -1016,8 +534,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	private function get_environment_options(): array {
 		$fields = [];
 		foreach ( EnvironmentSettingsEnum::cases() as $environment_settings ) {
-			$key = SettingsHelper::get_option_name(
-				$this->id,
+			$key = DBSettingsHelper::get_option_name(
 				[
 					SettingGroupsEnum::ENVIRONMENT,
 					$environment_settings,
@@ -1041,117 +558,14 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		return $fields;
 	}
 
-	private function get_order_to_process_payment( WC_Order $current_order, ?array $checkout_order ): WC_Order {
-		if ( empty( $checkout_order ) ) {
-			LoggerHelper::log(
-				'Checkout order is empty'
-			);
-			return $current_order;
-		}
-
-		$current_order_total  = $current_order->get_total( false );
-		$checkout_order_total = $checkout_order['total'];
-
-		$checkout_customer_shipping = $checkout_order['shipping_address'];
-		$checkout_customer_billing  = $checkout_order['billing_address'];
-
-		if ( ! empty( $checkout_customer_shipping ) && ! empty( $checkout_customer_billing ) ) {
-			LoggerHelper::log(
-				'Updating Woo order with Checkout shipping and billing address'
-			);
-
-			$current_order->set_address( $checkout_customer_shipping, 'shipping' );
-			$current_order->set_address( $checkout_customer_billing, 'billing' );
-
-			$current_order->calculate_totals();
-		}
-
-		if ( $current_order_total !== $checkout_order_total ) {
-			LoggerHelper::log(
-				'Updating Woo order with Checkout products, shipping method and coupons'
-			);
-
-			$order_items = $current_order->get_items();
-			foreach ( $order_items as $item_id => $item ) {
-				$current_order->remove_item( $item_id );
-			}
-
-			$checkout_order_items = $checkout_order['items'];
-			foreach ( $checkout_order_items as $checkout_order_item ) {
-				$product_id = $checkout_order_item['product_id'];
-				$quantity   = $checkout_order_item['quantity'];
-				/* @noinspection PhpUndefinedFunctionInspection */
-				$product = wc_get_product( $product_id );
-
-				if ( $product && $product->exists() && $quantity > 0 ) {
-					$current_order->add_product( $product, $quantity );
-				}
-			}
-
-			$checkout_shipping = $checkout_order['shipping_total'];
-			$current_shipping = $current_order->get_shipping_total( false );
-
-			if ( $current_shipping !== $checkout_shipping ) {
-				$shipping_lines       = $current_order->get_items( 'shipping' );
-				$shipping_id          = explode( ':', $checkout_order['selected_shipping_id'] );
-				$shipping_method_id   = $shipping_id[0];
-				$shipping_instance_id = (int) $shipping_id[1];
-				$selected_shipping    = $checkout_order['selected_shipping'];
-
-				foreach ( $shipping_lines as $shipping_line ) {
-					$current_method = $shipping_line->get_method_id();
-					$current_instance = (int) $shipping_line->get_instance_id();
-
-					if ( $shipping_method_id !== $shipping_line->get_method_id() || $shipping_instance_id !== $shipping_line->get_instance_id() ) {
-						$shipping_line->set_meta_data( $selected_shipping );
-						$shipping_line->set_method_id( $shipping_method_id );
-						$shipping_line->set_instance_id( $shipping_instance_id );
-						$shipping_line->set_method_title( $selected_shipping->get_label() );
-						$shipping_line->set_total( (float) $selected_shipping->get_cost() );
-						$shipping_line->save();
-					}
-				}
-			}
-
-			$current_order->calculate_totals();
-
-			$current_order_discount  = $current_order->get_discount_total( false );
-			$checkout_order_discount = $checkout_order['discounts']['discounts_total'];
-
-			if ( $current_order_discount !== $checkout_order_discount ) {
-				$coupons = $checkout_order['discounts']['applied_coupons'];
-
-				foreach ( $coupons as $coupon ) {
-					$current_order->apply_coupon( $coupon );
-				}
-				$current_order->set_discount_total( $checkout_order_discount );
-				$current_order->set_discount_tax( $checkout_order['discounts']['tax'] );
-			}
-			$current_order->set_total( $checkout_order_total );
-			$current_order->save();
-		}
-
-		return $current_order;
-	}
-
-	/**
-	 * Uses a method (get_option) from WordPress
-	 */
-	private function get_db_settings() {
-		if ( empty( $this->settings ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$this->settings = get_option( $this->plugin_id . $this->id . '_settings', [] );
-		}
-		return $this->settings;
-	}
-
 	private function has_valid_required_fields(): bool {
-		$version          = $this->get_version();
-		$environment      = $this->get_environment();
-		$access_token     = $this->get_access_token();
-		$configuration_id = $this->get_configuration_id();
+		$powerboard_settings = DBSettingsHelper::get_powerboard_settings();
+		$version             = $powerboard_settings[ DBSettingsHelper::LOCAL_VERSION_ID ];
+		$environment         = $powerboard_settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ];
+		$access_token        = $powerboard_settings[ DBSettingsHelper::LOCAL_ACCESS_TOKEN_ID ];
+		$configuration_id    = $powerboard_settings[ DBSettingsHelper::LOCAL_CONFIGURATION_TEMPLATE_ID ];
 
-		return ! empty( $version ) && ! empty( $environment ) && ! empty( $access_token ) && ! empty( $configuration_id );
+		return !empty( $version ) && !empty( $environment ) && !empty( $access_token ) && !empty( $configuration_id );
 	}
 
 	public function log_admin_settings_load(): void {
@@ -1171,31 +585,142 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	}
 
 	protected function log_admin_settings( $log_title ): void {
-		$environment = $this->get_environment();
-		$raw_token   = $this->get_access_token();
-		$token_valid = ! empty( $raw_token );
+		$powerboard_settings = DBSettingsHelper::get_powerboard_settings();
 
-		$masked = false;
+		$raw_token   = $powerboard_settings[ DBSettingsHelper::LOCAL_ACCESS_TOKEN_ID ];
+		$token_valid = ! empty( $raw_token );
+		$masked      = false;
 
 		if ( $raw_token ) {
 			$masked = '...' . substr( $raw_token, -4 );
 		}
 
-		$version = $this->get_version();
-		$config  = $this->get_configuration_id();
-		$custom  = $this->get_customisation_id();
-
 		LoggerHelper::log(
 			$log_title,
 			'info',
 			[
-				'environment'            => $environment,
-				'access_token_valid'     => $token_valid,
-				'access_token_masked'    => $masked,
-				'checkout_version'       => $version,
-				'configuration_template' => $config,
-				'customisation_template' => $custom,
+				'environment'               => $powerboard_settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ],
+				'access_token_valid'        => $token_valid,
+				'access_token_masked'       => $masked,
+				'checkout_version'          => $powerboard_settings[ DBSettingsHelper::LOCAL_VERSION_ID ],
+				'configuration_template'    => $powerboard_settings[ DBSettingsHelper::LOCAL_CONFIGURATION_TEMPLATE_ID ],
+				'customisation_template'    => $powerboard_settings[ DBSettingsHelper::LOCAL_CUSTOMISATION_TEMPLATE_ID ],
+				'available_payment_methods' => $powerboard_settings[ DBSettingsHelper::LOCAL_AVAILABLE_PAYMENT_METHODS_ID ],
 			]
 		);
+	}
+
+	private function save_hashed_settings() {
+		$hashed_credential_keys = $this->get_hashed_credential_keys();
+		foreach ( $hashed_credential_keys as $key => $credential_settings ) {
+			try {
+				$decrypted_key = HashService::decrypt( $this->settings[ $key ] );
+			} catch ( Exception $error ) {
+				$decrypted_key = null;
+				$this->add_error( $error );
+			}
+			$is_encrypted = $decrypted_key !== $this->settings[ $key ];
+
+			if ( ! empty( $this->settings[ $key ] ) && ! $is_encrypted ) {
+				try {
+					$encrypted_key = HashService::encrypt( $this->settings[ $key ] );
+				} catch ( Exception $error ) {
+					$encrypted_key = null;
+					$this->add_error( $error );
+				}
+				$this->settings[ $key ] = $encrypted_key;
+			}
+		}
+	}
+
+	private function save_settings() {
+		$settings_keys         = $this->get_settings_keys();
+		$empty_template_fields = false;
+		/* @noinspection PhpUndefinedMethodInspection */
+		foreach ( $this->get_form_fields() as $key => $field ) {
+			/* @noinspection PhpUndefinedMethodInspection */
+			$type = $this->get_field_type( $field );
+
+			$option_key = $this->plugin_id . $this->id . '_' . $key;
+
+            // phpcs:disable WordPress.Security.NonceVerification.Missing -- This is processed through the WooCommerce form handler
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- This is processed through the WooCommerce form handler
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized with wc_clean() and wp_unslash()
+			$value = ! empty( $_POST[ $option_key ] ) ? wc_clean( wp_unslash( $_POST[ $option_key ] ) ) : null;
+            // phpcs:enable
+
+			if ( method_exists( $this, 'validate_' . $type . '_field' ) ) {
+				$value = $this->{'validate_' . $type . '_field'}( $key, $value );
+			} else {
+				/* @noinspection PhpUndefinedMethodInspection */
+				$value = $this->validate_text_field( $key, $value );
+			}
+
+			if ( array_key_exists( $key, $settings_keys ) ) {
+				if ( $value === '********************' ) {
+					/* @noinspection PhpUndefinedMethodInspection */
+					$value = $this->get_option( $key );
+				} elseif ( $key === 'power_board_CREDENTIALS_ACCESS_KEY' ) {
+					$empty_template_fields = true;
+				}
+			}
+
+			if ( $empty_template_fields &&
+				( $key === 'power_board_CHECKOUT_CONFIGURATION_ID' ||
+					$key === 'power_board_CHECKOUT_CUSTOMISATION_ID' ) ) {
+				$this->settings[ $key ] = '';
+			} else {
+				$this->settings[ $key ] = $value;
+			}
+		}
+	}
+
+	private function get_settings_keys(): array {
+		$settings_keys                = [];
+		$access_key                   = DBSettingsHelper::get_access_token_key();
+		$settings_keys[ $access_key ] = 'ACCESS_KEY';
+
+		foreach ( EnvironmentSettingsEnum::cases() as $environment_settings ) {
+			$key                   = DBSettingsHelper::get_option_name(
+				[
+					SettingGroupsEnum::ENVIRONMENT,
+					$environment_settings,
+				]
+			);
+			$settings_keys[ $key ] = $environment_settings;
+		}
+
+		foreach ( MasterWidgetSettingsEnum::cases() as $master_widget_settings ) {
+			$key                   = DBSettingsHelper::get_option_name(
+				[
+					SettingGroupsEnum::CHECKOUT,
+					$master_widget_settings,
+				]
+			);
+			$settings_keys[ $key ] = $master_widget_settings;
+		}
+
+		return $settings_keys;
+	}
+
+	private function get_hashed_credential_keys(): array {
+		$access_key                            = DBSettingsHelper::get_access_token_key();
+		$hashed_credential_keys[ $access_key ] = 'ACCESS_KEY';
+
+		return $hashed_credential_keys;
+	}
+
+	private function has_validation_errors_to_show(): bool {
+		$validation_service = new ConnectionValidationService( $this );
+		$errors             = $validation_service->get_errors();
+		if ( ! empty( $errors ) ) {
+			foreach ( $errors as $error ) {
+				WC_Admin_Settings::add_error( $error );
+				break;
+			}
+			return true;
+		}
+
+		return false;
 	}
 }

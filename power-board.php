@@ -20,8 +20,6 @@
  * WC requires at least: 6.6
  * WC tested up to: 9.9.3
  * Requires Plugins: woocommerce
- *
- * @noinspection PhpUndefinedFunctionInspection for plugin_dir_url
  */
 
 declare( strict_types=1 );
@@ -61,7 +59,6 @@ function check_the_directory(): void {
 
 	if ( $current_dir !== $implied_dir ) {
 		if ( ! function_exists( 'deactivate_plugins' ) ) {
-			/* @noinspection PhpUndefinedConstantInspection */
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 

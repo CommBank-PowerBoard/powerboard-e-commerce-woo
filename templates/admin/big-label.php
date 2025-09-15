@@ -19,7 +19,6 @@ if ( isset( $data['value'] ) ) {
 	<th scope="row" class="titledesc">
 		<h1>
 		<?php
-		/* @noinspection PhpUndefinedFunctionInspection */
 		echo isset( $value['title'] ) ? esc_html( $value['title'] ) : '';
 		?>
 		</h1>

@@ -5,7 +5,6 @@ namespace PowerBoard\Services;
 
 use PowerBoard\API\ChargeService;
 use PowerBoard\API\ConfigService;
-use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 
 class SDKAdapterService {
 	private ?ChargeService $charge_service      = null;
@@ -20,16 +19,19 @@ class SDKAdapterService {
 	}
 
 	public function __construct() {
-		$settings = MasterWidgetPaymentService::get_instance();
-		$this->initialise( $settings->get_environment(), $settings->get_access_token() );
-	}
-
-	public function initialise( ?string $env, ?string $access_token ): void {
-		ConfigService::init( $env, $access_token );
+		ConfigService::init();
 	}
 
 	public function refunds( array $params ): array {
 		return $this->init_charge_service()->refunds( $params )->call();
+	}
+
+	public function get_charge( string $charge_id ): array {
+		return $this->init_charge_service()->get_charge_by_id( $charge_id )->call();
+	}
+
+	public function create_checkout_intent( array $params ): array {
+		return $this->init_charge_service()->create_checkout_intent( $params )->call();
 	}
 
 	protected function init_charge_service(): ChargeService {

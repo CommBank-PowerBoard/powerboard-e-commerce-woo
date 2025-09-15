@@ -1,5 +1,5 @@
-const getSelectedIndex = (element) => {
-	if (element.value === "") {
+const getSelectedIndex = ( element ) => {
+	if ( element.value === '' ) {
 		return -1;
 	}
 	return element.selectedIndex;
@@ -7,12 +7,12 @@ const getSelectedIndex = (element) => {
 
 // noinspection JSUnresolvedReference
 jQuery( document ).ready(
-	function ($) {
+	function( $ ) {
 		const element = $( '.power_board-settings' ).get();
 		element.map(
-			(el) => {
-				if ( ! el.classList.contains( 'is-optional' )) {
-					for (const elChild of el.children) {
+			( el ) => {
+				if ( !el.classList.contains( 'is-optional' ) ) {
+					for ( const elChild of el.children ) {
 						if ( elChild.value === '' ) {
 							elChild.setAttribute( 'disabled', true );
 						}
@@ -22,11 +22,11 @@ jQuery( document ).ready(
 				el.selectedIndex = getSelectedIndex( el );
 				el.addEventListener(
 					'change',
-					function () {
+					function() {
 						el.selectedIndex = getSelectedIndex( this );
 					}
 				);
 			}
-		)
+		);
 	}
 );

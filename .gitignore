@@ -13,7 +13,6 @@ sftp-config.json
 /node_modules/
 /node_modules2/
 /deploy/
-package-lock.json
 
 # Sass
 .sass-cache/
@@ -34,3 +33,34 @@ webhook.txt
 
 # PHPCS caching file ignore
 .phpcs.cache
+
+# Test and quality reports (CI artifacts)
+jest-junit.xml
+phpunit-junit.xml
+phpcs-*.json
+eslint-*.json
+*-gl-code-quality-report.json
+npm-audit-*.json
+npm-audit-*.txt
+coverage/base.css
+coverage/block-navigation.js
+coverage/classic-form.js.html
+coverage/favicon.png
+coverage/form.js.html
+coverage/index.html
+coverage/lcov-report/base.css
+coverage/lcov-report/block-navigation.js
+coverage/lcov-report/classic-form.js.html
+coverage/lcov-report/favicon.png
+coverage/lcov-report/form.js.html
+coverage/lcov-report/index.html
+coverage/lcov-report/prettify.css
+coverage/lcov-report/prettify.js
+coverage/lcov-report/sort-arrow-sprite.png
+coverage/lcov-report/sorter.js
+coverage/lcov.info
+coverage/prettify.css
+coverage/prettify.js
+coverage/sort-arrow-sprite.png
+coverage/sorter.js
+test-results
