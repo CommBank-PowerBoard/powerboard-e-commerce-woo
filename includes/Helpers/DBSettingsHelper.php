@@ -56,12 +56,12 @@ class DBSettingsHelper {
 		$settings = self::get_db_settings();
 
 		return [
-			self::LOCAL_ENVIRONMENT_ID               => $settings[ self::get_environment_key() ],
-			self::LOCAL_ACCESS_TOKEN_ID              => self::decrypt_token( $settings[ self::get_access_token_key() ] ),
-			self::LOCAL_VERSION_ID                   => $settings[ self::get_version_key() ],
-			self::LOCAL_CONFIGURATION_TEMPLATE_ID    => $settings[ self::get_configuration_template_key() ],
-			self::LOCAL_CUSTOMISATION_TEMPLATE_ID    => $settings[ self::get_customisation_template_key() ],
-			self::LOCAL_AVAILABLE_PAYMENT_METHODS_ID => $settings[ self::AVAILABLE_PAYMENT_METHODS_KEY ],
+			self::LOCAL_ENVIRONMENT_ID               => isset( $settings[ self::get_environment_key() ] ) ? $settings[ self::get_environment_key() ] : '',
+			self::LOCAL_ACCESS_TOKEN_ID              => isset( $settings[ self::get_access_token_key() ] ) ? self::decrypt_token( $settings[ self::get_access_token_key() ] ) : '',
+			self::LOCAL_VERSION_ID                   => isset( $settings[ self::get_version_key() ] ) ? $settings[ self::get_version_key() ] : '',
+			self::LOCAL_CONFIGURATION_TEMPLATE_ID    => isset( $settings[ self::get_configuration_template_key() ] ) ? $settings[ self::get_configuration_template_key() ] : '',
+			self::LOCAL_CUSTOMISATION_TEMPLATE_ID    => isset( $settings[ self::get_customisation_template_key() ] ) ? $settings[ self::get_customisation_template_key() ] : '',
+			self::LOCAL_AVAILABLE_PAYMENT_METHODS_ID => isset( $settings[ self::AVAILABLE_PAYMENT_METHODS_KEY ] ) ? $settings[ self::AVAILABLE_PAYMENT_METHODS_KEY ] : '',
 		];
 	}
 
