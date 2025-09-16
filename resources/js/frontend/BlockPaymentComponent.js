@@ -105,13 +105,14 @@ const createAvailablePaymentMethodsList = () => {
 	const availablePaymentMethodsElements = [];
 
 	for ( let paymentMethodKey in availablePaymentMethods ) {
-		const paymentMethodNiceName = availablePaymentMethods[ paymentMethodKey ];
+		const paymentMethodNiceName = availablePaymentMethods[ paymentMethodKey ].nice_name;
+		const paymentMethodImage = availablePaymentMethods[ paymentMethodKey ].image;
 
 		availablePaymentMethodsElements.push( createElement(
 			'img',
 			{
 				src: window.powerBoardWidgetSettings.pluginUrlPrefix +
-					`assets/images/payment-methods/${paymentMethodKey}.svg`,
+					`assets/images/payment-methods/${paymentMethodImage}`,
 				alt: `Available payment method ${paymentMethodNiceName}`,
 				id: `power-board-payment-method-${paymentMethodKey}`,
 				title: paymentMethodNiceName,

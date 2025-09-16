@@ -19,15 +19,17 @@ echo wp_kses_post(
 	$settings                  = json_decode( wc_esc_json( $data['settings'], true ) );
 	$available_payment_methods = $settings->available_payment_methods;
 
-    if(!empty($available_payment_methods)) {
-        foreach ($available_payment_methods as $payment_method_key => $payment_method_nice_name) {
-            echo '<img id="power-board-payment-method-' . esc_html($payment_method_key) . '"
-                          class="payment-method"
-                          src="' . esc_html(POWER_BOARD_PLUGIN_URL) . 'assets/images/payment-methods/' . esc_html($payment_method_key) . '.svg"
-                          title="' . esc_html($payment_method_nice_name) . '"
-                          alt="Available payment method ' . esc_html($payment_method_nice_name) . '">';
-        }
-    }
+	if ( !empty( $available_payment_methods ) ) {
+		foreach ( $available_payment_methods as $payment_method_key => $payment_method_info ) {
+			$payment_method_nice_name = $payment_method_info->nice_name;
+			$payment_method_image     = $payment_method_info->image;
+			echo '<img id="power-board-payment-method-' . esc_html( $payment_method_key ) . '"
+                      class="payment-method"
+                      src="' . esc_html( POWER_BOARD_PLUGIN_URL ) . 'assets/images/payment-methods/' . esc_html( $payment_method_image ) . '"
+                      title="' . esc_html( $payment_method_nice_name ) . '"
+                      alt="Available payment method ' . esc_html( $payment_method_nice_name ) . '">';
+		}
+	}
 	?>
 	</div>
 
