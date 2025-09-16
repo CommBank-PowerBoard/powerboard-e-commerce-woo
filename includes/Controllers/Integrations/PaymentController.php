@@ -49,29 +49,9 @@ class PaymentController {
 			}
 
 			$amount = floatval( $args['amount'] );
-
-			// Check upper bounds - amount cannot exceed order total
-			$order_total       = floatval( $order->get_total() );
-			$already_refunded  = floatval( $order->get_total_refunded() );
-			$max_refund_amount = $order_total - $already_refunded;
-
-			if ( $amount > $max_refund_amount ) {
-				$error = sprintf(
-					/* translators: 1: Requested amount, 2: Maximum refundable amount */
-					__( 'Refund amount %1$s exceeds maximum refundable amount of %2$s', 'power-board' ),
-					wc_price( $amount ),
-					wc_price( $max_refund_amount )
-				);
-				throw new Exception( esc_html( wp_strip_all_tags( $error ) ) );
-			}
 		} else {
-			// Use full remaining refundable amount if no amount specified
-			$amount = floatval( $order->get_total() ) - floatval( $order->get_total_refunded() );
-
-			if ( $amount <= 0 ) {
-				$error = __( 'No refundable amount remaining for this order', 'power-board' );
-				throw new Exception( esc_html( $error ) );
-			}
+			$error = __( 'Amount should always be specified', 'power-board' );
+			throw new Exception( esc_html( $error ) );
 		}
 
 		if ( ! in_array(
@@ -90,7 +70,7 @@ class PaymentController {
 		$action = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '';
 
 		$amount_to_refund = round( (float) $amount, 2 );
-		if ( ( $action === 'edit_order' || $action === 'editpost' ) ) {
+		if ( $action === 'edit_order' || $action === 'editpost' ) {
 			if ( $order->get_meta( '_status_change_verification_failed' ) === '1' ) {
 				$refund->set_amount( 0 );
 				$refund->set_total( 0 );
