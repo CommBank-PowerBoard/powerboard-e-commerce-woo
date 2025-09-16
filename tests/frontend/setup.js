@@ -133,6 +133,16 @@ Object.defineProperty(
 	}
 );
 
+// Mock window.confirm to avoid JSDOM "not implemented" error
+Object.defineProperty(
+	global.window,
+	'confirm',
+	{
+		value: jest.fn().mockReturnValue( true ),
+		writable: true
+	}
+);
+
 // Mock document functions (note: some document properties are provided by JSDOM)
 if ( !global.document.getElementById ) {
 	global.document.getElementById = jest.fn();

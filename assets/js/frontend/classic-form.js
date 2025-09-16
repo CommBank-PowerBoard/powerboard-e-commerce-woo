@@ -68,7 +68,11 @@ const CONSTANTS = {
 		POWERBOARD_FAILED_PARSE_SETTINGS: 'PowerBoard: Failed to parse settings.',
 		PAYMENT_DATA_NOT_SET: 'Payment data not set.',
 		USER_CANCELLED: 'Payment cancelled by user.',
-		PAYMENT_CANCELLED_ERROR: 'An unexpected error occurred while rendering payment options.'
+		PAYMENT_CANCELLED_ERROR: 'An unexpected error occurred while rendering payment options.',
+		MODAL_CLOSE_CONFIRMATION_MESSAGE:
+			'Wait! Your payment may have already been completed. ' +
+			'We recommend you wait for the confirmation message. ' +
+			'Are you sure you want to proceed?'
 	},
 	RESULTS: {
 		SUCCESS: 'success'
@@ -149,6 +153,7 @@ class ModalManager {
 	constructor( stateManager, dataService ) {
 		this.stateManager = stateManager;
 		this.dataService  = dataService;
+		this.escapeKeyHandler = null;
 	}
 
 	/**
@@ -239,6 +244,12 @@ class ModalManager {
 			woocommerceCheckoutForm.classList.remove( modalOpenedClass );
 		}
 
+		// Clean up escape key handler
+		if ( this.escapeKeyHandler ) {
+			document.removeEventListener( 'keydown', this.escapeKeyHandler );
+			this.escapeKeyHandler = null;
+		}
+
 		// Reset checkout state to prevent form being stuck in loading state
 		if ( this.stateManager ) {
 			this.stateManager.reset();
@@ -260,6 +271,24 @@ class ModalManager {
 					CONSTANTS.ERROR_MESSAGES.PAYMENT_CANCELLED_PROCESSING_FAILED
 				);
 			} );
+		}
+	}
+
+	/**
+	 * Shows confirmation dialog before closing modal
+	 *
+	 * @returns {boolean} True if user confirmed close, false otherwise
+	 */
+	showCloseConfirmation() {
+		return window.confirm( CONSTANTS.ERROR_MESSAGES.MODAL_CLOSE_CONFIRMATION_MESSAGE );
+	}
+
+	/**
+	 * Handles user-initiated close with confirmation
+	 */
+	handleUserClose() {
+		if ( this.showCloseConfirmation() ) {
+			this.close( true );
 		}
 	}
 
@@ -300,17 +329,26 @@ class ModalManager {
 	setupCloseHandlers( modal ) {
 		const closeBtn = modal.querySelector( CONSTANTS.SELECTORS.MODAL_CLOSE_BUTTON );
 		if ( closeBtn ) {
-			// user-initiated close
-			closeBtn.onclick = () => this.close( true );
+			// user-initiated close with confirmation
+			closeBtn.onclick = () => this.handleUserClose();
 		}
 
-		// Close on outside click
+		// Close on outside click with confirmation
 		modal.onclick = ( e ) => {
 			if ( e.target === modal ) {
-				// user-initiated close
-				this.close( true );
+				// user-initiated close with confirmation
+				this.handleUserClose();
 			}
 		};
+
+		// Escape key handler with confirmation
+		this.escapeKeyHandler = ( e ) => {
+			if ( e.key === 'Escape' ) {
+				this.handleUserClose();
+			}
+		};
+
+		document.addEventListener( 'keydown', this.escapeKeyHandler );
 	}
 }
 

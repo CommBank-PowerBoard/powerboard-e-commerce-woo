@@ -21,6 +21,9 @@ describe( 'ModalManager', () => {
 
 		modalManager = new ModalManager( mockStateManager, mockDataService );
 
+		// Initialize escapeKeyHandler property for testing
+		modalManager.escapeKeyHandler = null;
+
 		// Mock DOM elements
 		mockModal = {
 			style: { display: 'none' },
@@ -189,16 +192,125 @@ describe( 'ModalManager', () => {
 	} );
 
 	describe( 'setupCloseHandlers', () => {
-		it( 'should handle missing close button gracefully', () => {
-			mockModal.querySelector.mockReturnValue( null );
+		let originalAddEventListener;
+		let mockAddEventListener;
 
-			expect( () => modalManager.setupCloseHandlers( mockModal ) ).not.toThrow();
+		beforeEach( () => {
+			// Mock document.addEventListener for escape key testing
+			originalAddEventListener = global.document.addEventListener;
+			mockAddEventListener = jest.fn();
+			global.document.addEventListener = mockAddEventListener;
 		} );
 
-		it( 'should set up outside click handler', () => {
+		afterEach( () => {
+			// Restore original addEventListener
+			global.document.addEventListener = originalAddEventListener;
+		} );
+
+
+		it( 'should set up close button handler with confirmation', () => {
+			const handleUserCloseSpy = jest.spyOn( modalManager, 'handleUserClose' );
+			modalManager.setupCloseHandlers( mockModal );
+
+			expect( mockModal.querySelector ).toHaveBeenCalledWith( CONSTANTS.SELECTORS.MODAL_CLOSE_BUTTON );
+			expect( typeof mockCloseBtn.onclick ).toBe( 'function' );
+
+			// Test that clicking close button calls handleUserClose
+			mockCloseBtn.onclick();
+			expect( handleUserCloseSpy ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should set up outside click handler with confirmation', () => {
+			const handleUserCloseSpy = jest.spyOn( modalManager, 'handleUserClose' );
+
 			modalManager.setupCloseHandlers( mockModal );
 
 			expect( typeof mockModal.onclick ).toBe( 'function' );
+
+			// Test clicking outside modal calls handleUserClose
+			const mockEvent = { target: mockModal };
+			mockModal.onclick( mockEvent );
+			expect( handleUserCloseSpy ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should not trigger close when clicking inside modal content', () => {
+			const handleUserCloseSpy = jest.spyOn( modalManager, 'handleUserClose' );
+
+			modalManager.setupCloseHandlers( mockModal );
+
+			// Test clicking inside modal content doesn't call handleUserClose
+			const mockEvent = { target: mockWidget };
+			mockModal.onclick( mockEvent );
+			expect( handleUserCloseSpy ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should trigger close when escape key is pressed', () => {
+			const handleUserCloseSpy = jest.spyOn( modalManager, 'handleUserClose' );
+
+			modalManager.setupCloseHandlers( mockModal );
+
+			// Get the escape key handler function
+			const escapeKeyHandler = modalManager.escapeKeyHandler;
+
+			// Simulate escape key press
+			const escapeKeyEvent = { key: 'Escape' };
+			escapeKeyHandler( escapeKeyEvent );
+
+			expect( handleUserCloseSpy ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should not trigger close for non-escape keys', () => {
+			const handleUserCloseSpy = jest.spyOn( modalManager, 'handleUserClose' );
+
+			modalManager.setupCloseHandlers( mockModal );
+
+			// Get the escape key handler function
+			const escapeKeyHandler = modalManager.escapeKeyHandler;
+
+			// Simulate other key press
+			const otherKeyEvent = { key: 'Enter' };
+			escapeKeyHandler( otherKeyEvent );
+
+			expect( handleUserCloseSpy ).not.toHaveBeenCalled();
+		} );
+
+	} );
+
+	describe( 'showCloseConfirmation', () => {
+		it( 'should call window.confirm with correct message', () => {
+			const mockConfirm = jest.fn().mockReturnValue( true );
+			global.window.confirm = mockConfirm;
+
+			const result = modalManager.showCloseConfirmation();
+
+			expect( mockConfirm ).toHaveBeenCalledWith(
+				CONSTANTS.ERROR_MESSAGES.MODAL_CLOSE_CONFIRMATION_MESSAGE
+			);
+			expect( result ).toBe( true );
+		} );
+	} );
+
+	describe( 'handleUserClose', () => {
+		it( 'should close modal when user confirms', () => {
+			const showCloseConfirmationSpy = jest.spyOn( modalManager, 'showCloseConfirmation' )
+				.mockReturnValue( true );
+			const closeSpy = jest.spyOn( modalManager, 'close' );
+
+			modalManager.handleUserClose();
+
+			expect( showCloseConfirmationSpy ).toHaveBeenCalledTimes( 1 );
+			expect( closeSpy ).toHaveBeenCalledWith( true );
+		} );
+
+		it( 'should not close modal when user cancels confirmation', () => {
+			const showCloseConfirmationSpy = jest.spyOn( modalManager, 'showCloseConfirmation' )
+				.mockReturnValue( false );
+			const closeSpy = jest.spyOn( modalManager, 'close' );
+
+			modalManager.handleUserClose();
+
+			expect( showCloseConfirmationSpy ).toHaveBeenCalledTimes( 1 );
+			expect( closeSpy ).not.toHaveBeenCalled();
 		} );
 	} );
 } );
