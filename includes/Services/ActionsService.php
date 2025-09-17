@@ -85,7 +85,7 @@ class ActionsService {
 
 		add_action( 'admin_init', [ $order_service, 'remove_bulk_action_message' ] );
 
-		// Add Store API hooks for blocks checkout
+		// Add blocks checkout payment processing (after validation)
 		add_action( 'woocommerce_rest_checkout_process_payment_with_context', [ $this, 'process_blocks_checkout_payment' ], 10, 2 );
 
 		// woo hooks
@@ -126,6 +126,7 @@ class ActionsService {
 		return $response;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 	}
+
 
 	/**
 	 * Handles blocks checkout payment processing

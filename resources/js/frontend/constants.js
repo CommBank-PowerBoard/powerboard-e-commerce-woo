@@ -47,6 +47,7 @@ export const PAYMENT_METHOD = 'power_board';
 
 export const ERROR_MESSAGES = {
 	MODAL_LOAD_FAILED: 'Failed to show payment modal',
+	CHECKOUT_VALIDATION: 'An unexpected error occurred during checkout validation.',
 	PAYMENT_SETUP: 'An unexpected error occurred during payment setup.',
 	WIDGET_FAILURE: 'An unexpected error occurred while rendering payment options.',
 	PAYMENT_FAILED: 'Payment processing failed. Please try again.',

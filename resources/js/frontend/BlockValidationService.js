@@ -18,6 +18,7 @@ export class BlockValidationService {
 	 */
 	getMissingRequiredFields() {
 		const addressData = this.cart.getCustomerData().billingAddress;
+
 		if ( !addressData ) {
 			return [];
 		}
@@ -37,8 +38,11 @@ export class BlockValidationService {
 
 		// Check all required fields are present and not empty
 		for ( const field of requiredFields ) {
-			if ( !addressData[ field ] || addressData[ field ].trim() === '' ) {
-				missingFields.push( GET_FIELD_NICE_NAME[ field ] );
+			const fieldValue = addressData[ field ];
+
+			if ( !fieldValue || fieldValue.trim() === '' ) {
+				const niceName = GET_FIELD_NICE_NAME[ field ];
+				missingFields.push( niceName );
 			}
 		}
 
@@ -58,6 +62,7 @@ export class BlockValidationService {
 
 		// Check billing address completeness
 		const invalidRequiredFields = this.getMissingRequiredFields();
+
 		if ( invalidRequiredFields.length > 0 ) {
 			result.isValid = false;
 			// eslint-disable-next-line max-len

@@ -37,24 +37,31 @@ export class BlockCheckoutHandler {
 	}
 
 	/**
+	 * Processes checkout validation for WooCommerce Blocks
+	 *
+	 * @returns {Object} Validation result for emitResponse
+	 */
+	processCheckoutValidation() {
+		const powerBoardValidation = this.validationService.validatePowerBoardRequirements();
+
+		if ( !powerBoardValidation.isValid ) {
+			return {
+				type: this.responseTypes.ERROR,
+				message: __( powerBoardValidation.error, TEXT_DOMAIN )
+			};
+		}
+
+		return { type: this.responseTypes.SUCCESS };
+	}
+
+	/**
 	 * Processes the payment setup for block checkout
 	 *
 	 * @returns {Object} Payment setup result
 	 */
 	processPaymentSetup() {
-		// No payment data yet - validate form and let WooCommerce blocks handle checkout
-		const powerBoardValidation = this.validationService.validatePowerBoardRequirements();
-		// Validate form and let WooCommerce blocks handle checkout
-		if ( !powerBoardValidation.isValid ) {
-			return {
-				type: this.responseTypes.FAILED,
-				message: __( powerBoardValidation.error, TEXT_DOMAIN ),
-				messageContext: this.noticeContexts.PAYMENTS
-			};
-		}
-
-		// Form is valid, let WooCommerce blocks proceed with checkout
-		// We'll show the modal in onCheckoutSuccess event
+		// Let WooCommerce handle basic field validation during payment setup phase
+		// PowerBoard-specific validation will occur before showing the modal
 		return {
 			type: this.responseTypes.SUCCESS,
 			meta: {
@@ -79,6 +86,7 @@ export class BlockCheckoutHandler {
 			this.dataService.setOrderId( orderId );
 
 			if ( paymentDetails?.powerboard_redirect === MODAL_REDIRECT ) {
+				// Backend validation has already passed if we reach this point
 				// Show modal and wait for payment result
 				const modalResult = await this.showModalAndProcessPayment();
 

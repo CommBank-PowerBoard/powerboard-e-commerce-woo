@@ -14,9 +14,35 @@ const availablePaymentMethods = settings.available_payment_methods || [];
 const defaultInfoText         = 'Click \'Place Order\' to securely complete your payment.';
 const paymentInfoText         = settings.payment_info_text || defaultInfoText;
 
+/**
+ * Clears checkout-related notices across likely contexts to avoid stacked errors
+ *
+ * @param {Object} emitResponse - Woo Blocks emitResponse object (to read noticeContexts)
+ */
+export function clearCheckoutNotices( emitResponse ) {
+	try {
+		if ( window.wp && window.wp.data ) {
+			const noticesStore   = window.wp.data.select( 'core/notices' );
+			const dispatchNotices = window.wp.data.dispatch( 'core/notices' );
+			const contextsToClear = [
+				emitResponse.noticeContexts && emitResponse.noticeContexts.CHECKOUT
+			].filter( Boolean );
+
+			for ( const ctx of contextsToClear ) {
+				const ctxNotices = noticesStore.getNotices( ctx ) || [];
+				for ( const n of ctxNotices ) {
+					dispatchNotices.removeNotice( n.id, ctx );
+				}
+			}
+		}
+	} catch ( e ) {
+		// no-op if notices API is unavailable
+	}
+}
+
 export const BlockPaymentComponent                                   = ( props ) => {
 	const { eventRegistration, emitResponse, store, cart, settings } = props;
-	const { onPaymentSetup, onCheckoutSuccess }                      = eventRegistration;
+	const { onPaymentSetup, onCheckoutSuccess, onCheckoutValidation } = eventRegistration;
 
 	useEffect(
 		() => {
@@ -28,7 +54,35 @@ export const BlockPaymentComponent                                   = ( props )
 				emitResponse.responseTypes,
 				emitResponse.noticeContexts
 			);
-			// Set up payment validation (for form validation only)
+
+			const unsubscribeCheckoutValidation = onCheckoutValidation(
+				() => {
+					try {
+						const result = checkoutHandler.processCheckoutValidation();
+						if ( result.type === emitResponse.responseTypes.SUCCESS ) {
+							return { type: emitResponse.responseTypes.SUCCESS };
+						}
+
+						// Clear existing notices from previous validations
+						clearCheckoutNotices( emitResponse );
+
+						return {
+							type: emitResponse.responseTypes.ERROR,
+							errorMessage: __( result.message, TEXT_DOMAIN )
+						};
+					} catch ( error ) {
+						// Clear existing notices from previous validations
+						clearCheckoutNotices( emitResponse );
+
+						return {
+							type: emitResponse.responseTypes.ERROR,
+							errorMessage: __( ERROR_MESSAGES.CHECKOUT_VALIDATION, TEXT_DOMAIN )
+						};
+					}
+				}
+			);
+
+			// Set up payment setup handler
 			const unsubscribePaymentSetup = onPaymentSetup(
 				() => {
 					try {
@@ -42,17 +96,21 @@ export const BlockPaymentComponent                                   = ( props )
 						} else {
 							return {
 								type: emitResponse.responseTypes.ERROR,
-								message: __( result.message, TEXT_DOMAIN )
+								message: __( result.message, TEXT_DOMAIN ),
+								messageContext: result.messageContext ||
+									emitResponse.noticeContexts.PAYMENTS
 							};
 						}
 					} catch ( error ) {
 						return {
 							type: emitResponse.responseTypes.ERROR,
-							message: __( ERROR_MESSAGES.PAYMENT_SETUP, TEXT_DOMAIN )
+							message: __( ERROR_MESSAGES.PAYMENT_SETUP, TEXT_DOMAIN ),
+							messageContext: emitResponse.noticeContexts.PAYMENTS
 						};
 					}
 				}
 			);
+
 			// Set up checkout success handler (for showing modal)
 			const unsubscribeCheckoutSuccess = onCheckoutSuccess(
 				async( checkoutData ) => {
@@ -71,6 +129,7 @@ export const BlockPaymentComponent                                   = ( props )
 			return () => {
 				checkoutHandler.cleanup();
 				unsubscribePaymentSetup();
+				unsubscribeCheckoutValidation();
 				unsubscribeCheckoutSuccess();
 			};
 		},

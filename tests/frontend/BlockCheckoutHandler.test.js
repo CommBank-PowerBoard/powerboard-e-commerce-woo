@@ -11,8 +11,7 @@ import { BlockValidationService } from '../../resources/js/frontend/BlockValidat
 import { BlockWidgetManager } from '../../resources/js/frontend/BlockWidgetManager.js';
 import {
 	ERROR_MESSAGES,
-	MODAL_REDIRECT,
-	TEXT_DOMAIN
+	MODAL_REDIRECT
 } from '../../resources/js/frontend/constants.js';
 
 // Mock WordPress i18n
@@ -172,14 +171,9 @@ describe(
 			'processPaymentSetup',
 			() => {
 				it(
-					'should return success when form is valid',
+					'should return success with payment method data',
 					() => {
-						mockValidationService.validatePowerBoardRequirements.mockReturnValue( {
-							isValid: true,
-							error: ''
-						} );
 						const result = checkoutHandler.processPaymentSetup();
-						expect( mockValidationService.validatePowerBoardRequirements ).toHaveBeenCalled();
 						expect( result ).toEqual(
 							{
 								type: mockResponseTypes.SUCCESS,
@@ -188,25 +182,6 @@ describe(
 										powerboard_redirect: MODAL_REDIRECT
 									}
 								}
-							}
-						);
-					}
-				);
-
-				it(
-					'should return failed when form is invalid',
-					() => {
-						mockValidationService.validatePowerBoardRequirements.mockReturnValue( {
-							isValid: false,
-							error: 'test error'
-						} );
-						const result = checkoutHandler.processPaymentSetup();
-						expect( mockTranslate ).toHaveBeenCalledWith( 'test error', TEXT_DOMAIN );
-						expect( result ).toEqual(
-							{
-								type: mockResponseTypes.FAILED,
-								message: 'test error',
-								messageContext: mockNoticeContexts.PAYMENTS
 							}
 						);
 					}
@@ -309,14 +284,13 @@ describe(
 							}
 						};
 						const mockModalResult = { success: true, payment_data: { charge_id: 'ch_123' } };
-						const processingError = new Error( 'Processing failed' );
 						jest.spyOn( checkoutHandler, 'showModalAndProcessPayment' ).mockResolvedValue( mockModalResult );
-						mockDataService.processPaymentResult.mockRejectedValue( processingError );
+						mockDataService.processSuccessfulOrder.mockResolvedValue( { success: false } );
 						const result = await checkoutHandler.handleCheckoutSuccess( checkoutDataWithPowerBoard );
 						expect( result ).toEqual(
 							{
 								type: mockResponseTypes.ERROR,
-								message: ERROR_MESSAGES.SOMETHING_WRONG,
+								message: ERROR_MESSAGES.PAYMENT_FAILED,
 								messageContext: mockNoticeContexts.PAYMENTS,
 								retry: true
 							}
@@ -600,48 +574,38 @@ describe(
 			'validation and form processing',
 			() => {
 				it(
-					'should validate form requirements before processing',
-					() => {
-						// Test that validation is called
-						mockValidationService.validatePowerBoardRequirements.mockReturnValue( {
-							isValid: true,
-							error: ''
-						} );
+					'should proceed directly to modal since backend validation has already passed',
+					async() => {
+						// Mock successful modal result since backend validation already passed
+						const mockModalResult = { success: true };
+						const mockProcessResult = { success: true, data: { redirect_url: 'http://example.com/success' } };
 
-						const result = checkoutHandler.processPaymentSetup();
+						const checkoutDataWithPowerBoard = {
+							processingResponse: {
+								paymentDetails: {
+									powerboard_redirect: MODAL_REDIRECT,
+									order_id: 456
+								}
+							}
+						};
 
-						expect( mockValidationService.validatePowerBoardRequirements ).toHaveBeenCalledTimes( 1 );
-						expect( result.type ).toBe( mockResponseTypes.SUCCESS );
-					}
-				);
+						jest.spyOn( checkoutHandler, 'showModalAndProcessPayment' ).mockResolvedValue( mockModalResult );
+						mockDataService.processSuccessfulOrder.mockResolvedValue( mockProcessResult );
 
-				it(
-					'should include validation error details in response',
-					() => {
-						const validationError = 'Phone number is required';
-						mockValidationService.validatePowerBoardRequirements.mockReturnValue( {
-							isValid: false,
-							error: validationError
-						} );
+						const result = await checkoutHandler.handleCheckoutSuccess( checkoutDataWithPowerBoard );
 
-						const result = checkoutHandler.processPaymentSetup();
-
+						// Validation should not be called in handleCheckoutSuccess anymore
+						expect( mockValidationService.validatePowerBoardRequirements ).not.toHaveBeenCalled();
 						expect( result ).toEqual( {
-							type: mockResponseTypes.FAILED,
-							message: validationError,
-							messageContext: mockNoticeContexts.PAYMENTS
+							type: mockResponseTypes.SUCCESS,
+							redirectUrl: 'http://example.com/success'
 						} );
 					}
 				);
 
 				it(
-					'should include correct payment method data in success response',
+					'should include correct payment method data in processPaymentSetup response',
 					() => {
-						mockValidationService.validatePowerBoardRequirements.mockReturnValue( {
-							isValid: true,
-							error: ''
-						} );
-
 						const result = checkoutHandler.processPaymentSetup();
 
 						expect( result.meta.paymentMethodData ).toEqual( {
