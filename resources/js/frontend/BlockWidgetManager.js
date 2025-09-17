@@ -72,17 +72,23 @@ export class BlockWidgetManager {
 		// Handle payment success
 		window.widgetPowerBoard.onPaymentSuccessful(
 			async( data ) => {
-				await this.dataService.onPaymentSuccessful( data );
+				let paymentSuccessResponse = await this.dataService.onPaymentSuccessful( data );
 
 				if ( this.paymentPromiseResolve ) {
 					this.paymentPromiseResolve(
 						{
 							success: true,
+							redirectUrl: data.success_url ?? null,
 							payment_data: data
 						}
 					);
 					this.paymentPromiseResolve = null;
+				} else {
+					if ( paymentSuccessResponse.data.success_url ){
+						window.location.href = paymentSuccessResponse.data.success_url;
+					}
 				}
+
 
 				this.modalManager.close();
 			}

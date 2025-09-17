@@ -3,7 +3,7 @@
  * Handles PowerBoard payment modal display and interactions for block checkout
  */
 
-import { MODAL_IDS, SELECTORS, MODAL_AUTO_CLOSE_DELAY } from './constants.js';
+import { MODAL_IDS, SELECTORS, MODAL_AUTO_CLOSE_DELAY, ERROR_MESSAGES } from './constants.js';
 
 export class BlockModalManager {
 	constructor( dataService ) {
@@ -159,7 +159,7 @@ export class BlockModalManager {
 		// Close button handler
 		const closeBtn = modal.querySelector( SELECTORS.MODAL_CLOSE );
 		if ( closeBtn ) {
-			const closeBtnHandler = () => this.close( true ); // userInitiated = true
+			const closeBtnHandler = () => this.handleUserClose();
 			closeBtn.addEventListener( 'click', closeBtnHandler );
 			this.closeHandlers.push( {
 				element: closeBtn,
@@ -171,7 +171,7 @@ export class BlockModalManager {
 		// Outside click handler
 		const outsideClickHandler = ( e ) => {
 			if ( e.target === modal ) {
-				this.close( true ); // userInitiated = true
+				this.handleUserClose();
 			}
 		};
 		modal.addEventListener( 'click', outsideClickHandler );
@@ -184,7 +184,7 @@ export class BlockModalManager {
 		// Escape key handler
 		const escapeKeyHandler = ( e ) => {
 			if ( e.key === 'Escape' && this.isModalOpen ) {
-				this.close( true ); // userInitiated = true
+				this.handleUserClose();
 			}
 		};
 		document.addEventListener( 'keydown', escapeKeyHandler );
@@ -205,6 +205,24 @@ export class BlockModalManager {
 			element.removeEventListener( event, handler );
 		} );
 		this.closeHandlers = [];
+	}
+
+	/**
+	 * Shows confirmation dialog before closing modal
+	 *
+	 * @returns {boolean} True if user confirmed close, false otherwise
+	 */
+	showCloseConfirmation() {
+		return window.confirm( ERROR_MESSAGES.MODAL_CLOSE_CONFIRMATION_MESSAGE );
+	}
+
+	/**
+	 * Handles user-initiated close with confirmation
+	 */
+	handleUserClose() {
+		if ( this.showCloseConfirmation() ) {
+			this.close( true );
+		}
 	}
 
 	/**

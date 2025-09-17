@@ -233,6 +233,7 @@ describe(
 						expect( mockResolver ).toHaveBeenCalledWith(
 							{
 								success: true,
+								redirectUrl: null,
 								payment_data: paymentData
 							}
 						);

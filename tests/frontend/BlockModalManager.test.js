@@ -398,6 +398,108 @@ describe( 'BlockModalManager', () => {
 		} );
 	} );
 
+	describe( 'showCloseConfirmation', () => {
+		beforeEach( () => {
+			// Mock window.confirm
+			global.window.confirm = jest.fn();
+		} );
+
+		afterEach( () => {
+			// Restore window.confirm
+			delete global.window.confirm;
+		} );
+
+		it( 'should return true when user confirms', () => {
+			global.window.confirm.mockReturnValue( true );
+
+			const result = modalManager.showCloseConfirmation();
+
+			expect( global.window.confirm ).toHaveBeenCalled();
+			expect( result ).toBe( true );
+		} );
+
+		it( 'should return false when user cancels', () => {
+			global.window.confirm.mockReturnValue( false );
+
+			const result = modalManager.showCloseConfirmation();
+
+			expect( global.window.confirm ).toHaveBeenCalled();
+			expect( result ).toBe( false );
+		} );
+	} );
+
+	describe( 'handleUserClose', () => {
+		beforeEach( () => {
+			// Mock window.confirm and modal methods
+			global.window.confirm = jest.fn();
+			jest.spyOn( modalManager, 'showCloseConfirmation' );
+			jest.spyOn( modalManager, 'close' );
+		} );
+
+		afterEach( () => {
+			// Restore mocks
+			delete global.window.confirm;
+			jest.restoreAllMocks();
+		} );
+
+		it( 'should close modal when user confirms', () => {
+			modalManager.showCloseConfirmation.mockReturnValue( true );
+
+			modalManager.handleUserClose();
+
+			expect( modalManager.showCloseConfirmation ).toHaveBeenCalled();
+			expect( modalManager.close ).toHaveBeenCalledWith( true );
+		} );
+
+		it( 'should not close modal when user cancels', () => {
+			modalManager.showCloseConfirmation.mockReturnValue( false );
+
+			modalManager.handleUserClose();
+
+			expect( modalManager.showCloseConfirmation ).toHaveBeenCalled();
+			expect( modalManager.close ).not.toHaveBeenCalled();
+		} );
+	} );
+
+	describe( 'close handlers with confirmation', () => {
+		beforeEach( () => {
+			global.window.confirm = jest.fn();
+			jest.spyOn( modalManager, 'handleUserClose' );
+		} );
+
+		afterEach( () => {
+			delete global.window.confirm;
+			jest.restoreAllMocks();
+		} );
+
+		it( 'should call handleUserClose when close button is clicked', () => {
+			modalManager.show();
+
+			mockCloseBtn.click();
+
+			expect( modalManager.handleUserClose ).toHaveBeenCalled();
+		} );
+
+		it( 'should call handleUserClose when clicking outside modal', () => {
+			modalManager.show();
+
+			const event = new MouseEvent( 'click', { target: mockModal } );
+			Object.defineProperty( event, 'target', { value: mockModal } );
+			mockModal.dispatchEvent( event );
+
+			expect( modalManager.handleUserClose ).toHaveBeenCalled();
+		} );
+
+		it( 'should call handleUserClose when escape key is pressed', () => {
+			modalManager.show();
+
+			const event = new KeyboardEvent( 'keydown', { key: 'Escape' } );
+			document.dispatchEvent( event );
+
+			expect( modalManager.handleUserClose ).toHaveBeenCalled();
+		} );
+	} );
+
 	describe( 'comprehensive integration tests', () => {
 		it( 'should handle complete modal lifecycle with callbacks', () => {
 			const onCloseCallback = jest.fn();

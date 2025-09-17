@@ -264,6 +264,7 @@ class ModalService {
 				'message'      => 'Payment successful notification received',
 				'order_id'     => $order_id,
 				'order_status' => $order->get_status(),
+				'success_url'  => $order->get_checkout_order_received_url(),
 			],
 			200
 		);

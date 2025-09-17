@@ -56,7 +56,10 @@ export const ERROR_MESSAGES = {
 	SOMETHING_WRONG: 'Something went wrong, please try again.',
 	POWERBOARD_REQUIRED_FIELDS: 'To complete your checkout with PowerBoard, ' +
 		'please provide the following required fields:',
-	USER_CANCELLED: 'Payment cancelled by user'
+	USER_CANCELLED: 'Payment window closed by user',
+	MODAL_CLOSE_CONFIRMATION_MESSAGE:
+		'If you’ve already submitted your payment, ' +
+		'please keep this window open while we process your order.'
 };
 
 export const TEXT_DOMAIN = 'power-board';

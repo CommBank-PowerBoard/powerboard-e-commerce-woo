@@ -67,12 +67,11 @@ const CONSTANTS = {
 		FAILED_INITIALIZE_WIDGET: 'Failed to initialize widget:',
 		POWERBOARD_FAILED_PARSE_SETTINGS: 'PowerBoard: Failed to parse settings.',
 		PAYMENT_DATA_NOT_SET: 'Payment data not set.',
-		USER_CANCELLED: 'Payment cancelled by user.',
+		USER_CANCELLED: 'Payment window closed by user',
 		PAYMENT_CANCELLED_ERROR: 'An unexpected error occurred while rendering payment options.',
 		MODAL_CLOSE_CONFIRMATION_MESSAGE:
-			'Wait! Your payment may have already been completed. ' +
-			'We recommend you wait for the confirmation message. ' +
-			'Are you sure you want to proceed?'
+		'If you’ve already submitted your payment, ' +
+		'please keep this window open while we process your order.'
 	},
 	RESULTS: {
 		SUCCESS: 'success'
