@@ -1,16 +1,12 @@
 <?php
 /**
- * This file uses functions (wpautop, wp_kses_post, esc_attr, and esc_html__) from WordPress
+ * This file uses functions (esc_attr, and esc_html__) from WordPress
  * This file uses function wc_esc_json from WooCommerce
  *
  * @var array $data
  */
 
 declare( strict_types=1 );
-
-echo wp_kses_post(
-	wpautop( $data['description'] )
-);
 
 ?>
 <fieldset id="wc-classic-power-board-checkout" class="wc-payment-form powerboard">
@@ -32,7 +28,6 @@ echo wp_kses_post(
 	}
 	?>
 	</div>
-
 	<!-- Modal for PowerBoard Widget -->
 	<div id="powerboard-payment-modal" class="powerboard-modal" style="display: none;">
 		<div class="powerboard-modal-content">
@@ -53,12 +48,17 @@ echo wp_kses_post(
 			</div>
 		</div>
 	</div>
-
 	<!-- Payment method selection message -->
-	<div id="powerboard-payment-info">
-		<p><?php echo esc_html__( 'Click \'Place Order\' to securely complete your payment.', 'power-board' ); ?></p>
-	</div>
+	<?php
+	$desc = trim( (string) $data['description'] );
 
+	if ( $desc === '' ) {
+		$desc = __( "Click 'Place Order' to securely complete your payment.", 'power-board' );
+	}
+	?>
+	<div id="powerboard-payment-info">
+		<p><?php echo esc_html( $desc ); ?></p>
+	</div>
 	<input id="chargeid" type="hidden" name="chargeid">
 	<input id="intentid" type="hidden" name="intentid">
 	<input id="classic-<?php echo esc_attr( $data['id'] ); ?>-nonce" type="hidden" name="_wpnonce"

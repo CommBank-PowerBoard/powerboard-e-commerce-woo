@@ -37,16 +37,16 @@ final class GatewayLabelsTest extends TestCase {
 	}
 
 	public function testGetGatewayDescriptionUsesNormalizationAndLimit(): void {
-		$settings = [ 'description' => '   Pay securely via PowerBoard.   ' ];
+		$settings = [ 'description' => '   Click \'Place Order\' to securely complete your payment.   ' ];
 
 		$out = MWHelper::get_gateway_description( $settings, 500 );
-		$this->assertSame( 'Pay securely via PowerBoard.', $out );
+		$this->assertSame( 'Click \'Place Order\' to securely complete your payment.', $out );
 	}
 
 	public function testGetGatewayDescriptionFallsBackToDefaultIfEmpty(): void {
 		$settings = [ 'description' => '' ];
 
-		$out = MWHelper::get_gateway_description( $settings, 500, 'Pay securely via PowerBoard.' );
-		$this->assertSame( 'Pay securely via PowerBoard.', $out );
+		$out = MWHelper::get_gateway_description( $settings, 500, 'Click \'Place Order\' to securely complete your payment.' );
+		$this->assertSame( 'Click \'Place Order\' to securely complete your payment.', $out );
 	}
 }

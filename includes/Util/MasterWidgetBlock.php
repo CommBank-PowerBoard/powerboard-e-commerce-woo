@@ -216,20 +216,20 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 		$powerboard_settings = DBSettingsHelper::get_powerboard_settings();
 
 		$title = MasterWidgetSettingsHelper::get_gateway_title( $this->settings, MasterWidgetPaymentService::TITLE_MAX ?? null );
-		$desc  = MasterWidgetSettingsHelper::get_gateway_description( $this->settings, MasterWidgetPaymentService::DESCRIPTION_MAX ?? null );
 
 		if ( $title === '' ) {
 			$title = MasterWidgetPaymentService::DEFAULT_TITLE;
 		}
 
-		if ( $desc === '' ) {
-			$desc = MasterWidgetPaymentService::DEFAULT_DESCRIPTION;
-		}
+		$payment_gateways_class = WC()->payment_gateways();
+		$gateways               = $payment_gateways_class->payment_gateways();
+		$gateway                = $gateways[ POWER_BOARD_PLUGIN_PREFIX ] ?? null;
+		$payment_info_text      = $gateway ? MasterWidgetHelper::get_payment_info_text( $gateway ) : MasterWidgetHelper::DEFAULT_PAYMENT_INFO;
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
 			'title'                     => esc_html( $title ),
-			'description'               => esc_html( $desc ),
+			'payment_info_text'         => $payment_info_text,
 			'environment'               => $powerboard_settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ],
 			'checkout_template_version' => $powerboard_settings[ DBSettingsHelper::LOCAL_VERSION_ID ],
 			'checkout_customisation_id' => $powerboard_settings[ DBSettingsHelper::LOCAL_CUSTOMISATION_TEMPLATE_ID ],

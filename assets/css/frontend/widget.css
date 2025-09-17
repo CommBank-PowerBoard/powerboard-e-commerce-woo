@@ -53,6 +53,8 @@
 
 .power-board-payment-method-label-text {
 	margin-right: 8px;
+	vertical-align: top;
+	margin-right: 20px;
 }
 
 .payment_method_power_board label img {

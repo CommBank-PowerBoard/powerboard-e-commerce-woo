@@ -20,8 +20,6 @@ const cart     		= select( CART_STORE_KEY );
 const settings 		= getSetting( 'power_board_data', {} );
 const defaultLabel  = __( 'PowerBoard', TEXT_DOMAIN );
 const label  = decodeEntities( settings.title ) || defaultLabel;
-const description   = settings.description ? decodeEntities( settings.description ) : '';
-
 
 /**
  * Creates the PowerBoard payment method label with logo
@@ -38,9 +36,7 @@ const createPaymentMethodLabel = () => {
 				{ className: 'power-board-payment-method-label' },
 				createElement(
 					'span',
-					{
-						className: 'power-board-payment-method-label-text'
-					},
+					{ className: 'power-board-payment-method-label-text' },
 					label
 				),
 				createElement(
@@ -52,11 +48,6 @@ const createPaymentMethodLabel = () => {
 						className: 'power-board-payment-method-label-logo'
 					}
 				)
-			),
-			description && createElement(
-				'p',
-				{ className: 'power-board-payment-method-desc' },
-				description
 			)
 		)
 	);

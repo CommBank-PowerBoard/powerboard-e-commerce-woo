@@ -51,7 +51,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	protected static bool $admin_settings_load_logged = false;
 
 	const DEFAULT_TITLE       = 'PowerBoard';
-	const DEFAULT_DESCRIPTION = 'Pay securely via PowerBoard.';
+	const DEFAULT_DESCRIPTION = 'Click \'Place Order\' to securely complete your payment.';
 	const TITLE_MAX           = 50;
 	const DESCRIPTION_MAX     = 500;
 

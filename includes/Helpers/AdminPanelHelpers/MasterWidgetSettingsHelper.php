@@ -181,7 +181,7 @@ class MasterWidgetSettingsHelper {
 		return self::normalize_setting_string( $settings, 'title', $max_len, $value );
 	}
 
-	public static function get_gateway_description( array $settings, ?int $max_len = null, ?string $value = 'Pay securely via PowerBoard.' ): string {
+	public static function get_gateway_description( array $settings, ?int $max_len = null, ?string $value = 'Click \'Place Order\' to securely complete your payment.' ): string {
 		return self::normalize_setting_string( $settings, 'description', $max_len, $value );
 	}
 }

@@ -7,6 +7,20 @@ use PowerBoard\Enums\ConfigAPIEnum;
 use PowerBoard\Services\Settings\APIAdapterService;
 
 class MasterWidgetHelper {
+	const DEFAULT_PAYMENT_INFO = "Click 'Place Order' to securely complete your payment.";
+
+	/**
+	 * Returns description for payment info box
+	 */
+	public static function get_payment_info_text( \WC_Payment_Gateway $gateway ): string {
+		$text = trim( (string) $gateway->get_option( 'description', '' ) );
+		if ( $text === '' ) {
+			$text = self::DEFAULT_PAYMENT_INFO;
+		}
+
+		return apply_filters( 'power_board_payment_info_text', $text, $gateway );
+	}
+
 	/**
 	 * Validate phone number format
 	 *

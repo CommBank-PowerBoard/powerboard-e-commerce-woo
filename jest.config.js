@@ -1,6 +1,6 @@
 module.exports = {
 	testEnvironment: 'jsdom',
-	setupFilesAfterEnv: ['<rootDir>/tests/frontend/setup.js'],
+	setupFilesAfterEnv: [ '<rootDir>/tests/frontend/setup.js' ],
 	testMatch: [
 		'<rootDir>/tests/frontend/**/*.test.js'
 	],
@@ -9,7 +9,7 @@ module.exports = {
 		'!assets/js/frontend/**/*.min.js'
 	],
 	coverageDirectory: 'coverage',
-	coverageReporters: ['text', 'lcov', 'html'],
+	coverageReporters: [ 'text', 'lcov', 'html' ],
 	moduleNameMapper: {
 		'^@/(.*)$': '<rootDir>/assets/js/$1'
 	},
@@ -25,13 +25,13 @@ module.exports = {
 	// Configure jest-junit for GitLab CI integration
 	reporters: [
 		'default',
-		['jest-junit', {
+		[ 'jest-junit', {
 			outputDirectory: '.',
 			outputName: 'jest-junit.xml',
 			classNameTemplate: '{classname}',
 			titleTemplate: '{title}',
 			ancestorSeparator: ' › ',
 			usePathForSuiteName: true
-		}]
+		} ]
 	]
-}; 
+};

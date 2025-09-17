@@ -9,8 +9,10 @@ import { BlockCheckoutHandler } from './BlockCheckoutHandler.js';
 import { ERROR_MESSAGES, TEXT_DOMAIN } from './constants.js';
 import { getSetting } from '@woocommerce/settings';
 
-const settings = getSetting( 'power_board_data', {} );
-const availablePaymentMethods        = settings.available_payment_methods || [];
+const settings                = getSetting( 'power_board_data', {} );
+const availablePaymentMethods = settings.available_payment_methods || [];
+const defaultInfoText         = 'Click \'Place Order\' to securely complete your payment.';
+const paymentInfoText         = settings.payment_info_text || defaultInfoText;
 
 export const BlockPaymentComponent                                   = ( props ) => {
 	const { eventRegistration, emitResponse, store, cart, settings } = props;
@@ -238,11 +240,7 @@ const createPaymentInfo = () => {
 	return createElement(
 		'div',
 		{ id: 'powerboard-payment-info' },
-		createElement(
-			'p',
-			null,
-			__( 'Click \'Place Order\' to securely complete your payment.', TEXT_DOMAIN )
-		)
+		createElement( 'p', null, paymentInfoText )
 	);
 };
 
