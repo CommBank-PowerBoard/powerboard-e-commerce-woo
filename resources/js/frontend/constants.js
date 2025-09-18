@@ -58,8 +58,9 @@ export const ERROR_MESSAGES = {
 		'please provide the following required fields:',
 	USER_CANCELLED: 'Payment window closed by user',
 	MODAL_CLOSE_CONFIRMATION_MESSAGE:
-		'If you’ve already submitted your payment, ' +
-		'please keep this window open while we process your order.'
+		'If you’ve submitted your payment, ' +
+		'please wait for a confirmation message before closing the window. ' +
+		'Do you still wish to cancel?'
 };
 
 export const TEXT_DOMAIN = 'power-board';
