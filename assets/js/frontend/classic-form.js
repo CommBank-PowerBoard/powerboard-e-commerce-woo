@@ -588,7 +588,8 @@ class DataService {
 			_wpnonce: this.paymentData.widgetEventNonce,
 			order_id: this.orderId,
 			user_cancelled: isUserInitiated,
-			error_message: errorMessage
+			error_message: isUserInitiated !== false ?
+				CONSTANTS.ERROR_MESSAGES.USER_CANCELLED : errorMessage
 		};
 
 		return new Promise( ( resolve, reject ) => {

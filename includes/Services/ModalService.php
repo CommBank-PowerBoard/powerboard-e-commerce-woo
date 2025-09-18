@@ -453,7 +453,7 @@ class ModalService {
 
 		// Different messages based on cancel type
 		if ( $is_user_initiated === 'true' ) {
-			$order->add_order_note( 'Payment cancelled by user.' );
+			$order->add_order_note( 'Payment window closed by user.' );
 			$log_level = 'info';
 		} else {
 			$order->add_order_note( 'Payment cancelled due to error.' );

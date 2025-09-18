@@ -3,7 +3,7 @@
  * Handles API calls and data processing for PowerBoard block checkout
  */
 
-import { AJAX_ENDPOINTS } from './constants.js';
+import { AJAX_ENDPOINTS, ERROR_MESSAGES } from './constants.js';
 
 export class BlockDataService {
 	constructor( store, cart, settings ) {
@@ -187,7 +187,7 @@ export class BlockDataService {
 			_wpnonce: widgetEventNonce,
 			order_id: this.getOrderId(),
 			user_cancelled: isUserInitiated,
-			error_message: errorMessage
+			error_message: isUserInitiated !== false ? ERROR_MESSAGES.USER_CANCELLED : errorMessage
 		};
 
 		return new Promise(
