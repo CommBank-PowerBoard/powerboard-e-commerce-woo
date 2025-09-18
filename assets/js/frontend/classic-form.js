@@ -72,7 +72,7 @@ const CONSTANTS = {
 		MODAL_CLOSE_CONFIRMATION_MESSAGE:
 			'If you’ve submitted your payment, ' +
 			'please wait for a confirmation message before closing the window. ' +
-			'Do you still wish to cancel?'
+			'Do you still wish to close?'
 	},
 	RESULTS: {
 		SUCCESS: 'success'
