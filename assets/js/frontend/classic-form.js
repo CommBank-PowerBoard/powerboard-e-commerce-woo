@@ -3,6 +3,22 @@
  * Handles modal display, and payment processing for WooCommerce checkout
  */
 
+// Helper function to get gateway title from settings
+function getGatewayTitle() {
+	try {
+		const settingsElement = document.querySelector( '#classic-power_board-settings' );
+		if ( settingsElement ) {
+			const settings = JSON.parse( settingsElement.value );
+			return settings.title || 'PowerBoard';
+		}
+	} catch ( error ) {
+		// If parsing fails, fallback to default
+	}
+
+	// Fallback to default
+	return 'PowerBoard';
+}
+
 // Constants
 const CONSTANTS = {
 	PAYMENT_METHOD: 'power_board',
@@ -51,7 +67,7 @@ const CONSTANTS = {
 	},
 	ERROR_MESSAGES: {
 		POWERBOARD_REQUIRED_FIELDS:
-			'To complete your checkout with PowerBoard, ' +
+			`To complete your checkout with ${getGatewayTitle()}, ` +
 			'please provide the following required fields:',
 		MODAL_NOT_FOUND: 'PowerBoard: Modal element not found!',
 		PAYMENT_FAILED: 'Payment failed. Please try again.',

@@ -2,6 +2,10 @@
  * Shared constants for PowerBoard Block Checkout
  */
 
+import { getSetting } from '@woocommerce/settings';
+import { decodeEntities } from '@wordpress/html-entities';
+import { __ } from '@wordpress/i18n';
+
 export const MODAL_IDS = {
 	MODAL: 'powerboard-payment-modal',
 	LOADING: 'powerboard-modal-loading',
@@ -45,6 +49,11 @@ export const AJAX_ENDPOINTS = {
 
 export const PAYMENT_METHOD = 'power_board';
 
+// Get dynamic gateway title from settings
+const settings = getSetting( 'power_board_data', {} );
+const defaultLabel = __( 'PowerBoard', 'power-board' );
+const gatewayTitle = decodeEntities( settings.title ) || defaultLabel;
+
 export const ERROR_MESSAGES = {
 	MODAL_LOAD_FAILED: 'Failed to show payment modal',
 	CHECKOUT_VALIDATION: 'An unexpected error occurred during checkout validation.',
@@ -54,7 +63,7 @@ export const ERROR_MESSAGES = {
 	PAYMENT_EXPIRED: 'Your payment session has expired. Please retry your payment',
 	PAYMENT_CANCELLED_PROCESSING_FAILED: 'Payment cancelled processing failed',
 	SOMETHING_WRONG: 'Something went wrong, please try again.',
-	POWERBOARD_REQUIRED_FIELDS: 'To complete your checkout with PowerBoard, ' +
+	POWERBOARD_REQUIRED_FIELDS: `To complete your checkout with ${gatewayTitle}, ` +
 		'please provide the following required fields:',
 	USER_CANCELLED: 'Payment window closed by user',
 	MODAL_CLOSE_CONFIRMATION_MESSAGE:

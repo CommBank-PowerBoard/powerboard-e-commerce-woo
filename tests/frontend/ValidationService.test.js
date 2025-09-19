@@ -284,7 +284,7 @@ describe( 'ValidationService', () => {
 			const result = validationService.validateCheckoutForm();
 
 			expect( result.success ).toBe( false );
-			expect( result.errors ).toContain( 'To complete your checkout with PowerBoard, please provide the following required fields: First name, Last name' );
+			expect( result.errors[ 0 ] ).toMatch( /To complete your checkout with .+, please provide the following required fields: First name, Last name/ );
 		} );
 
 		it( 'should return success when PowerBoard is selected and all fields are valid', () => {

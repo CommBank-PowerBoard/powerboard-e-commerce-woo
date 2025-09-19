@@ -97,7 +97,8 @@ describe(
 						);
 						const result = validationService.validatePowerBoardRequirements();
 						expect( result.isValid ).toBe( false );
-						expect( result.error ).toContain( 'To complete your checkout with PowerBoard, please provide the following required fields:' );
+						expect( result.error ).toContain( 'To complete your checkout with' );
+						expect( result.error ).toContain( 'please provide the following required fields:' );
 					}
 				);
 			}
