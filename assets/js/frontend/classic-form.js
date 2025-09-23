@@ -1113,6 +1113,9 @@ class PowerBoardCheckoutHandler {
 			const paymentData = new PaymentSubmissionData( response );
 			this.dataService.setPaymentData( paymentData );
 
+			// Ensure wpnonce_error is valid with the current session
+			window.PowerBoardAjaxError.wpnonce_error = response._wpnonce_error_notice;
+
 			this.widgetManager.initializeMasterWidget()
 				.catch(
 					( error ) => {

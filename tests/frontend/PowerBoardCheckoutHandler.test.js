@@ -219,6 +219,7 @@ describe( 'PowerBoardCheckoutHandler', () => {
 					return null;
 				}
 			);
+			global.PowerBoardAjaxError = {};
 
 			checkoutHandler.handlePowerBoardSubmission( validResponse );
 
@@ -240,6 +241,7 @@ describe( 'PowerBoardCheckoutHandler', () => {
 					return null;
 				}
 			);
+			global.PowerBoardAjaxError = {};
 
 			checkoutHandler.handlePowerBoardSubmission( validResponse );
 

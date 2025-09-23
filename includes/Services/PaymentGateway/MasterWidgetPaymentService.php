@@ -217,6 +217,7 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			'_wpnonce_intent'        => wp_create_nonce( 'power-board-create-charge-intent' ),
 			'_wpnonce_widget_event'  => wp_create_nonce( 'power-board-widget-event' ),
 			'_wpnonce_success_order' => wp_create_nonce( 'power-board-successful-order' ),
+			'_wpnonce_error_notice'  => wp_create_nonce( 'power-board-create-error-notice' ),
 			'message'                => 'Please complete your payment in the PowerBoard modal.',
 		];
 	}
