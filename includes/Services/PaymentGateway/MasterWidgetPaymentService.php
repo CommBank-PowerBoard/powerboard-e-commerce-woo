@@ -211,14 +211,15 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		 * For classic checkout: use redirect mechanism
 		 */
 		return [
-			'result'                 => 'success',
-			'redirect'               => 'powerboard_show_modal',
-			'order_id'               => $order_id,
-			'_wpnonce_intent'        => wp_create_nonce( 'power-board-create-charge-intent' ),
-			'_wpnonce_widget_event'  => wp_create_nonce( 'power-board-widget-event' ),
-			'_wpnonce_success_order' => wp_create_nonce( 'power-board-successful-order' ),
-			'_wpnonce_error_notice'  => wp_create_nonce( 'power-board-create-error-notice' ),
-			'message'                => 'Please complete your payment in the PowerBoard modal.',
+			'result'                                => 'success',
+			'redirect'                              => 'powerboard_show_modal',
+			'order_id'                              => $order_id,
+			'_wpnonce_intent'                       => wp_create_nonce( 'power-board-create-charge-intent' ),
+			'_wpnonce_widget_event'                 => wp_create_nonce( 'power-board-widget-event' ),
+			'_wpnonce_success_order'                => wp_create_nonce( 'power-board-successful-order' ),
+			'_wpnonce_error_notice'                 => wp_create_nonce( 'power-board-create-error-notice' ),
+			'_wpnonce_woocommerce_process_checkout' => wp_create_nonce( 'woocommerce-process_checkout' ),
+			'message'                               => 'Please complete your payment in the PowerBoard modal.',
 		];
 	}
 	// phpcs:enable

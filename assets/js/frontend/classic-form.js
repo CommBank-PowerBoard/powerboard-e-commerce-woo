@@ -1110,11 +1110,13 @@ class PowerBoardCheckoutHandler {
 
 		// Show modal and initialize widget
 		if ( this.modalManager.show() ) {
+			this.setNoncesForCurrentSession( {
+				wooProcessCheckoutNonce: response._wpnonce_woocommerce_process_checkout,
+				errorNonce: response._wpnonce_error_notice
+			} );
+
 			const paymentData = new PaymentSubmissionData( response );
 			this.dataService.setPaymentData( paymentData );
-
-			// Ensure wpnonce_error is valid with the current session
-			window.PowerBoardAjaxError.wpnonce_error = response._wpnonce_error_notice;
 
 			this.widgetManager.initializeMasterWidget()
 				.catch(
@@ -1125,6 +1127,26 @@ class PowerBoardCheckoutHandler {
 						);
 					}
 				);
+		}
+	}
+
+	/**
+	 * Ensure WooCommerceProcessCheckout and PowerBoardError nonces are valid for the current session
+	 *
+	 * @param {Object} nonceValues - nonce values for current session
+	 */
+	setNoncesForCurrentSession( nonceValues ) {
+		const wooProcessCheckoutNonce = nonceValues.wooProcessCheckoutNonce;
+		const currentWooProcessCheckoutNonceElement =
+			document.getElementById( 'woocommerce-process-checkout-nonce' );
+		const currentWooProcessCheckoutNonce = currentWooProcessCheckoutNonceElement?.value;
+
+		if ( currentWooProcessCheckoutNonce !== wooProcessCheckoutNonce ) {
+			currentWooProcessCheckoutNonceElement.value = wooProcessCheckoutNonce;
+		}
+
+		if ( window.PowerBoardAjaxError.wpnonce_error !== nonceValues.errorNonce ) {
+			window.PowerBoardAjaxError.wpnonce_error = nonceValues.errorNonce;
 		}
 	}
 }
