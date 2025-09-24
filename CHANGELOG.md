@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0] - 2025-09-29
+
+### Compatibility
+
+- Compatible with Wordpress version `6.8.2`
+- Compatible with WooCommerce version `9.9.3`.
+
+### Added
+
+- Redesigned the order flow by implementing modal popup solution for PowerBoard payments, further enhancing the checkout and payment flow
+
 ## [1.6.0] - 2025-08-27
 
 ### Compatibility
