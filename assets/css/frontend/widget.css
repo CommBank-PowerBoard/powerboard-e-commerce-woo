@@ -1,16 +1,24 @@
 /* Classic Checkout - PowerBoard payment method styles */
 .wc_payment_method.payment_method_power_board label {
-	display: inline-flex;
-	justify-content: space-between;
+	display: inline-flex !important;
 	align-items: center;
 	flex-wrap: wrap;
-	width: calc(100% - 2em);
+	max-width: calc(100% - 35px);
+	width: -moz-available;
+	width: -webkit-fill-available;
+	width: stretch;
 	column-gap: 4px;
 }
 
+.wc_payment_method.payment_method_power_board.contains-input label {
+	max-width: 100%;
+	align-items: baseline;
+}
+
 .woocommerce-checkout #payment ul.payment_methods li.payment_method_power_board label img {
+	align-self: center;
 	height: 24px;
-	margin: 0;
+	margin: 0 0 0 auto;
 }
 
 .woocommerce-checkout #payment ul.payment_methods li.payment_method_power_board img.payment-method {
@@ -54,7 +62,6 @@
 .power-board-payment-method-label-text {
 	margin-right: 8px;
 	vertical-align: top;
-	margin-right: 20px;
 }
 
 .payment_method_power_board label img {

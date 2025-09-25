@@ -59,11 +59,13 @@ const CONSTANTS = {
 		ERROR: 'powerboard-modal-error'
 	},
 	CSS_CLASSES: {
+		POWERBOARD_MODAL_OPENED: 'powerboard-modal-opened',
 		WC_INVALID: 'woocommerce-invalid woocommerce-invalid-required-field',
 		PROCESSING: 'processing',
 		BLOCK_UI: 'blockUI',
 		BLOCK_OVERLAY: 'blockOverlay',
-		ACTIVE: 'active'
+		ACTIVE: 'active',
+		CONTAINS_INPUT: 'contains-input'
 	},
 	ERROR_MESSAGES: {
 		POWERBOARD_REQUIRED_FIELDS:
@@ -94,15 +96,14 @@ const CONSTANTS = {
 		SUCCESS: 'success'
 	},
 	VALUES: {
-		DISPLAY_BLOCK: 'block',
-		DISPLAY_NONE: 'none',
 		PLACE_ORDER_TEXT: 'Place Order',
 		POWERBOARD_REDIRECT: 'powerboard_show_modal',
-		OVERFLOW_HIDDEN: 'hidden',
-		OVERFLOW_EMPTY: ''
-	},
-	CSS_VALUES: {
-		POWERBOARD_MODAL_OPENED: 'powerboard-modal-opened'
+		CSS: {
+			DISPLAY_BLOCK: 'block',
+			OVERFLOW_HIDDEN: 'hidden',
+			NONE: 'none',
+			EMPTY: ''
+		}
 	},
 	FORM_FIELDS: [
 		'first_name', 'last_name', 'country', 'address_1', 'address_2',
@@ -187,19 +188,19 @@ class ModalManager {
 
 		// Reset modal state
 		if ( modalLoading ) {
-			modalLoading.style.display = CONSTANTS.VALUES.DISPLAY_BLOCK;
+			modalLoading.style.display = CONSTANTS.VALUES.CSS.DISPLAY_BLOCK;
 		}
 		if ( modalWidget ) {
-			modalWidget.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalWidget.style.display = CONSTANTS.VALUES.CSS.NONE;
 			modalWidget.classList.remove( CONSTANTS.CSS_CLASSES.ACTIVE );
 		}
 		if ( modalError ) {
-			modalError.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalError.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
 
 		// Show modal
-		modal.style.display          = CONSTANTS.VALUES.DISPLAY_BLOCK;
-		document.body.style.overflow = CONSTANTS.VALUES.OVERFLOW_HIDDEN;
+		modal.style.display          = CONSTANTS.VALUES.CSS.DISPLAY_BLOCK;
+		document.body.style.overflow = CONSTANTS.VALUES.CSS.OVERFLOW_HIDDEN;
 
 		// Remove WooCommerce beforeunload handler that causes Chrome popup
 		if ( window.wc_checkout_form && window.wc_checkout_form.detachUnloadEventsOnSubmit ) {
@@ -218,7 +219,7 @@ class ModalManager {
 			CONSTANTS.SELECTORS.WOOCOMMERCE_CHECKOUT
 		);
 		if ( woocommerceCheckoutForm ) {
-			woocommerceCheckoutForm.classList.add( CONSTANTS.CSS_VALUES.POWERBOARD_MODAL_OPENED );
+			woocommerceCheckoutForm.classList.add( CONSTANTS.CSS_CLASSES.POWERBOARD_MODAL_OPENED );
 		}
 
 		this.setupCloseHandlers( modal );
@@ -235,9 +236,9 @@ class ModalManager {
 	close( userInitiated= false, errorReason = null ) {
 		const modal = document.getElementById( CONSTANTS.MODAL_IDS.MODAL );
 		if ( modal ) {
-			modal.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modal.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
-		document.body.style.overflow = CONSTANTS.VALUES.OVERFLOW_EMPTY;
+		document.body.style.overflow = CONSTANTS.VALUES.CSS.EMPTY;
 
 		// Remove all beforeunload handlers to prevent Chrome popup
 		window.onbeforeunload = null;
@@ -256,7 +257,7 @@ class ModalManager {
 			CONSTANTS.SELECTORS.WOOCOMMERCE_CHECKOUT
 		);
 		if ( woocommerceCheckoutForm ) {
-			const modalOpenedClass = CONSTANTS.CSS_VALUES.POWERBOARD_MODAL_OPENED;
+			const modalOpenedClass = CONSTANTS.VALUES.POWERBOARD_MODAL_OPENED;
 			woocommerceCheckoutForm.classList.remove( modalOpenedClass );
 		}
 
@@ -319,13 +320,13 @@ class ModalManager {
 		const modalError   = document.getElementById( CONSTANTS.MODAL_IDS.ERROR );
 
 		if ( modalLoading ) {
-			modalLoading.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalLoading.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
 		if ( modalWidget ) {
-			modalWidget.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalWidget.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
 		if ( modalError ) {
-			modalError.style.display = CONSTANTS.VALUES.DISPLAY_BLOCK;
+			modalError.style.display = CONSTANTS.VALUES.CSS.DISPLAY_BLOCK;
 		}
 
 		// Auto-close modal after showing error
@@ -393,7 +394,7 @@ class CheckoutStateManager {
 		const placeOrderButton = document.querySelector( CONSTANTS.SELECTORS.PLACE_ORDER_BUTTON );
 		if ( placeOrderButton ) {
 			placeOrderButton.disabled      = false;
-			placeOrderButton.style.opacity = CONSTANTS.DEFAULT_VALUES.EMPTY_STRING;
+			placeOrderButton.style.opacity = CONSTANTS.VALUES.CSS.EMPTY;
 			const originalText = placeOrderButton.getAttribute( CONSTANTS.ATTRIBUTES.DATA_VALUE );
 			placeOrderButton.textContent = originalText || CONSTANTS.VALUES.PLACE_ORDER_TEXT;
 		}
@@ -914,14 +915,14 @@ class WidgetManager {
 
 		// Hide loading, show widget container
 		if ( modalLoading ) {
-			modalLoading.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalLoading.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
 		if ( modalWidget ) {
-			modalWidget.style.display = CONSTANTS.VALUES.DISPLAY_BLOCK;
+			modalWidget.style.display = CONSTANTS.VALUES.CSS.DISPLAY_BLOCK;
 			modalWidget.classList.add( CONSTANTS.CSS_CLASSES.ACTIVE );
 		}
 		if ( modalError ) {
-			modalError.style.display = CONSTANTS.VALUES.DISPLAY_NONE;
+			modalError.style.display = CONSTANTS.VALUES.CSS.NONE;
 		}
 
 		// Initialize PowerBoard widget
@@ -1104,7 +1105,7 @@ class PowerBoardCheckoutHandler {
 
 		// Check if modal is already open
 		const modal = document.getElementById( CONSTANTS.MODAL_IDS.MODAL );
-		if ( modal && modal.style.display === CONSTANTS.VALUES.DISPLAY_BLOCK ) {
+		if ( modal && modal.style.display === CONSTANTS.VALUES.CSS.DISPLAY_BLOCK ) {
 			return;
 		}
 
@@ -1151,6 +1152,22 @@ class PowerBoardCheckoutHandler {
 	}
 }
 
+function setupCheckPaymentSelectionStyles() {
+	jQuery( 'body' ).on( 'updated_checkout', function() {
+		const powerboardSelectionEl =
+			jQuery( '.wc_payment_method.payment_method_power_board' )[ 0 ];
+		const powerboardSelectionLabelEl = powerboardSelectionEl.querySelector( 'label' );
+		// Check if label contains ::before, which means the input is inside the label element
+		const labelBeforeEl = window.getComputedStyle( powerboardSelectionLabelEl, '::before' );
+		if (
+			labelBeforeEl.content !== CONSTANTS.VALUES.CSS.NONE
+			&& labelBeforeEl.content !== CONSTANTS.VALUES.CSS.EMPTY
+		) {
+			powerboardSelectionEl.classList.add( CONSTANTS.CSS_CLASSES.CONTAINS_INPUT );
+		}
+	} );
+}
+
 // Initialize when document is ready
 // noinspection JSUnresolvedReference
 jQuery(
@@ -1159,6 +1176,7 @@ jQuery(
 			() => {
 				const powerBoardCheckout = new PowerBoardCheckoutHandler( $ );
 				powerBoardCheckout.init();
+				setupCheckPaymentSelectionStyles();
 				// Expose for testing
 				if ( typeof window !== CONSTANTS.DEFAULT_VALUES.UNDEFINED ) {
 					window.PowerBoardCheckout = {
