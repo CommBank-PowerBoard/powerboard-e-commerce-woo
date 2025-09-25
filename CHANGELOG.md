@@ -10,15 +10,6 @@
 ### Added
 
 - Redesigned the order flow by implementing modal popup solution for PowerBoard payments, further enhancing the checkout and payment flow
-
-## [1.6.0] - 2025-08-27
-
-### Compatibility
-
-- Compatible with WooCommerce version `9.9.3`.
-
-### Added
-
 - Added support for custom title & description in the plugin settings page.
 
 ### Fixed
