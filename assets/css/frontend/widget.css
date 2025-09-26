@@ -98,8 +98,19 @@
 }
 
 /* Checkout widget styles */
+.powerboard-modal-body #standaloneWidget .gpay-card-info-container-fill .gpay-card-info-animation-container,
+.powerboard-modal-body #standaloneWidget .gpay-card-info-container-fill .gpay-card-info-iframe {
+	right: 0;
+}
+
+.powerboard-modal-body #standaloneWidget .paypal-buttons {
+	right: 0;
+	padding-bottom: 0;
+	margin: 0 10px 10px 10px;
+}
+
 @media screen and (max-width: 450px) {
-	#standaloneWidget button {
+	.powerboard-modal-body #standaloneWidget button {
 		width: 100% !important;
 	}
 }
