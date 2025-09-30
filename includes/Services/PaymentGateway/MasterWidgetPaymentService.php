@@ -90,6 +90,29 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, [ $this, 'process_admin_options_with_logging' ] );
 		add_action( 'set_logged_in_cookie', [ $this, 'set_cookie_on_current_request' ] );
 		add_action( 'woocommerce_order_get_payment_method_title', [ $this, 'admin_display_order_pmt_type' ], 10, 2 );
+		add_action( 'woocommerce_api_powerboard_ipn', [ $this, 'handle_ipn_response' ] );
+	}
+
+	/**
+	 * Handles IPN response
+	 */
+	public function handle_ipn_response( $args ) {
+		$testing = wc_get_var( $_GET['testing'], '' );
+		if ( $testing === '1' ) {
+			wp_send_json_success(
+				[
+					'message' => 'Success test',
+				],
+				200
+			);
+		} else {
+			wp_send_json_error(
+				[
+					'message' => 'Error test',
+				],
+				400
+			);
+		}
 	}
 
 	/**
