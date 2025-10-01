@@ -97,8 +97,8 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	 * Handles IPN response
 	 */
 	public function handle_ipn_response( $args ) {
-		$testing = wc_get_var( $_GET['testing'], '' );
-		if ( $testing === '1' ) {
+		$input = file_get_contents( 'php://input' );
+		if ( $input['testing'] === '1' ) {
 			wp_send_json_success(
 				[
 					'message' => 'Success test',
