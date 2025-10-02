@@ -19,6 +19,7 @@ use PowerBoard\Helpers\AvailablePaymentMethodsHelper;
 use PowerBoard\Helpers\DBSettingsHelper;
 use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\NonceHelper;
+use PowerBoard\Helpers\Util\PaymentNotificationHelper;
 use PowerBoard\Services\HashService;
 use PowerBoard\Services\SDKAdapterService;
 use PowerBoard\Services\TemplateService;
@@ -96,19 +97,44 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 	/**
 	 * Handles IPN response
 	 */
-	public function handle_ipn_response( $args ) {
+	public function handle_ipn_response() {
+		$http_host    = !empty( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+		$valid_domain = PaymentNotificationHelper::is_valid_domain_name( $http_host );
+
+		if ( ! $valid_domain ) {
+			LoggerHelper::log(
+				'ipn response',
+				'info',
+				[
+					'valid_domain' => $valid_domain,
+				]
+			);
+
+			wp_send_json_error(
+				[
+					'message' => 'Error test - invalid domain',
+				],
+				400
+			);
+		}
+
 		$input = file_get_contents( 'php://input' );
+
 		if ( $input['testing'] === '1' ) {
+			LoggerHelper::log( 'ipn response success' );
 			wp_send_json_success(
 				[
 					'message' => 'Success test',
+					'input'   => $input,
 				],
 				200
 			);
 		} else {
+			LoggerHelper::log( 'ipn response error' );
 			wp_send_json_error(
 				[
 					'message' => 'Error test',
+					'input'   => $input,
 				],
 				400
 			);

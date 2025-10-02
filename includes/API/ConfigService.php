@@ -18,11 +18,11 @@ class ConfigService {
 
 	public static function build_api_url( ?string $endpoint = null ): string {
 		if ( self::$environment === ConfigAPIEnum::PRODUCTION_ENVIRONMENT_VALUE ) {
-			return ConfigAPIEnum::PRODUCTION_API_URL . $endpoint;
+			return ConfigAPIEnum::PRODUCTION_API_URL . ConfigAPIEnum::API_VERSION_URL . $endpoint;
 		} elseif ( self::$environment === ConfigAPIEnum::STAGING_ENVIRONMENT_VALUE ) {
-			return ConfigAPIEnum::STAGING_API_URL . $endpoint;
+			return ConfigAPIEnum::STAGING_API_URL . ConfigAPIEnum::API_VERSION_URL . $endpoint;
 		} else {
-			return ConfigAPIEnum::SANDBOX_API_URL . $endpoint;
+			return ConfigAPIEnum::SANDBOX_API_URL . ConfigAPIEnum::API_VERSION_URL . $endpoint;
 		}
 	}
 }
