@@ -103,11 +103,11 @@ class ModalService {
 		}
 
 		$intent_request_params = [
-			'amount'        => round( $request['total']['total_price'] / 100, 2 ),
-			'version'       => (int) DBSettingsHelper::get_version(),
-			'currency'      => $request['total']['currency_code'],
-			'reference'     => $order_id,
-			'customer'      => [
+			'amount'           => round( $request['total']['total_price'] / 100, 2 ),
+			'version'          => (int) DBSettingsHelper::get_version(),
+			'currency'         => $request['total']['currency_code'],
+			'reference'        => $order_id,
+			'customer'         => [
 				'email'           => $billing_address['email'],
 				'billing_address' => [
 					'first_name'       => $billing_address['first_name'],
@@ -119,9 +119,10 @@ class ModalService {
 					'address_postcode' => $billing_address['postcode'],
 				],
 			],
-			'configuration' => [
+			'configuration'    => [
 				'template_id' => DBSettingsHelper::get_configuration_id(),
 			],
+			'notification_url' => esc_url_raw( WC()->api_request_url( 'powerboard_ipn' ) ),
 		];
 
 		$customisation_id = DBSettingsHelper::get_customisation_id();
