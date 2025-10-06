@@ -25,4 +25,9 @@ class ConfigService {
 			return ConfigAPIEnum::SANDBOX_API_URL . ConfigAPIEnum::API_VERSION_URL . $endpoint;
 		}
 	}
+
+	public static function get_domain(): string {
+		self::$environment = DBSettingsHelper::get_environment();
+		return static::build_api_url();
+	}
 }
