@@ -58,6 +58,20 @@ class MapEventToStatusTest extends BaseServiceTest {
 		}
 	}
 
+	public function test_map_event_to_status_with_refund_events() {
+		$service = $this->createPartialMockService( IPNResponseService::class );
+		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+
+		$refundEvents = [
+			'payment_refunded'
+		];
+
+		foreach ( $refundEvents as $event ) {
+			$result = $method->invokeArgs( $service, [ $event ] );
+			$this->assertEquals( 'refunded', $result, "Event '{$event}' should map to 'refunded'" );
+		}
+	}
+
 	public function test_map_event_to_status_with_pending_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
 		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
@@ -108,11 +122,12 @@ class MapEventToStatusTest extends BaseServiceTest {
 		// Test all events that should be handled
 		$eventMappings = [
 			'payment_succeeded' => 'success',
-			'payment_captured' => 'success', 
+			'payment_captured' => 'success',
 			'checkout_completed' => 'success',
 			'payment_failed' => 'failed',
 			'checkout_failed' => 'failed',
 			'payment_voided' => 'cancelled',
+			'payment_refunded' => 'refunded',
 			'checkout_cancelled' => 'cancelled',
 			'checkout_expired' => 'cancelled',
 			'payment_created' => 'pending',
@@ -121,10 +136,10 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 		foreach ( $eventMappings as $event => $expectedStatus ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
-			$this->assertEquals( 
-				$expectedStatus, 
-				$result, 
-				"Event '{$event}' should map to '{$expectedStatus}'" 
+			$this->assertEquals(
+				$expectedStatus,
+				$result,
+				"Event '{$event}' should map to '{$expectedStatus}'"
 			);
 		}
 	}

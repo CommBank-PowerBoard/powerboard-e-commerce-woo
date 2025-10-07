@@ -9,6 +9,7 @@ class PBPaymentNotificationEnum {
 	public const PAYMENT_CREATED    = 'payment_created';
 	public const PAYMENT_CAPTURED   = 'payment_captured';
 	public const PAYMENT_VOIDED     = 'payment_voided';
+	public const PAYMENT_REFUNDED   = 'payment_refunded';
 	public const CHECKOUT_CREATED   = 'checkout_created';
 	public const CHECKOUT_CANCELLED = 'checkout_cancelled';
 	public const CHECKOUT_EXPIRED   = 'checkout_expired';
@@ -21,6 +22,7 @@ class PBPaymentNotificationEnum {
 		self::PAYMENT_CREATED,
 		self::PAYMENT_CAPTURED,
 		self::PAYMENT_VOIDED,
+		self::PAYMENT_REFUNDED,
 		self::CHECKOUT_CREATED,
 		self::CHECKOUT_CANCELLED,
 		self::CHECKOUT_EXPIRED,
@@ -36,6 +38,7 @@ class PBPaymentNotificationEnum {
 				APIPaymentNotificationEnum::PAYMENT_CREATED => self::PAYMENT_CREATED,
 				APIPaymentNotificationEnum::PAYMENT_CAPTURED => self::PAYMENT_CAPTURED,
 				APIPaymentNotificationEnum::PAYMENT_VOIDED => self::PAYMENT_VOIDED,
+				APIPaymentNotificationEnum::PAYMENT_REFUNDED => self::PAYMENT_REFUNDED,
 				APIPaymentNotificationEnum::CHECKOUT_CREATED => self::CHECKOUT_CREATED,
 				APIPaymentNotificationEnum::CHECKOUT_CANCELLED => self::CHECKOUT_CANCELLED,
 				APIPaymentNotificationEnum::CHECKOUT_EXPIRED => self::CHECKOUT_EXPIRED,

@@ -112,6 +112,24 @@ class IPN {
 			);
 		}
 
+		// Map according to actual PowerBoard IPN format
+		// See docs/ipn.json for structure
+		$this->charge_id       = $data['id'] ?? '';  // Payment ID is the charge ID
+		$this->intent_id       = ''; // Not provided in IPN, leave empty
+		$this->order_id        = isset( $data['metadata']['order_id'] ) ? (int) $data['metadata']['order_id'] : null;
+		$this->failure_message = $data['failure']['message'] ?? '';
+		// Convert amount from cents to major currency units
+		$this->amount          = isset( $data['amount'] ) ? ( (float) $data['amount'] / 100 ) : 0.0;
+		$this->currency        = $data['currency'] ?? '';
+		$this->amount_refunded = isset( $data['amount_refunded'] ) ? ( (float) $data['amount_refunded'] / 100 ) : 0.0;
+		$this->timestamp       = $data['created_at'] ?? time();
+		$this->payment_method  = PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method']['type'] ?? '' );
+		$this->object_type     = $data['object'] ?? '';  // 'payment' or 'refund'
+		// Generate event_id from payment ID and timestamp as PowerBoard doesn't send separate event_id
+		$this->event_id        = $this->charge_id . '_' . $this->timestamp;
+		// Derive event from payment state flags
+		$this->event           = $this->derive_event_from_payment_state( $data );
+
 		$this->charge          = new Charge( $data );
 		$this->intent_id       = (string) $data['intent_id'] ?? null;
 		$this->order_id        = (int) $data['order_id']?? null;
@@ -253,5 +271,48 @@ class IPN {
 
 	public function get_is_paid(): ?bool {
 		return $this->is_paid;
+	}
+	/**
+	 * Derive event name from PowerBoard payment state flags
+	 *
+	 * @param array $data PowerBoard IPN payload
+	 * @return string Event name
+	 */
+	private function derive_event_from_payment_state( array $data ): string {
+		$object_type = $data['object'] ?? '';
+
+		// Handle refund object type
+		if ( $object_type === 'refund' ) {
+			return PBPaymentNotificationEnum::PAYMENT_REFUNDED;
+		}
+
+		// Handle payment object type based on state flags
+		$is_paid = $data['is_paid'] ?? false;
+		$is_refunded = $data['is_refunded'] ?? false;
+		$is_pending = $data['payment_method']['is_pending'] ?? false;
+		$failure_message = $data['failure']['message'] ?? '';
+
+		// Check for failure first
+		if ( ! empty( $failure_message ) ) {
+			return PBPaymentNotificationEnum::PAYMENT_FAILED;
+		}
+
+		// Check for refunded state
+		if ( $is_refunded ) {
+			return PBPaymentNotificationEnum::PAYMENT_REFUNDED;
+		}
+
+		// Check for successful payment
+		if ( $is_paid ) {
+			return PBPaymentNotificationEnum::PAYMENT_SUCCEEDED;
+		}
+
+		// Check for pending state
+		if ( $is_pending ) {
+			return PBPaymentNotificationEnum::PAYMENT_CREATED;
+		}
+
+		// Default to payment created
+		return PBPaymentNotificationEnum::PAYMENT_CREATED;
 	}
 }
