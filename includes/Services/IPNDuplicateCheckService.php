@@ -421,7 +421,6 @@ class IPNDuplicateCheckService {
 	private function extract_charge_id( array $ipn_data ): ?string {
 		// Common locations for charge ID in IPN data
 		$possible_keys = [ 'charge_id', 'id', 'charge', 'transaction_id' ];
-
 		foreach ( $possible_keys as $key ) {
 			if ( ! empty( $ipn_data[ $key ] ) ) {
 				return sanitize_text_field( (string) $ipn_data[ $key ] );
@@ -449,7 +448,6 @@ class IPNDuplicateCheckService {
 	private function extract_order_id( array $ipn_data ): ?int {
 		// Common locations for order ID in IPN data
 		$possible_keys = [ 'order_id', 'reference', 'external_id', 'merchant_reference' ];
-
 		foreach ( $possible_keys as $key ) {
 			if ( ! empty( $ipn_data[ $key ] ) ) {
 				return absint( $ipn_data[ $key ] );
