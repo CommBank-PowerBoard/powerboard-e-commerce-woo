@@ -33,7 +33,7 @@ class IPN {
 	protected $order_id;
 
 	/**
-	 * Error message returned by the gateway when a payment or refund fails.
+	 * Error message returned by the gateway when a payment fails.
 	 * Empty string on success.
 	 *
 	 * @var string
@@ -55,13 +55,6 @@ class IPN {
 	protected $currency;
 
 	/**
-	 * Total amount that has been refunded for this charge so far, in major currency units.
-	 *
-	 * @var float
-	 */
-	protected $amount_refunded;
-
-	/**
 	 * Timestamp when the event occurred.
 	 *
 	 * @var int
@@ -76,7 +69,7 @@ class IPN {
 	protected $payment_method;
 
 	/**
-	 * Type of the object associated with the event (e.g., 'payment' or 'refund').
+	 * Type of the object associated with the event (e.g., 'payment').
 	 *
 	 * @var string
 	 */
@@ -90,7 +83,7 @@ class IPN {
 	protected $event_id;
 
 	/**
-	 * Normalized event name mapped via PBPaymentNotificationEnum (e.g., 'payment_failed', 'payment_refunded').
+	 * Normalized event name mapped via PBPaymentNotificationEnum (e.g., 'payment_succeeded', 'payment_failed').
 	 *
 	 * @var string
 	 */
@@ -113,23 +106,6 @@ class IPN {
 		}
 
 		// Map according to actual PowerBoard IPN format
-		// See docs/ipn.json for structure
-		$this->charge_id       = $data['id'] ?? '';  // Payment ID is the charge ID
-		$this->intent_id       = ''; // Not provided in IPN, leave empty
-		$this->order_id        = isset( $data['metadata']['order_id'] ) ? (int) $data['metadata']['order_id'] : null;
-		$this->failure_message = $data['failure']['message'] ?? '';
-		// Convert amount from cents to major currency units
-		$this->amount          = isset( $data['amount'] ) ? ( (float) $data['amount'] / 100 ) : 0.0;
-		$this->currency        = $data['currency'] ?? '';
-		$this->amount_refunded = isset( $data['amount_refunded'] ) ? ( (float) $data['amount_refunded'] / 100 ) : 0.0;
-		$this->timestamp       = $data['created_at'] ?? time();
-		$this->payment_method  = PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method']['type'] ?? '' );
-		$this->object_type     = $data['object'] ?? '';  // 'payment' or 'refund'
-		// Generate event_id from payment ID and timestamp as PowerBoard doesn't send separate event_id
-		$this->event_id        = $this->charge_id . '_' . $this->timestamp;
-		// Derive event from payment state flags
-		$this->event           = $this->derive_event_from_payment_state( $data );
-
 		$this->charge          = new Charge( $data );
 		$this->intent_id       = (string) $data['intent_id'] ?? null;
 		$this->order_id        = (int) $data['order_id']?? null;

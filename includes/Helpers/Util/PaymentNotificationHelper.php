@@ -19,22 +19,21 @@ class PaymentNotificationHelper {
 			$domain_name = $http_host;
 		}
 		// TODO:: sync with @jack about getting the IPN from the same server we post the intent
-		return $domain_name === "localhost";
+		return $domain_name === wp_parse_url( ConfigService::get_domain() )['host'];
 	}
 
 	/**
 	 * Validate IPN response data
-	 * Note: intent_id is optional as it's not provided in PowerBoard IPN payload
 	 *
 	 * @param IPN $ipn
 	 */
 	public static function validate_ipn_response_data( $ipn ): bool {
 		return self::is_valid_string( $ipn->get_charge_id() )
+			&& self::is_valid_string( $ipn->get_intent_id() )
 			&& self::is_valid_int( $ipn->get_order_id() )
 			&& is_string( $ipn->get_failure_message() )
 			&& self::is_valid_amount( $ipn->get_amount() )
 			&& !empty( $ipn->get_currency() )
-			&& self::is_valid_amount( $ipn->get_amount_refunded(), true )
 			&& self::is_valid_int( $ipn->get_timestamp() )
 			&& self::validate_payment_method( $ipn->get_payment_method() )
 			&& self::validate_ipn_object_type( $ipn->get_object_type() )
@@ -55,7 +54,7 @@ class PaymentNotificationHelper {
 	}
 
 	private static function validate_ipn_object_type( $obj_type ): bool {
-		return in_array( $obj_type, [ 'payment', 'refund' ], true );
+		return $obj_type === 'payment';
 	}
 
 	private static function validate_ipn_event( $event ): bool {
