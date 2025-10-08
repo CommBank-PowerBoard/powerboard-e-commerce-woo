@@ -5,7 +5,6 @@ namespace PowerBoard\Model;
 
 use PowerBoard\Enums\AvailablePaymentMethods\PBAvailablePaymentMethodsEnum;
 use PowerBoard\Enums\PaymentNotification\PBPaymentNotificationEnum;
-use PowerBoard\Helpers\Util\LoggerHelper;
 
 class IPN {
 
@@ -247,49 +246,5 @@ class IPN {
 
 	public function get_is_paid(): ?bool {
 		return $this->is_paid;
-	}
-
-	/**
-	 * Derive event name from PowerBoard payment state flags
-	 *
-	 * @param array $data PowerBoard IPN payload
-	 * @return string Event name
-	 */
-	private function derive_event_from_payment_state( array $data ): string {
-		$object_type = $data['object'] ?? '';
-
-		// Handle refund object type
-		if ( $object_type === 'refund' ) {
-			return PBPaymentNotificationEnum::PAYMENT_REFUNDED;
-		}
-
-		// Handle payment object type based on state flags
-		$is_paid = $data['is_paid'] ?? false;
-		$is_refunded = $data['is_refunded'] ?? false;
-		$is_pending = $data['payment_method']['is_pending'] ?? false;
-		$failure_message = $data['failure']['message'] ?? '';
-
-		// Check for failure first
-		if ( ! empty( $failure_message ) ) {
-			return PBPaymentNotificationEnum::PAYMENT_FAILED;
-		}
-
-		// Check for refunded state
-		if ( $is_refunded ) {
-			return PBPaymentNotificationEnum::PAYMENT_REFUNDED;
-		}
-
-		// Check for successful payment
-		if ( $is_paid ) {
-			return PBPaymentNotificationEnum::PAYMENT_SUCCEEDED;
-		}
-
-		// Check for pending state
-		if ( $is_pending ) {
-			return PBPaymentNotificationEnum::PAYMENT_CREATED;
-		}
-
-		// Default to payment created
-		return PBPaymentNotificationEnum::PAYMENT_CREATED;
 	}
 }

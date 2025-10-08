@@ -10,7 +10,6 @@ class APIPaymentNotificationEnum {
 	public const PAYMENT_CREATED    = 'webhook.payment_created';
 	public const PAYMENT_CAPTURED   = 'webhook.payment_captured';
 	public const PAYMENT_VOIDED     = 'webhook.payment_voided';
-	public const PAYMENT_REFUNDED   = 'webhook.payment_refunded';
 	public const CHECKOUT_CREATED   = 'webhook.checkout_created';
 	public const CHECKOUT_CANCELLED = 'webhook.checkout_cancelled';
 	public const CHECKOUT_EXPIRED   = 'webhook.checkout_expired';
@@ -23,7 +22,6 @@ class APIPaymentNotificationEnum {
 		self::PAYMENT_CREATED,
 		self::PAYMENT_CAPTURED,
 		self::PAYMENT_VOIDED,
-		self::PAYMENT_REFUNDED,
 		self::CHECKOUT_CREATED,
 		self::CHECKOUT_CANCELLED,
 		self::CHECKOUT_EXPIRED,
