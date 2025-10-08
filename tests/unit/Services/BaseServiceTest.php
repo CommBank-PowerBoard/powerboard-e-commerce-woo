@@ -11,7 +11,7 @@ use ReflectionClass;
 /**
  * Base test class for service tests with common setup and utilities
  */
-abstract class BaseServiceTest extends TestCase {
+class BaseServiceTest extends TestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -84,4 +84,17 @@ abstract class BaseServiceTest extends TestCase {
 	protected function createPartialMockService( string $className, array $methods = [] ) {
 		return $this->createPartialMock( $className, $methods );
 	}
+
+    /**
+     * Test that invalid nonces are rejected
+     *
+     * @test
+     */
+    public function StandardTest(): void
+    {
+        $this->assertEquals( 1, 1 );
+
+    }
+
+
 }

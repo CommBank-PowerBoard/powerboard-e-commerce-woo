@@ -67,7 +67,7 @@ class NonceHelperTest extends TestCase {
 	/**
 	 * Data provider for valid nonce scenarios
 	 */
-	public function validNonceDataProvider(): array {
+	public static function validNonceDataProvider(): array {
 		return [
 			'standard_valid_nonce' => [
 				[
@@ -146,7 +146,7 @@ class NonceHelperTest extends TestCase {
 	/**
 	 * Data provider for invalid nonce scenarios
 	 */
-	public function invalidNonceDataProvider(): array {
+	public static function invalidNonceDataProvider(): array {
 		return [
 			'invalid_nonce_string'   => [
 				[
@@ -246,7 +246,7 @@ class NonceHelperTest extends TestCase {
 	/**
 	 * Data provider for edge cases
 	 */
-	public function edgeCaseDataProvider(): array {
+	public static function edgeCaseDataProvider(): array {
 		return [
 			'boolean_false_nonce' => [
 				[
