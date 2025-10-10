@@ -55,11 +55,11 @@ class BaseServiceTest extends TestCase {
 	/**
 	 * Get a private or protected method for testing using reflection
 	 *
-	 * @param object $object The object.
+	 * @param object $object_name The object.
 	 * @param string $method_name The method name.
 	 */
-	protected function getPrivateMethod( $object, string $method_name ) {
-		$reflection = new ReflectionClass( $object );
+	protected function getPrivateMethod( $object_name, string $method_name ) {
+		$reflection = new ReflectionClass( $object_name );
 		$method     = $reflection->getMethod( $method_name );
 		$method->setAccessible( true );
 		return $method;
@@ -68,11 +68,11 @@ class BaseServiceTest extends TestCase {
 	/**
 	 * Get a private or protected property for testing using reflection
 	 *
-	 * @param object $object The object.
+	 * @param object $object_name The object.
 	 * @param string $property_name The property name.
 	 */
-	protected function getPrivateProperty( $object, string $property_name ) {
-		$reflection = new ReflectionClass( $object );
+	protected function getPrivateProperty( $object_name, string $property_name ) {
+		$reflection = new ReflectionClass( $object_name );
 		$property   = $reflection->getProperty( $property_name );
 		$property->setAccessible( true );
 		return $property;

@@ -28,7 +28,7 @@ class ParseIPNPayloadTest extends BaseServiceTest {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 
 		// Test complex nested JSON
-		$complex_payload = json_encode(
+		$complex_payload = wp_json_encode(
 			[
 				'charge_id' => 'ch_nested_456',
 				'order_id'  => 67890,
@@ -118,7 +118,7 @@ class ParseIPNPayloadTest extends BaseServiceTest {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 
 		// Test that data types are preserved
-		$payload = json_encode(
+		$payload = wp_json_encode(
 			[
 				'string_field' => 'text',
 				'int_field'    => 123,

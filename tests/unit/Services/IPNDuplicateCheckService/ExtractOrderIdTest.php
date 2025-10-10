@@ -39,8 +39,8 @@ class ExtractOrderIdTest extends TestCase {
 	/**
 	 * Get a private or protected method for testing using reflection
 	 */
-	private function getPrivateMethod( $object, string $method_name ) {
-		$reflection = new ReflectionClass( $object );
+	private function getPrivateMethod( $object_name, string $method_name ) {
+		$reflection = new ReflectionClass( $object_name );
 		$method     = $reflection->getMethod( $method_name );
 		$method->setAccessible( true );
 		return $method;
@@ -176,16 +176,16 @@ class ExtractOrderIdTest extends TestCase {
 		// Test invalid values that absint() should handle
 		// Most invalid values will result in null from our method
 		$invalid_cases = [
-			[ 'order_id' => '' ],      // Empty string -> null (our method checks empty())
-			[ 'order_id' => null ],    // null -> null
-			[ 'order_id' => false ],   // false -> null (empty() returns true)
-			[ 'order_id' => [] ],      // array -> null (empty() returns true)
+			[ 'order_id' => '' ],
+			[ 'order_id' => null ],
+			[ 'order_id' => false ],
+			[ 'order_id' => [] ],
 		];
 
 		foreach ( $invalid_cases as $data ) {
 			$result = $method->invokeArgs( $service, [ $data ] );
 			// These should all return null because empty() check catches them
-			$this->assertNull( $result, 'Invalid values should return null: ' . json_encode( $data['order_id'] ) );
+			$this->assertNull( $result, 'Invalid values should return null: ' . wp_json_encode( $data['order_id'] ) );
 		}
 
 		// Test values that absint() can convert

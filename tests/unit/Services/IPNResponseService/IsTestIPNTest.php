@@ -32,8 +32,8 @@ class IsTestIPNTest extends TestCase {
 	/**
 	 * Get a private or protected method for testing using reflection
 	 */
-	private function getPrivateMethod( $object, string $method_name ) {
-		$reflection = new ReflectionClass( $object );
+	private function getPrivateMethod( $object_name, string $method_name ) {
+		$reflection = new ReflectionClass( $object_name );
 		$method     = $reflection->getMethod( $method_name );
 		$method->setAccessible( true );
 		return $method;
