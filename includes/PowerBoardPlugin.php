@@ -1,4 +1,5 @@
 <?php
+
 declare( strict_types=1 );
 
 namespace PowerBoard;
@@ -48,7 +49,7 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 			}
 
 			// Reset button styles inside the widget
-			add_action( 'wp_head', [ $this, 'register_style_fixes' ] );
+			add_action( 'wp_footer', [ $this, 'register_style_fixes' ], 9999 );
 		}
 
 		public static function get_instance(): PowerBoardPlugin {
@@ -78,6 +79,12 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 				}
 				.checkout-overlay {
 					z-index: 999 ! important;
+				}
+				#standaloneWidget #gpay-button-online-api-id {
+					background-color: #000 !important;
+				}
+				#standaloneWidget #gpay-button-online-api-id:hover {
+					background-color: #3c4043 !important;
 				}
 			</style>
 			<?php
