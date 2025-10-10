@@ -4,7 +4,6 @@ declare( strict_types=1 );
 namespace unit;
 
 use PHPUnit\Framework\TestCase;
-use PowerBoard\API\ChargeService;
 use PowerBoard\Services\HashService;
 
 class HashServiceTest extends TestCase {

@@ -3,9 +3,9 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers;
 
-use PowerBoard\Enums\EnvironmentSettingsEnum;
-use PowerBoard\Enums\MasterWidgetSettingsEnum;
-use PowerBoard\Enums\SettingGroupsEnum;
+use PowerBoard\Enums\AdminPanelSettings\EnvironmentSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\MasterWidgetSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\SettingGroupsEnum;
 use PowerBoard\Services\HashService;
 
 class DBSettingsHelper {

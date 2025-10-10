@@ -42,52 +42,52 @@ def count_json_issues(filename):
 
 def main():
     print("=== Combined Code Quality Job ===")
-    
+
     # Install dependencies
     run_command("composer install", "Installing Composer dependencies", allow_failure=False)
     run_command("npm ci", "Installing NPM dependencies", allow_failure=False)
-    
+
     # Run PHPCS - capture exit code but continue to generate reports
     print("=== Running PHPCS ===")
     phpcs_result = subprocess.run("./vendor/bin/phpcs --standard=phpcs.xml --report=summary includes/ tests/unit/", shell=True, capture_output=True, text=True)
     phpcs_has_issues = phpcs_result.returncode != 0
-    
+
     if phpcs_result.stdout:
         print(phpcs_result.stdout)
     if phpcs_result.stderr:
         print(f"PHPCS STDERR: {phpcs_result.stderr}")
-    
+
     # Generate PHPCS JSON report regardless of issues
     run_command("./vendor/bin/phpcs --standard=phpcs.xml --report=json includes/ tests/unit/ 2>/dev/null > phpcs-report.json || true", "Generating PHPCS JSON Report", allow_failure=True)
     phpcs_size = get_file_size("phpcs-report.json")
     print(f"PHPCS completed. Report size: {phpcs_size} bytes")
-    
-    # Run ESLint - capture exit code but continue to generate reports  
+
+    # Run ESLint - capture exit code but continue to generate reports
     print("=== Running ESLint ===")
     eslint_result = subprocess.run("npm run lint:js", shell=True, capture_output=True, text=True)
     eslint_has_issues = eslint_result.returncode != 0
-    
+
     if eslint_result.stdout:
         print(eslint_result.stdout)
     if eslint_result.stderr:
         print(f"ESLint STDERR: {eslint_result.stderr}")
-    
+
     # Generate ESLint JSON report regardless of issues
     run_command("npm run lint:js -- --format=json --output-file=eslint-report.json || true", "Generating ESLint JSON Report", allow_failure=True)
     eslint_size = get_file_size("eslint-report.json")
     print(f"ESLint completed. Report size: {eslint_size} bytes")
-    
+
     # Convert to GitLab format
     run_command("python3 scripts/phpcs-to-gitlab.py phpcs-report.json phpcs-gl-code-quality-report.json || true", "Converting PHPCS to GitLab format", allow_failure=True)
     run_command("python3 scripts/eslint-to-gitlab.py eslint-report.json eslint-gl-code-quality-report.json || true", "Converting ESLint to GitLab format", allow_failure=True)
-    
+
     # Merge reports
     run_command("python3 scripts/merge-quality-reports.py gl-code-quality-report.json phpcs-gl-code-quality-report.json eslint-gl-code-quality-report.json || true", "Merging Reports", allow_failure=True)
-    
+
     # Final results and determine if pipeline should fail
     print("=== Final Results ===")
     total_issues = 0
-    
+
     if os.path.exists("gl-code-quality-report.json"):
         final_size = get_file_size("gl-code-quality-report.json")
         issue_count = count_json_issues("gl-code-quality-report.json")
@@ -98,10 +98,10 @@ def main():
         print("❌ No final report created, creating empty one")
         with open("gl-code-quality-report.json", "w") as f:
             json.dump([], f)
-    
+
     # Determine pipeline result
     has_quality_issues = phpcs_has_issues or eslint_has_issues or total_issues > 0
-    
+
     if has_quality_issues:
         print("❌ Quality issues detected - failing pipeline!")
         print(f"PHPCS issues: {'Yes' if phpcs_has_issues else 'No'}")
@@ -110,7 +110,7 @@ def main():
         sys.exit(1)
     else:
         print("✅ No quality issues found - pipeline passes!")
-    
+
     print("=== Quality Scan Complete ===")
 
 if __name__ == "__main__":

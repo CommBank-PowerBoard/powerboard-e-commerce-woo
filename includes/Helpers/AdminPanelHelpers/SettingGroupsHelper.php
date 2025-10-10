@@ -3,7 +3,7 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers\AdminPanelHelpers;
 
-use PowerBoard\Enums\SettingGroupsEnum;
+use PowerBoard\Enums\AdminPanelSettings\SettingGroupsEnum;
 
 class SettingGroupsHelper {
 	public static function get_label( string $key ): string {

@@ -7,6 +7,8 @@ use PowerBoard\Helpers\DBSettingsHelper;
 use PowerBoard\Helpers\MasterWidgetHelper;
 use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\NonceHelper;
+use PowerBoard\Helpers\Util\PaymentLabelHelper;
+use PowerBoard\Helpers\Util\PaymentProcessingHelper;
 
 class ModalService {
 
@@ -190,7 +192,7 @@ class ModalService {
 
 			if ( ! $this->can_user_modify_order( $order ) ) {
 				LoggerHelper::log_callback_event(
-					'Error: Payment failed and user does not have permissions to modify this order',
+					'Error: Payment succeeded and user does not have permissions to modify this order',
 					[
 						'order_id' => $order_id ?? null,
 					],
@@ -204,6 +206,7 @@ class ModalService {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized with wc_clean() and wp_unslash()
 		$payment_data = isset( $_POST['payment_data'] ) ? wc_clean( wp_unslash( $_POST['payment_data'] ) ) : [];
 		$charge_id    = isset( $payment_data['charge_id'] ) ? sanitize_text_field( wp_unslash( $payment_data['charge_id'] ) ) : '';
+		$payment_type = $this->get_payment_display_label_from_charge( $charge_id );
 
 		if ( ! $order_id ) {
 			LoggerHelper::log_callback_event(
@@ -212,6 +215,7 @@ class ModalService {
 					'order_id'     => $order_id,
 					'charge_id'    => $charge_id,
 					'payment_data' => $payment_data,
+					'payment_type' => $payment_type,
 				],
 				'error'
 			);
@@ -226,6 +230,7 @@ class ModalService {
 					'order_id'     => $order_id,
 					'charge_id'    => $charge_id,
 					'payment_data' => $payment_data,
+					'payment_type' => $payment_type,
 				],
 				'error'
 			);
@@ -233,32 +238,7 @@ class ModalService {
 			return;
 		}
 
-		$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
-		$order->update_meta_data( '_power_board_charge_id', $charge_id );
-
-		if ( ! empty( $charge_id ) ) {
-			$payment_type = $this->get_payment_display_label_from_charge( $charge_id );
-
-			if ( $payment_type ) {
-				$order->set_payment_method_title( $payment_type );
-				$order->update_meta_data( 'PowerBoard_payment_method', $payment_type );
-			}
-		}
-
-		$order->add_order_note( 'Payment succeeded. Charge ID: ' . $charge_id );
-		$order->payment_complete( $charge_id );
-		$order->save();
-
-		// Log the successful payment notification
-		LoggerHelper::log_callback_event(
-			'Payment succeeded',
-			[
-				'order_id'     => $order_id,
-				'charge_id'    => $charge_id,
-				'payment_data' => $payment_data,
-				'order_status' => $order->get_status(),
-			]
-		);
+		PaymentProcessingHelper::process_payment_successful( $order, $charge_id, PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $payment_type, $payment_data );
 
 		wp_send_json_success(
 			[
@@ -323,22 +303,9 @@ class ModalService {
 			return;
 		}
 
-		if ( ! empty( $payment_data['message'] ) ) {
-			$error_message = sanitize_text_field( $payment_data['message'] );
-			$order->set_payment_method( POWER_BOARD_PLUGIN_PREFIX );
-			$order->add_order_note( 'Payment failed: ' . $error_message . '. Charge ID: ' . $charge_id );
-			$order->update_status( 'failed' );
-			$order->save();
-
-			LoggerHelper::log_callback_event(
-				'Payment failed',
-				[
-					'order_id'      => $order_id ?? null,
-					'charge_id'     => $charge_id ?? null,
-					'error_message' => $error_message ?? null,
-				],
-				'error'
-			);
+		$error_message = $payment_data['message'];
+		if ( ! empty( $error_message ) ) {
+			PaymentProcessingHelper::process_payment_failed( $order, $charge_id, PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $error_message );
 
 			wp_send_json_success(
 				[
@@ -481,7 +448,6 @@ class ModalService {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 
-
 	/**
 	 * Retrieves a user-friendly payment method display label from a PowerBoard charge
 	 *
@@ -544,6 +510,7 @@ class ModalService {
 
 		return '';
 	}
+
 
 	/**
 	 * Check if current user can modify the given order

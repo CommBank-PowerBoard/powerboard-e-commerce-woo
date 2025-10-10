@@ -9,9 +9,10 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Services\PaymentGateway;
 
-use PowerBoard\Enums\EnvironmentSettingsEnum;
-use PowerBoard\Enums\MasterWidgetSettingsEnum;
-use PowerBoard\Enums\SettingGroupsEnum;
+use Exception;
+use PowerBoard\Enums\AdminPanelSettings\EnvironmentSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\MasterWidgetSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\SettingGroupsEnum;
 use PowerBoard\Helpers\AdminPanelHelpers\EnvironmentSettingsHelper;
 use PowerBoard\Helpers\AdminPanelHelpers\MasterWidgetSettingsHelper;
 use PowerBoard\Helpers\AdminPanelHelpers\SettingGroupsHelper;
@@ -24,7 +25,6 @@ use PowerBoard\Services\IPNResponseService;
 use PowerBoard\Services\SDKAdapterService;
 use PowerBoard\Services\TemplateService;
 use PowerBoard\Services\Validation\ConnectionValidationService;
-use Exception;
 use WC_Admin_Settings;
 use WC_Payment_Gateway;
 
@@ -82,7 +82,6 @@ class MasterWidgetPaymentService extends WC_Payment_Gateway {
 			$this->title            = $this->method_title;
 			$this->template_service = new TemplateService( $this );
 
-			// TODO: Why do we need this?
 			$this->settings[ DBSettingsHelper::get_access_token_key() ] = DBSettingsHelper::get_access_token();
 			$this->update_available_payment_methods();
 		}
