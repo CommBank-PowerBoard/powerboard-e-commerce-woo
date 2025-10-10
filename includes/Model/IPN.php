@@ -163,11 +163,10 @@ class IPN {
 	 * Check if value is a valid amount.
 	 *
 	 * @param float $value
-	 * @param bool $allow_zero
 	 * @return bool
 	 */
-	private function is_valid_amount( $value, $allow_zero = false ): bool {
-		return isset( $value ) && is_numeric( $value ) && ( $value > 0 || ( $allow_zero && (int) $value === 0 ) );
+	private function is_valid_amount( $value ): bool {
+		return isset( $value ) && is_numeric( $value ) && $value > 0;
 	}
 
 	/**

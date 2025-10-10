@@ -483,27 +483,4 @@ class IPNDuplicateCheckService {
 	private function log_ipn_event( string $message, array $context = [], string $level = 'info' ): void {
 		LoggerHelper::log_callback_event( $message, $context, $level );
 	}
-
-	/**
-	 * Parse JSON IPN payload safely
-	 *
-	 * @param string $json_payload Raw JSON payload
-	 * @return array Parsed data or empty array on failure
-	 */
-	public function parse_ipn_payload( string $json_payload ): array {
-		try {
-			$data = json_decode( $json_payload, true );
-			return is_array( $data ) ? $data : [];
-		} catch ( Exception $e ) {
-			$this->log_ipn_event(
-				'IPN payload parsing failed',
-				[
-					'payload' => substr( $json_payload, 0, 500 ), // Log only first 500 chars for security
-					'error'   => $e->getMessage(),
-				],
-				'error'
-				);
-			return [];
-		}
-	}
 }

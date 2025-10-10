@@ -3,8 +3,6 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers\Util;
 
-use PowerBoard\Services\OrderService;
-
 class PaymentProcessingHelper {
 	public const SOURCE_IPN             = 'IPN';
 	public const SOURCE_CHECKOUT_WIDGET = 'Checkout Widget';
