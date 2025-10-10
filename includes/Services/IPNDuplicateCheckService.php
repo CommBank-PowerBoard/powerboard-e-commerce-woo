@@ -4,7 +4,7 @@ declare( strict_types=1 );
 namespace PowerBoard\Services;
 
 use PowerBoard\Helpers\Util\LoggerHelper;
-use PowerBoard\Services\SDKAdapterService;
+use PowerBoard\Model\IPN;
 use Exception;
 use WC_Order;
 
@@ -73,33 +73,15 @@ class IPNDuplicateCheckService {
 	/**
 	 * Process IPN notification and apply duplicate checking logic
 	 *
-	 * @param array $ipn_data The IPN payload data
+	 * @param IPN $ipn The IPN payload data
 	 * @return array Processing result with status and messages
 	 */
-	public function process_ipn_notification( array $ipn_data ): array {
+	public function process_ipn_notification( IPN $ipn ): array {
 		try {
 			// Extract essential data from IPN
-			$charge_id  = $this->extract_charge_id( $ipn_data );
-			$order_id   = $this->extract_order_id( $ipn_data );
-			$ipn_status = $this->extract_payment_status( $ipn_data );
-
-			if ( empty( $charge_id ) || empty( $order_id ) ) {
-				$this->log_ipn_event(
-					'IPN validation failed: Missing charge_id or order_id',
-					[
-						'ipn_data'  => $ipn_data,
-						'charge_id' => $charge_id,
-						'order_id'  => $order_id,
-					],
-					'error'
-					);
-
-				return [
-					'status'    => 'error',
-					'message'   => 'Missing required IPN data',
-					'http_code' => 400,
-				];
-			}
+			$charge_id  = $ipn->get_charge()->get_charge_id();
+			$order_id   = $ipn->get_order_id();
+			$ipn_status = $this->map_event_to_status( $ipn->get_event() );
 
 			// Get WooCommerce order
 			$order = wc_get_order( $order_id );
@@ -182,7 +164,9 @@ class IPNDuplicateCheckService {
 			}
 
 			// Normal status update - current status is not final
-			return $this->update_order_status( $order, $target_wc_status, $charge_id, $ipn_status, $current_order_status );
+			return [
+				'status' => 'update_status',
+			];
 
 		} catch ( Exception $e ) {
 			$this->log_ipn_event(
@@ -201,6 +185,29 @@ class IPNDuplicateCheckService {
 				'http_code' => 500,
 			];
 		}
+	}
+
+	/**
+	 * Map PowerBoard event to status for duplicate checking
+	 *
+	 * @param string|null $event PowerBoard event name
+	 * @return string Status for duplicate checking
+	 */
+	private function map_event_to_status( ?string $event ): string {
+		$event_to_status_map = [
+			'payment_succeeded'  => 'success',
+			'payment_captured'   => 'success',
+			'checkout_completed' => 'success',
+			'payment_failed'     => 'failed',
+			'checkout_failed'    => 'failed',
+			'payment_voided'     => 'cancelled',
+			'checkout_cancelled' => 'cancelled',
+			'checkout_expired'   => 'cancelled',
+			'payment_created'    => 'pending',
+			'checkout_created'   => 'pending',
+		];
+
+		return $event_to_status_map[ $event ] ?? 'pending';
 	}
 
 	/**
@@ -269,7 +276,9 @@ class IPNDuplicateCheckService {
 			if ( $definitive_wc_status !== $current_status ) {
 				// Determine if the API status has higher priority
 				if ( $this->should_update_status( $current_status, $definitive_wc_status ) ) {
-					return $this->update_order_status( $order, $definitive_wc_status, $charge_id, $api_status, $current_status, true );
+					return [
+						'status' => 'update_status',
+					];
 				} else {
 					$this->log_ipn_event(
 						'API status has lower priority - no update',
@@ -285,7 +294,7 @@ class IPNDuplicateCheckService {
 						);
 
 					return [
-						'status'    => 'no_update',
+						'status'    => 'ignored',
 						'message'   => 'API status has lower priority than current status',
 						'http_code' => 200,
 					];
@@ -304,7 +313,7 @@ class IPNDuplicateCheckService {
 					);
 
 				return [
-					'status'    => 'confirmed',
+					'status'    => 'ignored',
 					'message'   => 'API confirms current order status',
 					'http_code' => 200,
 				];
@@ -326,74 +335,6 @@ class IPNDuplicateCheckService {
 				'status'    => 'api_error',
 				'message'   => 'API verification failed - maintaining current status',
 				'http_code' => 200,
-			];
-		}
-	}
-
-	/**
-	 * Update order status with comprehensive logging
-	 *
-	 * @param WC_Order $order WooCommerce order object
-	 * @param string $new_status New WooCommerce status
-	 * @param string $charge_id PowerBoard charge ID
-	 * @param string $original_status Original PowerBoard status
-	 * @param string $old_status Previous WooCommerce status
-	 * @param bool $is_api_resolved Whether this update came from API resolution
-	 * @return array Processing result
-	 */
-	private function update_order_status( WC_Order $order, string $new_status, string $charge_id, string $original_status, string $old_status, bool $is_api_resolved = false ): array {
-		$order_id = $order->get_id();
-
-		try {
-			// Build order note
-			$source = $is_api_resolved ? 'API verification' : 'IPN notification';
-			$note   = sprintf(
-				'Payment status updated via %s. Status: %s (Charge ID: %s)',
-				$source,
-				$original_status,
-				$charge_id
-			);
-
-			// Update order status
-			$order->update_status( $new_status, $note );
-			$order->save();
-
-			$this->log_ipn_event(
-				'Order status updated successfully',
-				[
-					'order_id'                   => $order_id,
-					'charge_id'                  => $charge_id,
-					'old_status'                 => $old_status,
-					'new_status'                 => $new_status,
-					'original_powerboard_status' => $original_status,
-					'source'                     => $source,
-					'note_added'                 => $note,
-				],
-				'info'
-				);
-
-			return [
-				'status'    => 'updated',
-				'message'   => "Order status updated from {$old_status} to {$new_status}",
-				'http_code' => 200,
-			];
-
-		} catch ( Exception $e ) {
-			$this->log_ipn_event(
-				'Order status update failed',
-				[
-					'order_id'            => $order_id,
-					'charge_id'           => $charge_id,
-					'intended_new_status' => $new_status,
-					'error'               => $e->getMessage(),
-				],
-				'error'
-				);
-
-			return [
-				'status'    => 'update_failed',
-				'message'   => 'Failed to update order status',
-				'http_code' => 500,
 			];
 		}
 	}
