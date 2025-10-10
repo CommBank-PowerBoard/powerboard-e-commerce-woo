@@ -1,10 +1,10 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services\IPNResponseService;
+namespace unit\Services\IPNDuplicateCheckService;
 
 use unit\Services\BaseServiceTest;
-use PowerBoard\Services\IPNResponseService;
+use PowerBoard\Services\IPNDuplicateCheckService;
 
 /**
  * Tests for IPNResponseService::map_event_to_status() method
@@ -12,7 +12,7 @@ use PowerBoard\Services\IPNResponseService;
 class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_success_events() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		$success_events = [
@@ -28,7 +28,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_with_failure_events() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		$failure_events = [
@@ -43,7 +43,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_with_cancellation_events() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		$cancellation_events = [
@@ -59,7 +59,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_with_pending_events() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		$pending_events = [
@@ -74,7 +74,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_with_unknown_events() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		$unknown_events = [
@@ -92,7 +92,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_handles_null_and_empty() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test edge cases
@@ -102,7 +102,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_comprehensive_coverage() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test all events that should be handled
@@ -130,7 +130,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 	}
 
 	public function test_map_event_to_status_case_sensitivity() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
+		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test case sensitivity - mapping should be exact
