@@ -18,19 +18,21 @@ class StatusMappingTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
-		
+
 		// Define constants if not already defined
 		if ( ! defined( 'POWER_BOARD_PLUGIN_PREFIX' ) ) {
 			define( 'POWER_BOARD_PLUGIN_PREFIX', 'power_board' );
 		}
-		
+
 		// Mock WordPress functions
 		Functions\when( 'sanitize_text_field' )->returnArg();
-		Functions\when( 'absint' )->alias( function( $value ) {
-			return (int) $value;
-		});
+		Functions\when( 'absint' )->alias(
+				function ( $value ) {
+					return (int) $value;
+				}
+			);
 	}
-	
+
 	protected function tearDown(): void {
 		Monkey\tearDown();
 		parent::tearDown();
@@ -41,31 +43,31 @@ class StatusMappingTest extends TestCase {
 	 */
 	public function test_powerboard_status_mapping() {
 		$service = $this->createPartialMock( IPNDuplicateCheckService::class, [] );
-		
-		$testCases = [
-			'complete' => 'completed',
-			'completed' => 'completed',
-			'success' => 'processing',
-			'successful' => 'processing',
-			'processing' => 'processing',
-			'pending' => 'pending',
-			'failed' => 'failed',
-			'cancelled' => 'cancelled',
-			'refunded' => 'refunded',
-			'charged_back' => 'refunded',
-			'unknown_status' => 'pending' // Default mapping
+
+		$test_cases = [
+			'complete'       => 'completed',
+			'completed'      => 'completed',
+			'success'        => 'processing',
+			'successful'     => 'processing',
+			'processing'     => 'processing',
+			'pending'        => 'pending',
+			'failed'         => 'failed',
+			'cancelled'      => 'cancelled',
+			'refunded'       => 'refunded',
+			'charged_back'   => 'refunded',
+			'unknown_status' => 'pending', // Default mapping
 		];
 
 		$reflection = new ReflectionClass( $service );
-		$method = $reflection->getMethod( 'map_powerboard_status_to_wc' );
+		$method     = $reflection->getMethod( 'map_powerboard_status_to_wc' );
 		$method->setAccessible( true );
 
-		foreach ( $testCases as $powerboard_status => $expected_wc_status ) {
+		foreach ( $test_cases as $powerboard_status => $expected_wc_status ) {
 			$result = $method->invokeArgs( $service, [ $powerboard_status ] );
-			$this->assertEquals( 
-				$expected_wc_status, 
-				$result, 
-				"Failed mapping '{$powerboard_status}' to '{$expected_wc_status}'" 
+			$this->assertEquals(
+				$expected_wc_status,
+				$result,
+				"Failed mapping '{$powerboard_status}' to '{$expected_wc_status}'"
 			);
 		}
 	}
@@ -75,28 +77,28 @@ class StatusMappingTest extends TestCase {
 	 */
 	public function test_status_mapping_constant() {
 		$reflection = new ReflectionClass( IPNDuplicateCheckService::class );
-		$statusMap = $reflection->getConstant( 'POWERBOARD_TO_WC_STATUS_MAP' );
+		$status_map = $reflection->getConstant( 'POWERBOARD_TO_WC_STATUS_MAP' );
 
-		$this->assertIsArray( $statusMap );
-		$this->assertArrayHasKey( 'complete', $statusMap );
-		$this->assertArrayHasKey( 'success', $statusMap );
-		$this->assertArrayHasKey( 'pending', $statusMap );
-		$this->assertArrayHasKey( 'failed', $statusMap );
+		$this->assertIsArray( $status_map );
+		$this->assertArrayHasKey( 'complete', $status_map );
+		$this->assertArrayHasKey( 'success', $status_map );
+		$this->assertArrayHasKey( 'pending', $status_map );
+		$this->assertArrayHasKey( 'failed', $status_map );
 
 		// Verify some key mappings
-		$this->assertEquals( 'completed', $statusMap['complete'] );
-		$this->assertEquals( 'processing', $statusMap['success'] );
-		$this->assertEquals( 'pending', $statusMap['pending'] );
-		$this->assertEquals( 'refunded', $statusMap['charged_back'] );
+		$this->assertEquals( 'completed', $status_map['complete'] );
+		$this->assertEquals( 'processing', $status_map['success'] );
+		$this->assertEquals( 'pending', $status_map['pending'] );
+		$this->assertEquals( 'refunded', $status_map['charged_back'] );
 	}
 
 	/**
 	 * Test case sensitivity in status mapping
 	 */
 	public function test_status_mapping_case_sensitivity() {
-		$service = $this->createPartialMock( IPNDuplicateCheckService::class, [] );
+		$service    = $this->createPartialMock( IPNDuplicateCheckService::class, [] );
 		$reflection = new ReflectionClass( $service );
-		$method = $reflection->getMethod( 'map_powerboard_status_to_wc' );
+		$method     = $reflection->getMethod( 'map_powerboard_status_to_wc' );
 		$method->setAccessible( true );
 
 		// Test case insensitive behavior (method should lowercase input)

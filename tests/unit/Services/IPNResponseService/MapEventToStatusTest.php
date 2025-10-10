@@ -13,15 +13,15 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_success_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
-		$successEvents = [
+		$success_events = [
 			'payment_succeeded',
-			'payment_captured', 
-			'checkout_completed'
+			'payment_captured',
+			'checkout_completed',
 		];
 
-		foreach ( $successEvents as $event ) {
+		foreach ( $success_events as $event ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals( 'success', $result, "Event '{$event}' should map to 'success'" );
 		}
@@ -29,14 +29,14 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_failure_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
-		$failureEvents = [
+		$failure_events = [
 			'payment_failed',
-			'checkout_failed'
+			'checkout_failed',
 		];
 
-		foreach ( $failureEvents as $event ) {
+		foreach ( $failure_events as $event ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals( 'failed', $result, "Event '{$event}' should map to 'failed'" );
 		}
@@ -44,15 +44,15 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_cancellation_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
-		$cancellationEvents = [
+		$cancellation_events = [
 			'payment_voided',
 			'checkout_cancelled',
-			'checkout_expired'
+			'checkout_expired',
 		];
 
-		foreach ( $cancellationEvents as $event ) {
+		foreach ( $cancellation_events as $event ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals( 'cancelled', $result, "Event '{$event}' should map to 'cancelled'" );
 		}
@@ -60,14 +60,14 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_pending_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
-		$pendingEvents = [
+		$pending_events = [
 			'payment_created',
-			'checkout_created'
+			'checkout_created',
 		];
 
-		foreach ( $pendingEvents as $event ) {
+		foreach ( $pending_events as $event ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals( 'pending', $result, "Event '{$event}' should map to 'pending'" );
 		}
@@ -75,17 +75,17 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_with_unknown_events() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
-		$unknownEvents = [
+		$unknown_events = [
 			'unknown_event',
 			'invalid_event',
 			'payment_unknown',
 			'checkout_unknown',
-			'random_string'
+			'random_string',
 		];
 
-		foreach ( $unknownEvents as $event ) {
+		foreach ( $unknown_events as $event ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals( 'pending', $result, "Unknown event '{$event}' should default to 'pending'" );
 		}
@@ -93,7 +93,7 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_handles_null_and_empty() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test edge cases
 		$this->assertEquals( 'pending', $method->invokeArgs( $service, [ null ] ) );
@@ -103,35 +103,35 @@ class MapEventToStatusTest extends BaseServiceTest {
 
 	public function test_map_event_to_status_comprehensive_coverage() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test all events that should be handled
-		$eventMappings = [
-			'payment_succeeded' => 'success',
-			'payment_captured' => 'success',
+		$event_mappings = [
+			'payment_succeeded'  => 'success',
+			'payment_captured'   => 'success',
 			'checkout_completed' => 'success',
-			'payment_failed' => 'failed',
-			'checkout_failed' => 'failed',
-			'payment_voided' => 'cancelled',
+			'payment_failed'     => 'failed',
+			'checkout_failed'    => 'failed',
+			'payment_voided'     => 'cancelled',
 			'checkout_cancelled' => 'cancelled',
-			'checkout_expired' => 'cancelled',
-			'payment_created' => 'pending',
-			'checkout_created' => 'pending',
+			'checkout_expired'   => 'cancelled',
+			'payment_created'    => 'pending',
+			'checkout_created'   => 'pending',
 		];
 
-		foreach ( $eventMappings as $event => $expectedStatus ) {
+		foreach ( $event_mappings as $event => $expected_status ) {
 			$result = $method->invokeArgs( $service, [ $event ] );
 			$this->assertEquals(
-				$expectedStatus,
+				$expected_status,
 				$result,
-				"Event '{$event}' should map to '{$expectedStatus}'"
+				"Event '{$event}' should map to '{$expected_status}'"
 			);
 		}
 	}
 
 	public function test_map_event_to_status_case_sensitivity() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
-		$method = $this->getPrivateMethod( $service, 'map_event_to_status' );
+		$method  = $this->getPrivateMethod( $service, 'map_event_to_status' );
 
 		// Test case sensitivity - mapping should be exact
 		$this->assertEquals( 'pending', $method->invokeArgs( $service, [ 'PAYMENT_SUCCEEDED' ] ) ); // Should default to pending

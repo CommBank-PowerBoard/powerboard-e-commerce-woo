@@ -13,7 +13,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 
 	public function test_should_update_status_with_higher_priority() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'should_update_status' );
+		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test priority-based updates (higher priority should update)
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) ); // 1 -> 2
@@ -25,7 +25,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 
 	public function test_should_update_status_with_lower_priority() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'should_update_status' );
+		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test lower priority should not update
 		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'processing' ] ) ); // 6 -> 2
@@ -37,7 +37,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 
 	public function test_should_update_status_with_same_priority() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'should_update_status' );
+		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test same priority should not update
 		$this->assertFalse( $method->invokeArgs( $service, [ 'processing', 'processing' ] ) ); // 2 -> 2
@@ -47,7 +47,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 
 	public function test_should_update_status_with_unknown_statuses() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'should_update_status' );
+		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test unknown statuses (should default to priority 0)
 		$this->assertTrue( $method->invokeArgs( $service, [ 'unknown', 'pending' ] ) ); // 0 -> 1
@@ -57,10 +57,10 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 
 	public function test_should_update_status_priority_order() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'should_update_status' );
+		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test complete priority chain: pending < processing < cancelled < failed < refunded < completed
-		
+
 		// pending (1) to higher priorities
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) );
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'cancelled' ] ) );
@@ -68,7 +68,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'refunded' ] ) );
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'completed' ] ) );
 
-		// completed (6) to lower priorities  
+		// completed (6) to lower priorities
 		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'refunded' ] ) );
 		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'failed' ] ) );
 		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'cancelled' ] ) );
@@ -79,7 +79,7 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 	public function test_should_update_status_matches_priority_constants() {
 		// Verify the method uses the STATUS_PRIORITY constant correctly
 		$priorities = $this->getClassConstant( IPNDuplicateCheckService::class, 'STATUS_PRIORITY' );
-		
+
 		$this->assertIsArray( $priorities );
 		$this->assertArrayHasKey( 'pending', $priorities );
 		$this->assertArrayHasKey( 'processing', $priorities );

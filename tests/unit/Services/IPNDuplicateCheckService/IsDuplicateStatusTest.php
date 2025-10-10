@@ -13,7 +13,7 @@ class IsDuplicateStatusTest extends BaseServiceTest {
 
 	public function test_is_duplicate_status_returns_true_for_matching_statuses() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'is_duplicate_status' );
+		$method  = $this->getPrivateMethod( $service, 'is_duplicate_status' );
 
 		// Test duplicate detection
 		$this->assertTrue( $method->invokeArgs( $service, [ 'processing', 'processing' ] ) );
@@ -24,7 +24,7 @@ class IsDuplicateStatusTest extends BaseServiceTest {
 
 	public function test_is_duplicate_status_returns_false_for_different_statuses() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'is_duplicate_status' );
+		$method  = $this->getPrivateMethod( $service, 'is_duplicate_status' );
 
 		// Test non-duplicates
 		$this->assertFalse( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) );
@@ -35,7 +35,7 @@ class IsDuplicateStatusTest extends BaseServiceTest {
 
 	public function test_is_duplicate_status_is_case_sensitive() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'is_duplicate_status' );
+		$method  = $this->getPrivateMethod( $service, 'is_duplicate_status' );
 
 		// Case sensitivity test
 		$this->assertFalse( $method->invokeArgs( $service, [ 'Processing', 'processing' ] ) );
@@ -44,7 +44,7 @@ class IsDuplicateStatusTest extends BaseServiceTest {
 
 	public function test_is_duplicate_status_handles_empty_strings() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method = $this->getPrivateMethod( $service, 'is_duplicate_status' );
+		$method  = $this->getPrivateMethod( $service, 'is_duplicate_status' );
 
 		// Empty string tests
 		$this->assertTrue( $method->invokeArgs( $service, [ '', '' ] ) );
