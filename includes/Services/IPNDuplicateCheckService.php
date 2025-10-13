@@ -28,6 +28,7 @@ class IPNDuplicateCheckService {
 	/**
 	 * Final states that should trigger conflict resolution
 	 */
+    //FIXME:: missing the processing right?
 	const FINAL_STATES = [
 		'completed',
 		'failed',
@@ -55,6 +56,7 @@ class IPNDuplicateCheckService {
 	 * Status priority for determining which status should take precedence
 	 * Higher number = higher priority
 	 */
+    //FIXME:: priorities are not correct, I would say you can't have a refund of a fail order (this is not about priority of the charge, but order status)
 	const STATUS_PRIORITY = [
 		'pending'    => 1,
 		'processing' => 2,
@@ -103,24 +105,11 @@ class IPNDuplicateCheckService {
 				];
 			}
 
-			// Validate that this order belongs to PowerBoard
-			if ( strpos( $order->get_payment_method(), POWER_BOARD_PLUGIN_PREFIX ) === false ) {
-				$this->log_ipn_event(
-					'IPN rejected: Order not processed by PowerBoard',
-					[
-						'order_id'       => $order_id,
-						'payment_method' => $order->get_payment_method(),
-						'charge_id'      => $charge_id,
-					],
-					'warning'
-					);
-
-				return [
-					'status'    => 'ignored',
-					'message'   => 'Order not processed by PowerBoard',
-					'http_code' => 200,
-				];
-			}
+            //TODO: if ipn return success and the order is failed or pending we should mark the order as success
+            //TODO: if ipn return failed and the order is pending, should be marked as failed
+            //TODO: if ipn return failed and the order is success, do nothing
+            //TODO: if ipn return refund, we do nothing (in the future the current order-status need to be success in order to be possible to update it)
+            //TODO: if ipn return pending do nothing
 
 			$current_order_status = $order->get_status();
 			$target_wc_status     = $this->map_powerboard_status_to_wc( $ipn_status );
@@ -138,6 +127,7 @@ class IPNDuplicateCheckService {
 				);
 
 			// Check for duplicate status
+            //TODO:: maybe here we can check of the order status = payment status, and order->payment_id = ipn->payment_id, if it's not, we've a double payment for an order, and we can log it or save it to warn customers
 			if ( $this->is_duplicate_status( $current_order_status, $target_wc_status ) ) {
 				$this->log_ipn_event(
 					'IPN duplicate detected - no action taken',
@@ -228,6 +218,7 @@ class IPNDuplicateCheckService {
 	 * @return bool True if it's a final state
 	 */
 	private function is_final_state( string $status ): bool {
+        //TODO:: failled status can and should be updated.
 		return in_array( $status, self::FINAL_STATES, true );
 	}
 
@@ -255,6 +246,9 @@ class IPNDuplicateCheckService {
 			);
 
 		try {
+
+            //FIXME:: 1 order can have multiple charges, by WOOCO standard 1 failled order can be repaid, from powerboard point we'll have another charge with success
+            //FIXME:: reassess if we need to get_charge
 			// Get definitive status from PowerBoard API
 			$api_response         = $this->sdk_adapter->get_charge( $charge_id );
 			$api_status           = $this->extract_status_from_api_response( $api_response );
@@ -347,6 +341,10 @@ class IPNDuplicateCheckService {
 	 * @return bool True if status should be updated
 	 */
 	private function should_update_status( string $current_status, string $new_status ): bool {
+
+        //FIXME:: I'm not sure if we can do it like that: current status = order status, new status  = payment status, 1 order can have "n" payments
+        //TODO:: I would say we need to change the status from payment to order->status (maybe even saving the intend on the orders, so we can track payments)
+        //TODO:: maybe check with @jackScarlet if there's possible to track orders instead of charges (I don't think so)
 		$current_priority = self::STATUS_PRIORITY[ $current_status ] ?? 0;
 		$new_priority     = self::STATUS_PRIORITY[ $new_status ] ?? 0;
 
