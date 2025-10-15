@@ -73,7 +73,7 @@ Also, we use helper code that not need compile what contained in assets path.
 
 == Changelog ==
 
-= 2.0.0 =
+= 2.1.0 =
 
 * Compatibility
 
