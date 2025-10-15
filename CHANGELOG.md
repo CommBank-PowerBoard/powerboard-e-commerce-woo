@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0] - 2025-10-20
+
+### Compatibility
+
+- Compatible with Wordpress version `6.8.3`
+- Compatible with WooCommerce version `10.2.2`.
+
+### Added
+
+- Plugin configuration data is now automatically removed upon uninstallation
+
+### Fixed
+
+- Resolved an issue where the Google Pay icon was incorrectly displayed on the Staging environment.
+- Corrected a bug preventing proper color overriding on the Google Pay "Pay" button.
+
 ## [2.0.0] - 2025-09-29
 
 ### Compatibility
