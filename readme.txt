@@ -78,7 +78,7 @@ Also, we use helper code that not need compile what contained in assets path.
 * Compatibility
 
   - Compatible with Wordpress version `6.8.3`
-  - Compatible with WooCommerce version `10.2.2`.
+  - Compatible with WooCommerce version `9.9.3`.
 
 * Added
 
