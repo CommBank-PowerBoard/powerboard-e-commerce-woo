@@ -13,8 +13,8 @@
 
 ### Fixed
 
-- Resolved an issue where the Google Pay icon was incorrectly displayed on the Staging environment.
-- Corrected a bug preventing proper color overriding on the Google Pay "Pay" button.
+- Implemented fix to prevent WooCommerce themes from overriding the colour of the Google Pay "Pay" button
+- Update GooglePay mark icon used
 
 ## [2.0.0] - 2025-09-29
 
