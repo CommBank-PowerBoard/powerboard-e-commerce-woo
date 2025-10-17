@@ -16,7 +16,7 @@ class IsFinalStateTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'is_final_state' );
 
 		// Test final states
-		$final_states = [ 'completed', 'failed', 'cancelled', 'refunded' ];
+		$final_states = [ 'processing', 'completed', 'failed', 'cancelled', 'refunded' ];
 		foreach ( $final_states as $state ) {
 			$this->assertTrue(
 				$method->invokeArgs( $service, [ $state ] ),
@@ -30,7 +30,7 @@ class IsFinalStateTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'is_final_state' );
 
 		// Test non-final states
-		$non_final_states = [ 'pending', 'processing', 'on-hold', 'draft', 'checkout-draft' ];
+		$non_final_states = [ 'pending', 'on-hold', 'draft', 'checkout-draft' ];
 		foreach ( $non_final_states as $state ) {
 			$this->assertFalse(
 				$method->invokeArgs( $service, [ $state ] ),

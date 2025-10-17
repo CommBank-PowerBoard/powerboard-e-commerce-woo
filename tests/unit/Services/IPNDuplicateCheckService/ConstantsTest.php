@@ -36,6 +36,7 @@ class ConstantsTest extends TestCase {
 		$this->assertNotEmpty( $final_states );
 
 		// Check required final states
+		$this->assertContains( 'processing', $final_states );
 		$this->assertContains( 'completed', $final_states );
 		$this->assertContains( 'failed', $final_states );
 		$this->assertContains( 'cancelled', $final_states );
@@ -43,7 +44,6 @@ class ConstantsTest extends TestCase {
 
 		// Should not contain non-final states
 		$this->assertNotContains( 'pending', $final_states );
-		$this->assertNotContains( 'processing', $final_states );
 		$this->assertNotContains( 'on-hold', $final_states );
 	}
 
@@ -62,19 +62,19 @@ class ConstantsTest extends TestCase {
 		}
 
 		// Verify priority ordering (higher number = higher priority)
-		$this->assertGreaterThan( $priorities['pending'], $priorities['processing'] ); // processing > pending
-		$this->assertGreaterThan( $priorities['processing'], $priorities['cancelled'] ); // cancelled > processing
-		$this->assertGreaterThan( $priorities['cancelled'], $priorities['failed'] ); // failed > cancelled
-		$this->assertGreaterThan( $priorities['failed'], $priorities['refunded'] ); // refunded > failed
-		$this->assertGreaterThan( $priorities['refunded'], $priorities['completed'] ); // completed > refunded
+		$this->assertGreaterThan( $priorities['pending'], $priorities['failed'] ); // failed > pending
+		$this->assertGreaterThan( $priorities['failed'], $priorities['cancelled'] ); // cancelled > failed
+		$this->assertGreaterThan( $priorities['cancelled'], $priorities['processing'] ); // processing > cancelled
+		$this->assertGreaterThan( $priorities['processing'], $priorities['completed'] ); // completed > processing
+		$this->assertGreaterThan( $priorities['completed'], $priorities['refunded'] ); // refunded > completed
 
 		// Test specific expected values
 		$this->assertEquals( 1, $priorities['pending'] );
-		$this->assertEquals( 2, $priorities['processing'] );
+		$this->assertEquals( 2, $priorities['failed'] );
 		$this->assertEquals( 3, $priorities['cancelled'] );
-		$this->assertEquals( 4, $priorities['failed'] );
-		$this->assertEquals( 5, $priorities['refunded'] );
-		$this->assertEquals( 6, $priorities['completed'] );
+		$this->assertEquals( 4, $priorities['processing'] );
+		$this->assertEquals( 5, $priorities['completed'] );
+		$this->assertEquals( 6, $priorities['refunded'] );
 	}
 
 	public function test_powerboard_to_wc_status_map_constant() {

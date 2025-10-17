@@ -16,11 +16,11 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test priority-based updates (higher priority should update)
-		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) ); // 1 -> 2
-		$this->assertTrue( $method->invokeArgs( $service, [ 'processing', 'completed' ] ) ); // 2 -> 6
-		$this->assertTrue( $method->invokeArgs( $service, [ 'failed', 'completed' ] ) ); // 4 -> 6
-		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'failed' ] ) ); // 1 -> 4
-		$this->assertTrue( $method->invokeArgs( $service, [ 'cancelled', 'refunded' ] ) ); // 3 -> 5
+		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'failed' ] ) ); // 1 -> 2
+		$this->assertTrue( $method->invokeArgs( $service, [ 'failed', 'processing' ] ) ); // 2 -> 4
+		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) ); // 1 -> 4
+		$this->assertTrue( $method->invokeArgs( $service, [ 'processing', 'completed' ] ) ); // 4 -> 5
+		$this->assertTrue( $method->invokeArgs( $service, [ 'completed', 'refunded' ] ) ); // 5 -> 6
 	}
 
 	public function test_should_update_status_with_lower_priority() {
@@ -28,11 +28,11 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test lower priority should not update
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'processing' ] ) ); // 6 -> 2
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'failed' ] ) ); // 6 -> 4
-		$this->assertFalse( $method->invokeArgs( $service, [ 'processing', 'pending' ] ) ); // 2 -> 1
-		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'cancelled' ] ) ); // 5 -> 3
-		$this->assertFalse( $method->invokeArgs( $service, [ 'failed', 'pending' ] ) ); // 4 -> 1
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'completed' ] ) ); // 6 -> 5
+		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'processing' ] ) ); // 5 -> 4
+		$this->assertFalse( $method->invokeArgs( $service, [ 'processing', 'failed' ] ) ); // 4 -> 2
+		$this->assertFalse( $method->invokeArgs( $service, [ 'failed', 'pending' ] ) ); // 2 -> 1
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'cancelled' ] ) ); // 6 -> 3
 	}
 
 	public function test_should_update_status_with_same_priority() {
@@ -40,9 +40,9 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
 		// Test same priority should not update
-		$this->assertFalse( $method->invokeArgs( $service, [ 'processing', 'processing' ] ) ); // 2 -> 2
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'completed' ] ) ); // 6 -> 6
-		$this->assertFalse( $method->invokeArgs( $service, [ 'failed', 'failed' ] ) ); // 4 -> 4
+		$this->assertFalse( $method->invokeArgs( $service, [ 'processing', 'processing' ] ) ); // 4 -> 4
+		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'completed' ] ) ); // 5 -> 5
+		$this->assertFalse( $method->invokeArgs( $service, [ 'failed', 'failed' ] ) ); // 2 -> 2
 	}
 
 	public function test_should_update_status_with_unknown_statuses() {
@@ -59,21 +59,23 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
 		$method  = $this->getPrivateMethod( $service, 'should_update_status' );
 
-		// Test complete priority chain: pending < processing < cancelled < failed < refunded < completed
+		// Test complete priority chain: pending 1 < failed 2 < cancelled 3 < processing 4 < completed 5 < refunded 6
 
 		// pending (1) to higher priorities
-		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) );
-		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'cancelled' ] ) );
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'failed' ] ) );
-		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'refunded' ] ) );
+		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'cancelled' ] ) );
+		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'processing' ] ) );
+
 		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'completed' ] ) );
 
+		$this->assertTrue( $method->invokeArgs( $service, [ 'pending', 'refunded' ] ) );
+
 		// completed (6) to lower priorities
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'refunded' ] ) );
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'failed' ] ) );
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'cancelled' ] ) );
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'processing' ] ) );
-		$this->assertFalse( $method->invokeArgs( $service, [ 'completed', 'pending' ] ) );
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'completed' ] ) );
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'processing' ] ) );
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'cancelled' ] ) );
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'failed' ] ) );
+		$this->assertFalse( $method->invokeArgs( $service, [ 'refunded', 'pending' ] ) );
 	}
 
 	public function test_should_update_status_matches_priority_constants() {
@@ -89,10 +91,10 @@ class ShouldUpdateStatusTest extends BaseServiceTest {
 		$this->assertArrayHasKey( 'completed', $priorities );
 
 		// Verify priority ordering
-		$this->assertGreaterThan( $priorities['pending'], $priorities['processing'] );
-		$this->assertGreaterThan( $priorities['processing'], $priorities['cancelled'] );
-		$this->assertGreaterThan( $priorities['cancelled'], $priorities['failed'] );
-		$this->assertGreaterThan( $priorities['failed'], $priorities['refunded'] );
-		$this->assertGreaterThan( $priorities['refunded'], $priorities['completed'] );
+		$this->assertGreaterThan( $priorities['pending'], $priorities['failed'] );
+		$this->assertGreaterThan( $priorities['failed'], $priorities['cancelled'] );
+		$this->assertGreaterThan( $priorities['cancelled'], $priorities['processing'] );
+		$this->assertGreaterThan( $priorities['processing'], $priorities['completed'] );
+		$this->assertGreaterThan( $priorities['completed'], $priorities['refunded'] );
 	}
 }

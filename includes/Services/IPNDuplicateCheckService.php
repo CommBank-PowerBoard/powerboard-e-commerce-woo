@@ -28,12 +28,25 @@ class IPNDuplicateCheckService {
 	/**
 	 * Final states that should trigger conflict resolution
 	 */
-    //FIXME:: missing the processing right?
 	const FINAL_STATES = [
+		'processing',
 		'completed',
 		'failed',
 		'cancelled',
 		'refunded',
+	];
+
+	/**
+	 * Status priority for determining which status should take precedence
+	 * Higher number = higher priority
+	 */
+	const STATUS_PRIORITY = [
+		'pending'    => 1,
+		'failed'     => 2,
+		'cancelled'  => 3,
+		'processing' => 4,
+		'completed'  => 5,
+		'refunded'   => 6,
 	];
 
 	/**
@@ -50,20 +63,6 @@ class IPNDuplicateCheckService {
 		'cancelled'    => 'cancelled',
 		'refunded'     => 'refunded',
 		'charged_back' => 'refunded',
-	];
-
-	/**
-	 * Status priority for determining which status should take precedence
-	 * Higher number = higher priority
-	 */
-    //FIXME:: priorities are not correct, I would say you can't have a refund of a fail order (this is not about priority of the charge, but order status)
-	const STATUS_PRIORITY = [
-		'pending'    => 1,
-		'processing' => 2,
-		'cancelled'  => 3,
-		'failed'     => 4,
-		'refunded'   => 5,
-		'completed'  => 6,
 	];
 
 	private SDKAdapterService $sdk_adapter;
@@ -105,14 +104,29 @@ class IPNDuplicateCheckService {
 				];
 			}
 
-            //TODO: if ipn return success and the order is failed or pending we should mark the order as success
-            //TODO: if ipn return failed and the order is pending, should be marked as failed
-            //TODO: if ipn return failed and the order is success, do nothing
-            //TODO: if ipn return refund, we do nothing (in the future the current order-status need to be success in order to be possible to update it)
-            //TODO: if ipn return pending do nothing
-
 			$current_order_status = $order->get_status();
 			$target_wc_status     = $this->map_powerboard_status_to_wc( $ipn_status );
+
+			if ( ! $this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
+				$this->log_ipn_event(
+					'IPN processing failed: Status transition not allowed',
+					[
+						'order_id'             => $order_id,
+						'charge_id'            => $charge_id,
+						'current_order_status' => $current_order_status,
+						'ipn_status'           => $ipn_status,
+						'target_wc_status'     => $target_wc_status,
+						'action'               => 'skipped',
+					],
+					'info'
+				);
+
+				return [
+					'status'    => 'ignored',
+					'message'   => 'Status transition not allowed',
+					'http_code' => 200,
+				];
+			}
 
 			$this->log_ipn_event(
 				'IPN received',
@@ -126,8 +140,9 @@ class IPNDuplicateCheckService {
 				'info'
 				);
 
+			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
+
 			// Check for duplicate status
-            //TODO:: maybe here we can check of the order status = payment status, and order->payment_id = ipn->payment_id, if it's not, we've a double payment for an order, and we can log it or save it to warn customers
 			if ( $this->is_duplicate_status( $current_order_status, $target_wc_status ) ) {
 				$this->log_ipn_event(
 					'IPN duplicate detected - no action taken',
@@ -212,13 +227,96 @@ class IPNDuplicateCheckService {
 	}
 
 	/**
+	 * Check if the target status is the status transition is allowed
+	 * if ipn return success and the order is failed or pending we should mark the order as success
+	 * if ipn return failed and the order is pending, should be marked as failed
+	 * if ipn return failed and the order is success, do nothing
+	 * if ipn return refund, we do nothing (in the future the current order-status need to be success in order to be possible to update it)
+	 * if ipn return pending do nothing
+	 *
+	 * @param string $current_status Current WooCommerce order status
+	 * @param string $target_status Target WooCommerce status from IPN
+	 * @param string $ipn_status IPN status
+	 * @return bool True if transition is allowed
+	 */
+	private function is_status_transition_allowed( string $current_status, string $target_status, string $ipn_status ): bool {
+
+		if ( in_array( $ipn_status, [ 'success', 'successful' ], true ) &&
+		in_array( $current_status, [ 'pending', 'failed' ], true ) ) {
+			return true;
+		}
+
+		if ( $ipn_status === 'failed' && $current_status === 'pending' ) {
+			return true;
+		}
+
+		if ( $ipn_status === 'failed' &&
+		in_array( $current_status, [ 'processing', 'completed' ], true ) ) {
+			return false;
+		}
+
+		if ( $ipn_status === 'pending' ) {
+			return false;
+		}
+
+		return false;
+	}
+
+	/**
+	 *
+	 * Check if the order has a double payment
+	 *
+	 * @param WC_Order $order
+	 * @param string $new_charge_id
+	 * @param string $current_status
+	 * @param string $target_status
+	 * @return void
+	 */
+	private function check_double_payment( WC_Order $order, string $new_charge_id, string $current_status, string $target_status ): void {
+		$stored_charge_id = $order->get_meta( '_powerboard_charge_id' );
+
+		if ( ! empty( $stored_charge_id ) && $stored_charge_id === $new_charge_id ) {
+			$success_status     = [ 'processing', 'completed' ];
+			$is_current_success = in_array( $current_status, $success_status, true );
+			$is_new_success     = in_array( $target_status, $success_status, true );
+
+			if ( $is_current_success && $is_new_success ) {
+				$this->log_ipn_event(
+					'WARNING : Possible double payment detected',
+					[
+						'order_id'         => $order->get_id(),
+						'stored_charge_id' => $stored_charge_id,
+						'new_charge_id'    => $new_charge_id,
+						'current_status'   => $current_status,
+						'target_status'    => $target_status,
+						'message'          => 'Order has a success status and a new success status, this is a possible double payment',
+					],
+					'warning'
+				);
+			} else {
+				$this->log_ipn_event(
+					'Different charge ID detected for order',
+					[
+						'order_id'         => $order->get_id(),
+						'stored_charge_id' => $stored_charge_id,
+						'new_charge_id'    => $new_charge_id,
+						'current_status'   => $current_status,
+						'target_status'    => $target_status,
+						'message'          => 'Payment retry after failure detected',
+					],
+					'info'
+				);
+			}
+		}
+	}
+
+	/**
 	 * Check if the given status is a final state
 	 *
 	 * @param string $status WooCommerce order status
 	 * @return bool True if it's a final state
 	 */
 	private function is_final_state( string $status ): bool {
-        //TODO:: failled status can and should be updated.
 		return in_array( $status, self::FINAL_STATES, true );
 	}
 
@@ -247,8 +345,6 @@ class IPNDuplicateCheckService {
 
 		try {
 
-            //FIXME:: 1 order can have multiple charges, by WOOCO standard 1 failled order can be repaid, from powerboard point we'll have another charge with success
-            //FIXME:: reassess if we need to get_charge
 			// Get definitive status from PowerBoard API
 			$api_response         = $this->sdk_adapter->get_charge( $charge_id );
 			$api_status           = $this->extract_status_from_api_response( $api_response );
@@ -341,10 +437,6 @@ class IPNDuplicateCheckService {
 	 * @return bool True if status should be updated
 	 */
 	private function should_update_status( string $current_status, string $new_status ): bool {
-
-        //FIXME:: I'm not sure if we can do it like that: current status = order status, new status  = payment status, 1 order can have "n" payments
-        //TODO:: I would say we need to change the status from payment to order->status (maybe even saving the intend on the orders, so we can track payments)
-        //TODO:: maybe check with @jackScarlet if there's possible to track orders instead of charges (I don't think so)
 		$current_priority = self::STATUS_PRIORITY[ $current_status ] ?? 0;
 		$new_priority     = self::STATUS_PRIORITY[ $new_status ] ?? 0;
 
