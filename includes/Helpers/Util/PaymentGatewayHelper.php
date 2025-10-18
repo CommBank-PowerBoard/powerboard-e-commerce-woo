@@ -23,6 +23,7 @@ class PaymentGatewayHelper {
 
 
 	/**
+	 * Standardize url from request into https://something.something
 	 * @param string $http_host
 	 * @return array|false|int|mixed|string|null
 	 */
@@ -37,12 +38,12 @@ class PaymentGatewayHelper {
 		$http_host = wp_parse_url( 'https://' . $http_host, PHP_URL_HOST );
 
 		return $http_host;
-
 	}
 
 
 	/**
-	 * @param $http_host
+	 * check domain validity
+	 * @param string $http_host
 	 * @return bool
 	 */
 	public static function is_valid_domain_name( $http_host ): bool {
@@ -54,8 +55,5 @@ class PaymentGatewayHelper {
 		}
 
 		return str_ends_with( $http_host, ConfigAPIEnum::DOMAIN_API );
-
 	}
-
-
 }
