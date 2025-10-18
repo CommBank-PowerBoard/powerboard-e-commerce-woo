@@ -5,7 +5,7 @@ namespace PowerBoard\Enums;
 
 class ConfigAPIEnum {
 
-    public const DOMAIN_API                     = 'commbank.com.au';
+	public const DOMAIN_API                     = 'commbank.com.au';
 	public const PRODUCTION_API_URL             = 'https://api.powerboard.commbank.com.au/';
 	public const SANDBOX_API_URL                = 'https://api.preproduction.powerboard.commbank.com.au/';
 	public const STAGING_API_URL                = 'https://api.staging.powerboard.commbank.com.au/';

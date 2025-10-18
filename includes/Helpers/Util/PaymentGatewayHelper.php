@@ -1,5 +1,6 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 namespace PowerBoard\Helpers\Util;
 
@@ -7,15 +8,13 @@ use PowerBoard\API\ConfigService;
 use PowerBoard\Enums\ConfigAPIEnum;
 use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 
-class PaymentGatewayHelper
-{
+class PaymentGatewayHelper {
 
-	public static function get_payment_gateway(): ?MasterWidgetPaymentService
-	{
+	public static function get_payment_gateway(): ?MasterWidgetPaymentService {
 		$payment_gateways = WC()->payment_gateways->get_available_payment_gateways();
 
-		if (isset($payment_gateways[POWER_BOARD_PLUGIN_PREFIX])) {
-			return $payment_gateways[POWER_BOARD_PLUGIN_PREFIX];
+		if(isset($payment_gateways[ POWER_BOARD_PLUGIN_PREFIX ])) {
+			return $payment_gateways[ POWER_BOARD_PLUGIN_PREFIX ];
 		} else {
 			wp_send_json_error(['message' => 'PowerBoard gateway not available']);
 			return null;
@@ -28,10 +27,9 @@ class PaymentGatewayHelper
 	 * @return void
 	 *
 	 */
-	private static function standardize_url($http_host)
-	{
+	private static function standardize_url($http_host) {
 
-		if (!is_string($http_host) || empty($http_host)) {
+		if(!is_string($http_host) || empty($http_host)) {
 			return null;
 		}
 
@@ -48,12 +46,11 @@ class PaymentGatewayHelper
 	 * @param $http_host
 	 * @return bool
 	 */
-	public static function is_valid_domain_name($http_host): bool
-	{
+	public static function is_valid_domain_name($http_host): bool {
 
 		$http_host = self::standardize_url($http_host);
 
-		if (empty($http_host)) {
+		if(empty($http_host)) {
 			return false;
 		}
 
