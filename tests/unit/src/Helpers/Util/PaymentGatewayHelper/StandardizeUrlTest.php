@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare( strict_types = 1 );
 
 namespace unit\src\Helpers\Util\PaymentGatewayHelper;
 
@@ -20,9 +20,9 @@ class StandardizeUrlTest extends TestCase {
 		parent::setUp();
 
 		// Use reflection to access the private method
-		$reflection = new ReflectionClass(PaymentGatewayHelper::class);
-		$this->standardizeUrlMethod = $reflection->getMethod('standardize_url');
-		$this->standardizeUrlMethod->setAccessible(true);
+		$reflection = new ReflectionClass( PaymentGatewayHelper::class );
+		$this->standardizeUrlMethod = $reflection->getMethod( 'standardize_url' );
+		$this->standardizeUrlMethod->setAccessible( true );
 	}
 
 	/**
@@ -32,9 +32,9 @@ class StandardizeUrlTest extends TestCase {
 	public function test_standardize_url_with_https_simple_domain() {
 		$input = 'https://local.host.com';
 		$expected = 'local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -44,9 +44,9 @@ class StandardizeUrlTest extends TestCase {
 	public function test_standardize_url_with_http_simple_domain() {
 		$input = 'http://www.local.host.com';
 		$expected = 'www.local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -57,9 +57,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://api.staging.powerboard.commbank.com.au/v1/';
 		$expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -70,9 +70,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'http://api.staging.powerboard.commbank.com.au/v1/';
 		$expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -83,9 +83,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://www.api.staging.powerboard.commbank.com.au/v1/';
 		$expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -96,9 +96,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'http://www.api.staging.powerboard.commbank.com.au/v1/';
 		$expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -108,9 +108,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'example.com';
 		$expected = 'example.com'; // Simple domain, returns as-is
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -120,9 +120,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://api.example.com:8080/path';
 		$expected = 'api.example.com'; // resolve_subdomain_url returns last 2 parts
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -132,9 +132,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = '';
 		$expected = null; // wp_parse_url should return null for empty string
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertNull($result);
+		$this->assertNull( $result );
 	}
 
 	/**
@@ -144,9 +144,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = null;
 		$expected = null;
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertNull($result);
+		$this->assertNull( $result );
 	}
 
 	/**
@@ -156,9 +156,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'not-a-valid-url';
 		$expected = 'not-a-valid-url'; // Should still process through resolve_subdomain_url
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -168,9 +168,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://http://example.com';
 		$expected = 'example.com'; // Both protocols should be removed
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -180,9 +180,9 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://api.staging.service.co.uk';
 		$expected = 'api.staging.service.co.uk'; // Should return last 3 parts for UK TLD
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 
 	/**
@@ -192,8 +192,8 @@ class StandardizeUrlTest extends TestCase {
 		$input = 'https://google.com';
 		$expected = 'google.com'; // Should return both parts
 
-		$result = $this->standardizeUrlMethod->invoke(null, $input);
+		$result = $this->standardizeUrlMethod->invoke( null, $input );
 
-		$this->assertEquals($expected, $result);
+		$this->assertEquals( $expected, $result );
 	}
 }
