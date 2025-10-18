@@ -113,7 +113,7 @@ class IsValidDomainNameTest extends TestCase {
 	 */
 	public function test_method_handles_domain_with_protocol() {
 		$http_host = 'https://api.staging.powerboard.commbank.com.au/v1/';
-		$result = PaymentGatewayHelper::is_valid_domain_name( $http_host );
+		$result    = PaymentGatewayHelper::is_valid_domain_name( $http_host );
 		$this->assertTrue( $result );
 	}
 
