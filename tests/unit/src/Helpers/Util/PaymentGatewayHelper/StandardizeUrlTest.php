@@ -1,5 +1,5 @@
 <?php
-declare( strict_types=1 );
+declare(strict_types=1);
 
 namespace unit\src\Helpers\Util\PaymentGatewayHelper;
 
@@ -14,186 +14,201 @@ use ReflectionMethod;
 
 class StandardizeUrlTest extends TestCase
 {
-    private ReflectionMethod $standardizeUrlMethod;
+	private ReflectionMethod $standardizeUrlMethod;
 
-    public function setUp(): void {
-        parent::setUp();
-        
-        // Use reflection to access the private method
-        $reflection = new ReflectionClass(PaymentGatewayHelper::class);
-        $this->standardizeUrlMethod = $reflection->getMethod('standardize_url');
-        $this->standardizeUrlMethod->setAccessible(true);
-    }
+	public function setUp(): void
+	{
+		parent::setUp();
 
-    /**
-     * Test HTTPS URL with simple domain
-     * Based on comment: //https://local.host.com
-     */
-    public function test_standardize_url_with_https_simple_domain() {
-        $input = 'https://local.host.com';
-        $expected = 'local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		// Use reflection to access the private method
+		$reflection = new ReflectionClass(PaymentGatewayHelper::class);
+		$this->standardizeUrlMethod = $reflection->getMethod('standardize_url');
+		$this->standardizeUrlMethod->setAccessible(true);
+	}
 
-    /**
-     * Test HTTP URL with simple domain
-     * Based on comment: //http://local.host.com
-     */
-    public function test_standardize_url_with_http_simple_domain() {
-        $input = 'http://www.local.host.com';
-        $expected = 'www.local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+	/**
+	 * Test HTTPS URL with simple domain
+	 * Based on comment: //https://local.host.com
+	 */
+	public function test_standardize_url_with_https_simple_domain()
+	{
+		$input = 'https://local.host.com';
+		$expected = 'local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
 
-    /**
-     * Test HTTPS URL with complex PowerBoard domain and path
-     * Based on comment: //https://api.staging.powerboard.commbank.com.au/v1/
-     */
-    public function test_standardize_url_with_https_powerboard_domain_with_path() {
-        $input = 'https://api.staging.powerboard.commbank.com.au/v1/';
-        $expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$this->assertEquals($expected, $result);
+	}
 
-    /**
-     * Test HTTP URL with complex PowerBoard domain and path
-     * Based on comment: //http://api.staging.powerboard.commbank.com.au/v1/
-     */
-    public function test_standardize_url_with_http_powerboard_domain_with_path() {
-        $input = 'http://api.staging.powerboard.commbank.com.au/v1/';
-        $expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+	/**
+	 * Test HTTP URL with simple domain
+	 * Based on comment: //http://local.host.com
+	 */
+	public function test_standardize_url_with_http_simple_domain()
+	{
+		$input = 'http://www.local.host.com';
+		$expected = 'www.local.host.com'; // resolve_subdomain_url returns last 2 parts for non-country-code TLD
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
 
-    /**
-     * Test HTTPS URL with www subdomain and complex PowerBoard domain
-     * Based on comment: //https://www.api.staging.powerboard.commbank.com.au/v1/
-     */
-    public function test_standardize_url_with_https_www_powerboard_domain_with_path() {
-        $input = 'https://www.api.staging.powerboard.commbank.com.au/v1/';
-        $expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$this->assertEquals($expected, $result);
+	}
 
-    /**
-     * Test HTTP URL with www subdomain and complex PowerBoard domain
-     * Based on comment: //http://www.api.staging.powerboard.commbank.com.au/v1/
-     */
-    public function test_standardize_url_with_http_www_powerboard_domain_with_path() {
-        $input = 'http://www.api.staging.powerboard.commbank.com.au/v1/';
-        $expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+	/**
+	 * Test HTTPS URL with complex PowerBoard domain and path
+	 * Based on comment: //https://api.staging.powerboard.commbank.com.au/v1/
+	 */
+	public function test_standardize_url_with_https_powerboard_domain_with_path()
+	{
+		$input = 'https://api.staging.powerboard.commbank.com.au/v1/';
+		$expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-    /**
-     * Test URL without protocol (should work since method adds http://)
-     */
-    public function test_standardize_url_without_protocol() {
-        $input = 'example.com';
-        $expected = 'example.com'; // Simple domain, returns as-is
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
 
-    /**
-     * Test URL with port number
-     */
-    public function test_standardize_url_with_port() {
-        $input = 'https://api.example.com:8080/path';
-        $expected = 'api.example.com'; // resolve_subdomain_url returns last 2 parts
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$this->assertEquals($expected, $result);
+	}
 
-    /**
-     * Test empty string input
-     */
-    public function test_standardize_url_with_empty_string() {
-        $input = '';
-        $expected = null; // wp_parse_url should return null for empty string
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertNull($result);
-    }
+	/**
+	 * Test HTTP URL with complex PowerBoard domain and path
+	 * Based on comment: //http://api.staging.powerboard.commbank.com.au/v1/
+	 */
+	public function test_standardize_url_with_http_powerboard_domain_with_path()
+	{
+		$input = 'http://api.staging.powerboard.commbank.com.au/v1/';
+		$expected = 'api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-    /**
-     * Test null input
-     */
-    public function test_standardize_url_with_null() {
-        $input = null;
-        $expected = null;
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertNull($result);
-    }
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
 
-    /**
-     * Test malformed URL
-     */
-    public function test_standardize_url_with_malformed_url() {
-        $input = 'not-a-valid-url';
-        $expected = 'not-a-valid-url'; // Should still process through resolve_subdomain_url
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$this->assertEquals($expected, $result);
+	}
 
-    /**
-     * Test domain with multiple protocols (edge case)
-     */
-    public function test_standardize_url_with_multiple_protocols() {
-        $input = 'https://http://example.com';
-        $expected = 'example.com'; // Both protocols should be removed
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+	/**
+	 * Test HTTPS URL with www subdomain and complex PowerBoard domain
+	 * Based on comment: //https://www.api.staging.powerboard.commbank.com.au/v1/
+	 */
+	public function test_standardize_url_with_https_www_powerboard_domain_with_path()
+	{
+		$input = 'https://www.api.staging.powerboard.commbank.com.au/v1/';
+		$expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
 
-    /**
-     * Test UK domain (another country code TLD)
-     */
-    public function test_standardize_url_with_uk_tld() {
-        $input = 'https://api.staging.service.co.uk';
-        $expected = 'api.staging.service.co.uk'; // Should return last 3 parts for UK TLD
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
 
-    /**
-     * Test simple two-part domain
-     */
-    public function test_standardize_url_with_simple_two_part_domain() {
-        $input = 'https://google.com';
-        $expected = 'google.com'; // Should return both parts
-        
-        $result = $this->standardizeUrlMethod->invoke(null, $input);
-        
-        $this->assertEquals($expected, $result);
-    }
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test HTTP URL with www subdomain and complex PowerBoard domain
+	 * Based on comment: //http://www.api.staging.powerboard.commbank.com.au/v1/
+	 */
+	public function test_standardize_url_with_http_www_powerboard_domain_with_path()
+	{
+		$input = 'http://www.api.staging.powerboard.commbank.com.au/v1/';
+		$expected = 'www.api.staging.powerboard.commbank.com.au'; // resolve_subdomain_url returns last 3 parts for country-code TLD 'au'
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test URL without protocol (should work since method adds http://)
+	 */
+	public function test_standardize_url_without_protocol()
+	{
+		$input = 'example.com';
+		$expected = 'example.com'; // Simple domain, returns as-is
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test URL with port number
+	 */
+	public function test_standardize_url_with_port()
+	{
+		$input = 'https://api.example.com:8080/path';
+		$expected = 'api.example.com'; // resolve_subdomain_url returns last 2 parts
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test empty string input
+	 */
+	public function test_standardize_url_with_empty_string()
+	{
+		$input = '';
+		$expected = null; // wp_parse_url should return null for empty string
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertNull($result);
+	}
+
+	/**
+	 * Test null input
+	 */
+	public function test_standardize_url_with_null()
+	{
+		$input = null;
+		$expected = null;
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertNull($result);
+	}
+
+	/**
+	 * Test malformed URL
+	 */
+	public function test_standardize_url_with_malformed_url()
+	{
+		$input = 'not-a-valid-url';
+		$expected = 'not-a-valid-url'; // Should still process through resolve_subdomain_url
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test domain with multiple protocols (edge case)
+	 */
+	public function test_standardize_url_with_multiple_protocols()
+	{
+		$input = 'https://http://example.com';
+		$expected = 'example.com'; // Both protocols should be removed
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test UK domain (another country code TLD)
+	 */
+	public function test_standardize_url_with_uk_tld()
+	{
+		$input = 'https://api.staging.service.co.uk';
+		$expected = 'api.staging.service.co.uk'; // Should return last 3 parts for UK TLD
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * Test simple two-part domain
+	 */
+	public function test_standardize_url_with_simple_two_part_domain()
+	{
+		$input = 'https://google.com';
+		$expected = 'google.com'; // Should return both parts
+
+		$result = $this->standardizeUrlMethod->invoke(null, $input);
+
+		$this->assertEquals($expected, $result);
+	}
 }
