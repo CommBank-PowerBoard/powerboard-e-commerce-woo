@@ -134,10 +134,3 @@ if ( ! function_exists( 'esc_html' ) ) {
 		return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
 	}
 }
-
-// Include the mock ConfigService and use class_alias to replace the real class
-require_once __DIR__ . '/mocks/API/ConfigService.php';
-// Only alias if the real class hasn't been loaded yet to avoid conflicts
-if ( !class_exists( 'PowerBoard\\API\\ConfigService', false ) ) {
-	class_alias( 'unit\\mocks\\API\\ConfigService', 'PowerBoard\\API\\ConfigService' );
-}
