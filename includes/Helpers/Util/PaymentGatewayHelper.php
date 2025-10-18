@@ -24,6 +24,7 @@ class PaymentGatewayHelper {
 
 	/**
 	 * Standardize url from request into https://something.something
+	 *
 	 * @param string $http_host
 	 * @return array|false|int|mixed|string|null
 	 */
@@ -42,7 +43,8 @@ class PaymentGatewayHelper {
 
 
 	/**
-	 * check domain validity
+	 * Check domain validity
+	 *
 	 * @param string $http_host
 	 * @return bool
 	 */
