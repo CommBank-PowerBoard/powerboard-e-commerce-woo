@@ -23,9 +23,8 @@ class PaymentGatewayHelper {
 
 
 	/**
-	 * @param $url
-	 * @return void
-	 *
+	 * @param string $http_host
+	 * @return array|false|int|mixed|string|null
 	 */
 	private static function standardize_url( $http_host ) {
 
