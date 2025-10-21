@@ -16,7 +16,7 @@ class IsFinalStateTest extends BaseServiceTest {
 		$method  = $this->getPrivateMethod( $service, 'is_final_state' );
 
 		// Test final states
-		$final_states = [ 'processing', 'completed', 'failed', 'cancelled', 'refunded' ];
+		$final_states = [ 'processing', 'completed', 'cancelled', 'refunded' ];
 		foreach ( $final_states as $state ) {
 			$this->assertTrue(
 				$method->invokeArgs( $service, [ $state ] ),

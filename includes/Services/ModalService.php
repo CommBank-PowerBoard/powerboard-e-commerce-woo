@@ -124,7 +124,7 @@ class ModalService {
 			'configuration'    => [
 				'template_id' => DBSettingsHelper::get_configuration_id(),
 			],
-			'notification_url' => esc_url_raw( WC()->api_request_url( 'powerboard_ipn' ) ),
+			'webhook_url' => esc_url_raw( WC()->api_request_url( 'powerboard_ipn' ) ),
 		];
 
 		$customisation_id = DBSettingsHelper::get_customisation_id();

@@ -38,7 +38,6 @@ class ConstantsTest extends TestCase {
 		// Check required final states
 		$this->assertContains( 'processing', $final_states );
 		$this->assertContains( 'completed', $final_states );
-		$this->assertContains( 'failed', $final_states );
 		$this->assertContains( 'cancelled', $final_states );
 		$this->assertContains( 'refunded', $final_states );
 

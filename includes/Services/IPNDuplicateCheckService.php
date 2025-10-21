@@ -31,7 +31,6 @@ class IPNDuplicateCheckService {
 	const FINAL_STATES = [
 		'processing',
 		'completed',
-		'failed',
 		'cancelled',
 		'refunded',
 	];
@@ -87,7 +86,7 @@ class IPNDuplicateCheckService {
 			// Get WooCommerce order
 			$order = wc_get_order( $order_id );
 			if ( ! $order ) {
-				$this->log_ipn_event(
+				LoggerHelper::log_callback_event(
 					'IPN processing failed: Order not found',
 					[
 						'order_id'   => $order_id,
@@ -107,8 +106,10 @@ class IPNDuplicateCheckService {
 			$current_order_status = $order->get_status();
 			$target_wc_status     = $this->map_powerboard_status_to_wc( $ipn_status );
 
+			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
+
 			if ( ! $this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
-				$this->log_ipn_event(
+				LoggerHelper::log_callback_event(
 					'IPN processing failed: Status transition not allowed',
 					[
 						'order_id'             => $order_id,
@@ -128,23 +129,9 @@ class IPNDuplicateCheckService {
 				];
 			}
 
-			$this->log_ipn_event(
-				'IPN received',
-				[
-					'order_id'             => $order_id,
-					'charge_id'            => $charge_id,
-					'current_order_status' => $current_order_status,
-					'ipn_status'           => $ipn_status,
-					'target_wc_status'     => $target_wc_status,
-				],
-				'info'
-				);
-
-			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
-
 			// Check for duplicate status
 			if ( $this->is_duplicate_status( $current_order_status, $target_wc_status ) ) {
-				$this->log_ipn_event(
+				LoggerHelper::log_callback_event(
 					'IPN duplicate detected - no action taken',
 					[
 						'order_id'       => $order_id,
@@ -164,9 +151,25 @@ class IPNDuplicateCheckService {
 			}
 
 			// Check if current order status is final
-			if ( $this->is_final_state( $current_order_status ) ) {
+			if (
+				$this->is_final_state( $current_order_status ) &&
+				$this->is_final_state( $target_wc_status) &&
+				$current_order_status != $target_wc_status
+			) {
 				return $this->handle_final_state_conflict( $order, $charge_id, $current_order_status, $target_wc_status, $ipn_status );
 			}
+
+			LoggerHelper::log_callback_event(
+				'IPN received',
+				[
+					'order_id'             => $order_id,
+					'charge_id'            => $charge_id,
+					'current_order_status' => $current_order_status,
+					'ipn_status'           => $ipn_status,
+					'target_wc_status'     => $target_wc_status,
+				],
+				'info'
+			);
 
 			// Normal status update - current status is not final
 			return [
@@ -174,7 +177,7 @@ class IPNDuplicateCheckService {
 			];
 
 		} catch ( Exception $e ) {
-			$this->log_ipn_event(
+			LoggerHelper::log_callback_event(
 				'IPN processing exception',
 				[
 					'error'    => $e->getMessage(),
@@ -250,15 +253,6 @@ class IPNDuplicateCheckService {
 			return true;
 		}
 
-		if ( $ipn_status === 'failed' &&
-		in_array( $current_status, [ 'processing', 'completed' ], true ) ) {
-			return false;
-		}
-
-		if ( $ipn_status === 'pending' ) {
-			return false;
-		}
-
 		return false;
 	}
 
@@ -274,39 +268,28 @@ class IPNDuplicateCheckService {
 	 */
 	private function check_double_payment( WC_Order $order, string $new_charge_id, string $current_status, string $target_status ): void {
 		$stored_charge_id = $order->get_meta( '_powerboard_charge_id' );
+		$success_status     = [ 'processing', 'completed' ];
 
-		if ( ! empty( $stored_charge_id ) && $stored_charge_id === $new_charge_id ) {
-			$success_status     = [ 'processing', 'completed' ];
-			$is_current_success = in_array( $current_status, $success_status, true );
-			$is_new_success     = in_array( $target_status, $success_status, true );
+		if (
+			! empty( $stored_charge_id ) &&
+			in_array($current_status, $success_status, true) &&
+			in_array($target_status, $success_status, true) &&
+			$stored_charge_id != $new_charge_id
+		) {
 
-			if ( $is_current_success && $is_new_success ) {
-				$this->log_ipn_event(
-					'WARNING : Possible double payment detected',
-					[
-						'order_id'         => $order->get_id(),
-						'stored_charge_id' => $stored_charge_id,
-						'new_charge_id'    => $new_charge_id,
-						'current_status'   => $current_status,
-						'target_status'    => $target_status,
-						'message'          => 'Order has a success status and a new success status, this is a possible double payment',
-					],
-					'warning'
-				);
-			} else {
-				$this->log_ipn_event(
-					'Different charge ID detected for order',
-					[
-						'order_id'         => $order->get_id(),
-						'stored_charge_id' => $stored_charge_id,
-						'new_charge_id'    => $new_charge_id,
-						'current_status'   => $current_status,
-						'target_status'    => $target_status,
-						'message'          => 'Payment retry after failure detected',
-					],
-					'info'
-				);
-			}
+			LoggerHelper::log_callback_event(
+				'WARNING : Possible double payment detected',
+				[
+					'order_id'         => $order->get_id(),
+					'stored_charge_id' => $stored_charge_id,
+					'new_charge_id'    => $new_charge_id,
+					'current_status'   => $current_status,
+					'target_status'    => $target_status,
+					'message'          => 'Order has a success status and a new success status, this is a possible double payment',
+				],
+				'warning'
+			);
+
 		}
 	}
 
@@ -331,7 +314,7 @@ class IPNDuplicateCheckService {
 	 * @return array Processing result
 	 */
 	private function handle_final_state_conflict( WC_Order $order, string $charge_id, string $current_status, string $target_status, string $ipn_status ): array {
-		$this->log_ipn_event(
+		LoggerHelper::log_callback_event(
 			'Final state conflict detected - triggering API verification',
 			[
 				'order_id'             => $order->get_id(),
@@ -350,7 +333,7 @@ class IPNDuplicateCheckService {
 			$api_status           = $this->extract_status_from_api_response( $api_response );
 			$definitive_wc_status = $this->map_powerboard_status_to_wc( $api_status );
 
-			$this->log_ipn_event(
+			LoggerHelper::log_callback_event(
 				'API verification completed',
 				[
 					'order_id'             => $order->get_id(),
@@ -370,7 +353,7 @@ class IPNDuplicateCheckService {
 						'status' => 'update_status',
 					];
 				} else {
-					$this->log_ipn_event(
+					LoggerHelper::log_callback_event(
 						'API status has lower priority - no update',
 						[
 							'order_id'             => $order->get_id(),
@@ -390,7 +373,7 @@ class IPNDuplicateCheckService {
 					];
 				}
 			} else {
-				$this->log_ipn_event(
+				LoggerHelper::log_callback_event(
 					'API confirms current status - no change needed',
 					[
 						'order_id'       => $order->get_id(),
@@ -409,7 +392,7 @@ class IPNDuplicateCheckService {
 				];
 			}
 		} catch ( Exception $e ) {
-			$this->log_ipn_event(
+			LoggerHelper::log_callback_event(
 				'API verification failed',
 				[
 					'order_id'        => $order->get_id(),
@@ -563,14 +546,4 @@ class IPNDuplicateCheckService {
 		return self::POWERBOARD_TO_WC_STATUS_MAP[ $status ] ?? 'pending';
 	}
 
-	/**
-	 * Log IPN-related events with consistent format
-	 *
-	 * @param string $message Log message
-	 * @param array $context Log context data
-	 * @param string $level Log level (info, warning, error)
-	 */
-	private function log_ipn_event( string $message, array $context = [], string $level = 'info' ): void {
-		LoggerHelper::log_callback_event( $message, $context, $level );
-	}
 }

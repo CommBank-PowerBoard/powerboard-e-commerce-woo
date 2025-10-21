@@ -27,6 +27,11 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 			$method->invokeArgs( $service, [ 'failed', 'processing', 'successful' ] ),
 			'Success IPN should allow transition from failed to processing'
 		);
+
+		$this->assertfalse(
+			$method->invokeArgs( $service, [ 'success', 'processing', 'failed' ] ),
+			'Success IPN should allow transition from failed to processing'
+		);
 	}
 
 	/**
