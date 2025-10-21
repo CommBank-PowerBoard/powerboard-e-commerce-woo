@@ -40,27 +40,27 @@ class IPNDuplicateCheckService {
 	 * Higher number = higher priority
 	 */
 	const STATUS_PRIORITY = [
-		'pending'    => 1,
-		'failed'     => 2,
-		'cancelled'  => 3,
+		'pending' => 1,
+		'failed' => 2,
+		'cancelled' => 3,
 		'processing' => 4,
-		'completed'  => 5,
-		'refunded'   => 6,
+		'completed' => 5,
+		'refunded' => 6,
 	];
 
 	/**
 	 * Status mapping from PowerBoard to WooCommerce
 	 */
 	const POWERBOARD_TO_WC_STATUS_MAP = [
-		'complete'     => 'completed',
-		'completed'    => 'completed',
-		'success'      => 'processing',
-		'successful'   => 'processing',
-		'processing'   => 'processing',
-		'pending'      => 'pending',
-		'failed'       => 'failed',
-		'cancelled'    => 'cancelled',
-		'refunded'     => 'refunded',
+		'complete' => 'completed',
+		'completed' => 'completed',
+		'success' => 'processing',
+		'successful' => 'processing',
+		'processing' => 'processing',
+		'pending' => 'pending',
+		'failed' => 'failed',
+		'cancelled' => 'cancelled',
+		'refunded' => 'refunded',
 		'charged_back' => 'refunded',
 	];
 
@@ -79,52 +79,52 @@ class IPNDuplicateCheckService {
 	public function process_ipn_notification( IPN $ipn ): array {
 		try {
 			// Extract essential data from IPN
-			$charge_id  = $ipn->get_charge()->get_charge_id();
-			$order_id   = $ipn->get_order_id();
+			$charge_id = $ipn->get_charge()->get_charge_id();
+			$order_id = $ipn->get_order_id();
 			$ipn_status = $this->map_event_to_status( $ipn->get_event() );
 
 			// Get WooCommerce order
 			$order = wc_get_order( $order_id );
-			if ( ! $order ) {
+			if ( !$order ) {
 				LoggerHelper::log_callback_event(
 					'IPN processing failed: Order not found',
 					[
-						'order_id'   => $order_id,
-						'charge_id'  => $charge_id,
+						'order_id' => $order_id,
+						'charge_id' => $charge_id,
 						'ipn_status' => $ipn_status,
 					],
 					'error'
-					);
+				);
 
 				return [
-					'status'    => 'error',
-					'message'   => 'Order not found',
+					'status' => 'error',
+					'message' => 'Order not found',
 					'http_code' => 404,
 				];
 			}
 
 			$current_order_status = $order->get_status();
-			$target_wc_status     = $this->map_powerboard_status_to_wc( $ipn_status );
+			$target_wc_status = $this->map_powerboard_status_to_wc( $ipn_status );
 
 			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
 
-			if ( ! $this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
+			if ( !$this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
 				LoggerHelper::log_callback_event(
 					'IPN processing failed: Status transition not allowed',
 					[
-						'order_id'             => $order_id,
-						'charge_id'            => $charge_id,
+						'order_id' => $order_id,
+						'charge_id' => $charge_id,
 						'current_order_status' => $current_order_status,
-						'ipn_status'           => $ipn_status,
-						'target_wc_status'     => $target_wc_status,
-						'action'               => 'skipped',
+						'ipn_status' => $ipn_status,
+						'target_wc_status' => $target_wc_status,
+						'action' => 'skipped',
 					],
 					'info'
 				);
 
 				return [
-					'status'    => 'ignored',
-					'message'   => 'Status transition not allowed',
+					'status' => 'ignored',
+					'message' => 'Status transition not allowed',
 					'http_code' => 200,
 				];
 			}
@@ -134,18 +134,18 @@ class IPNDuplicateCheckService {
 				LoggerHelper::log_callback_event(
 					'IPN duplicate detected - no action taken',
 					[
-						'order_id'       => $order_id,
-						'charge_id'      => $charge_id,
+						'order_id' => $order_id,
+						'charge_id' => $charge_id,
 						'current_status' => $current_order_status,
-						'ipn_status'     => $ipn_status,
-						'action'         => 'skipped',
+						'ipn_status' => $ipn_status,
+						'action' => 'skipped',
 					],
 					'info'
-					);
+				);
 
 				return [
-					'status'    => 'duplicate',
-					'message'   => 'Duplicate IPN - status unchanged',
+					'status' => 'duplicate',
+					'message' => 'Duplicate IPN - status unchanged',
 					'http_code' => 200,
 				];
 			}
@@ -153,20 +153,21 @@ class IPNDuplicateCheckService {
 			// Check if current order status is final
 			if (
 				$this->is_final_state( $current_order_status ) &&
-				$this->is_final_state( $target_wc_status) &&
+				$this->is_final_state( $target_wc_status ) &&
 				$current_order_status != $target_wc_status
 			) {
-				return $this->handle_final_state_conflict( $order, $charge_id, $current_order_status, $target_wc_status, $ipn_status );
+				return $this->handle_final_state_conflict( $order, $charge_id, $current_order_status, $target_wc_status,
+					$ipn_status );
 			}
 
 			LoggerHelper::log_callback_event(
 				'IPN received',
 				[
-					'order_id'             => $order_id,
-					'charge_id'            => $charge_id,
+					'order_id' => $order_id,
+					'charge_id' => $charge_id,
 					'current_order_status' => $current_order_status,
-					'ipn_status'           => $ipn_status,
-					'target_wc_status'     => $target_wc_status,
+					'ipn_status' => $ipn_status,
+					'target_wc_status' => $target_wc_status,
 				],
 				'info'
 			);
@@ -180,16 +181,16 @@ class IPNDuplicateCheckService {
 			LoggerHelper::log_callback_event(
 				'IPN processing exception',
 				[
-					'error'    => $e->getMessage(),
-					'trace'    => $e->getTraceAsString(),
+					'error' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
 					'ipn_data' => $ipn_data ?? [],
 				],
 				'error'
-				);
+			);
 
 			return [
-				'status'    => 'error',
-				'message'   => 'Internal processing error',
+				'status' => 'error',
+				'message' => 'Internal processing error',
 				'http_code' => 500,
 			];
 		}
@@ -203,16 +204,16 @@ class IPNDuplicateCheckService {
 	 */
 	private function map_event_to_status( ?string $event ): string {
 		$event_to_status_map = [
-			'payment_succeeded'  => 'success',
-			'payment_captured'   => 'success',
+			'payment_succeeded' => 'success',
+			'payment_captured' => 'success',
 			'checkout_completed' => 'success',
-			'payment_failed'     => 'failed',
-			'checkout_failed'    => 'failed',
-			'payment_voided'     => 'cancelled',
+			'payment_failed' => 'failed',
+			'checkout_failed' => 'failed',
+			'payment_voided' => 'cancelled',
 			'checkout_cancelled' => 'cancelled',
-			'checkout_expired'   => 'cancelled',
-			'payment_created'    => 'pending',
-			'checkout_created'   => 'pending',
+			'checkout_expired' => 'cancelled',
+			'payment_created' => 'pending',
+			'checkout_created' => 'pending',
 		];
 
 		return $event_to_status_map[ $event ] ?? 'pending';
@@ -242,10 +243,14 @@ class IPNDuplicateCheckService {
 	 * @param string $ipn_status IPN status
 	 * @return bool True if transition is allowed
 	 */
-	private function is_status_transition_allowed( string $current_status, string $target_status, string $ipn_status ): bool {
+	private function is_status_transition_allowed(
+		string $current_status,
+		string $target_status,
+		string $ipn_status
+	): bool {
 
 		if ( in_array( $ipn_status, [ 'success', 'successful' ], true ) &&
-		in_array( $current_status, [ 'pending', 'failed' ], true ) ) {
+			in_array( $current_status, [ 'pending', 'failed' ], true ) ) {
 			return true;
 		}
 
@@ -266,26 +271,31 @@ class IPNDuplicateCheckService {
 	 * @param string $target_status
 	 * @return void
 	 */
-	private function check_double_payment( WC_Order $order, string $new_charge_id, string $current_status, string $target_status ): void {
+	private function check_double_payment(
+		WC_Order $order,
+		string $new_charge_id,
+		string $current_status,
+		string $target_status
+	): void {
 		$stored_charge_id = $order->get_meta( '_powerboard_charge_id' );
-		$success_status     = [ 'processing', 'completed' ];
+		$success_status = [ 'processing', 'completed' ];
 
 		if (
-			! empty( $stored_charge_id ) &&
-			in_array($current_status, $success_status, true) &&
-			in_array($target_status, $success_status, true) &&
+			!empty( $stored_charge_id ) &&
+			in_array( $current_status, $success_status, true ) &&
+			in_array( $target_status, $success_status, true ) &&
 			$stored_charge_id != $new_charge_id
 		) {
 
 			LoggerHelper::log_callback_event(
 				'WARNING : Possible double payment detected',
 				[
-					'order_id'         => $order->get_id(),
+					'order_id' => $order->get_id(),
 					'stored_charge_id' => $stored_charge_id,
-					'new_charge_id'    => $new_charge_id,
-					'current_status'   => $current_status,
-					'target_status'    => $target_status,
-					'message'          => 'Order has a success status and a new success status, this is a possible double payment',
+					'new_charge_id' => $new_charge_id,
+					'current_status' => $current_status,
+					'target_status' => $target_status,
+					'message' => 'Order has a success status and a new success status, this is a possible double payment',
 				],
 				'warning'
 			);
@@ -313,37 +323,43 @@ class IPNDuplicateCheckService {
 	 * @param string $ipn_status Original IPN status
 	 * @return array Processing result
 	 */
-	private function handle_final_state_conflict( WC_Order $order, string $charge_id, string $current_status, string $target_status, string $ipn_status ): array {
+	private function handle_final_state_conflict(
+		WC_Order $order,
+		string $charge_id,
+		string $current_status,
+		string $target_status,
+		string $ipn_status
+	): array {
 		LoggerHelper::log_callback_event(
 			'Final state conflict detected - triggering API verification',
 			[
-				'order_id'             => $order->get_id(),
-				'charge_id'            => $charge_id,
+				'order_id' => $order->get_id(),
+				'charge_id' => $charge_id,
 				'current_final_status' => $current_status,
-				'ipn_target_status'    => $target_status,
-				'ipn_status'           => $ipn_status,
+				'ipn_target_status' => $target_status,
+				'ipn_status' => $ipn_status,
 			],
 			'warning'
-			);
+		);
 
 		try {
 
 			// Get definitive status from PowerBoard API
-			$api_response         = $this->sdk_adapter->get_charge( $charge_id );
-			$api_status           = $this->extract_status_from_api_response( $api_response );
+			$api_response = $this->sdk_adapter->get_charge( $charge_id );
+			$api_status = $this->extract_status_from_api_response( $api_response );
 			$definitive_wc_status = $this->map_powerboard_status_to_wc( $api_status );
 
 			LoggerHelper::log_callback_event(
 				'API verification completed',
 				[
-					'order_id'             => $order->get_id(),
-					'charge_id'            => $charge_id,
-					'api_status'           => $api_status,
+					'order_id' => $order->get_id(),
+					'charge_id' => $charge_id,
+					'api_status' => $api_status,
 					'definitive_wc_status' => $definitive_wc_status,
-					'current_status'       => $current_status,
+					'current_status' => $current_status,
 				],
 				'info'
-				);
+			);
 
 			// Check if API status differs from current order status
 			if ( $definitive_wc_status !== $current_status ) {
@@ -356,19 +372,19 @@ class IPNDuplicateCheckService {
 					LoggerHelper::log_callback_event(
 						'API status has lower priority - no update',
 						[
-							'order_id'             => $order->get_id(),
-							'charge_id'            => $charge_id,
-							'current_status'       => $current_status,
-							'api_status'           => $api_status,
+							'order_id' => $order->get_id(),
+							'charge_id' => $charge_id,
+							'current_status' => $current_status,
+							'api_status' => $api_status,
 							'definitive_wc_status' => $definitive_wc_status,
-							'action'               => 'ignored',
+							'action' => 'ignored',
 						],
 						'info'
-						);
+					);
 
 					return [
-						'status'    => 'ignored',
-						'message'   => 'API status has lower priority than current status',
+						'status' => 'ignored',
+						'message' => 'API status has lower priority than current status',
 						'http_code' => 200,
 					];
 				}
@@ -376,18 +392,18 @@ class IPNDuplicateCheckService {
 				LoggerHelper::log_callback_event(
 					'API confirms current status - no change needed',
 					[
-						'order_id'       => $order->get_id(),
-						'charge_id'      => $charge_id,
+						'order_id' => $order->get_id(),
+						'charge_id' => $charge_id,
 						'current_status' => $current_status,
-						'api_status'     => $api_status,
-						'action'         => 'confirmed',
+						'api_status' => $api_status,
+						'action' => 'confirmed',
 					],
 					'info'
-					);
+				);
 
 				return [
-					'status'    => 'ignored',
-					'message'   => 'API confirms current order status',
+					'status' => 'ignored',
+					'message' => 'API confirms current order status',
 					'http_code' => 200,
 				];
 			}
@@ -395,18 +411,18 @@ class IPNDuplicateCheckService {
 			LoggerHelper::log_callback_event(
 				'API verification failed',
 				[
-					'order_id'        => $order->get_id(),
-					'charge_id'       => $charge_id,
-					'error'           => $e->getMessage(),
+					'order_id' => $order->get_id(),
+					'charge_id' => $charge_id,
+					'error' => $e->getMessage(),
 					'fallback_action' => 'maintain_current_status',
 				],
-						'error'
-				);
+				'error'
+			);
 
 			// On API failure, maintain current status but still return 200
 			return [
-				'status'    => 'api_error',
-				'message'   => 'API verification failed - maintaining current status',
+				'status' => 'api_error',
+				'message' => 'API verification failed - maintaining current status',
 				'http_code' => 200,
 			];
 		}
@@ -421,7 +437,7 @@ class IPNDuplicateCheckService {
 	 */
 	private function should_update_status( string $current_status, string $new_status ): bool {
 		$current_priority = self::STATUS_PRIORITY[ $current_status ] ?? 0;
-		$new_priority     = self::STATUS_PRIORITY[ $new_status ] ?? 0;
+		$new_priority = self::STATUS_PRIORITY[ $new_status ] ?? 0;
 
 		return $new_priority > $current_priority;
 	}
@@ -516,16 +532,16 @@ class IPNDuplicateCheckService {
 	 */
 	private function extract_status_from_api_response( array $api_response ): ?string {
 		// Check common response structures
-		if ( ! empty( $api_response['resource']['data']['status'] ) ) {
-			return strtolower( sanitize_text_field( (string) $api_response['resource']['data']['status'] ) );
+		if ( !empty( $api_response[ 'resource' ][ 'data' ][ 'status' ] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response[ 'resource' ][ 'data' ][ 'status' ] ) );
 		}
 
-		if ( ! empty( $api_response['data']['status'] ) ) {
-			return strtolower( sanitize_text_field( (string) $api_response['data']['status'] ) );
+		if ( !empty( $api_response[ 'data' ][ 'status' ] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response[ 'data' ][ 'status' ] ) );
 		}
 
-		if ( ! empty( $api_response['status'] ) ) {
-			return strtolower( sanitize_text_field( (string) $api_response['status'] ) );
+		if ( !empty( $api_response[ 'status' ] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response[ 'status' ] ) );
 		}
 
 		return null;
