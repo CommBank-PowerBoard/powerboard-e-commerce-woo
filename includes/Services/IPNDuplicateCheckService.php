@@ -26,29 +26,6 @@ use WC_Order;
 class IPNDuplicateCheckService {
 
 	/**
-	 * Final states that should trigger conflict resolution
-	 */
-	const FINAL_STATES = [
-		'processing',
-		'completed',
-		'cancelled',
-		'refunded',
-	];
-
-	/**
-	 * Status priority for determining which status should take precedence
-	 * Higher number = higher priority
-	 */
-	const STATUS_PRIORITY = [
-		'pending' => 1,
-		'failed' => 2,
-		'cancelled' => 3,
-		'processing' => 4,
-		'completed' => 5,
-		'refunded' => 6,
-	];
-
-	/**
 	 * Status mapping from PowerBoard to WooCommerce
 	 */
 	const POWERBOARD_TO_WC_STATUS_MAP = [
@@ -108,27 +85,6 @@ class IPNDuplicateCheckService {
 
 			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
 
-			if ( !$this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
-				LoggerHelper::log_callback_event(
-					'IPN processing failed: Status transition not allowed',
-					[
-						'order_id' => $order_id,
-						'charge_id' => $charge_id,
-						'current_order_status' => $current_order_status,
-						'ipn_status' => $ipn_status,
-						'target_wc_status' => $target_wc_status,
-						'action' => 'skipped',
-					],
-					'info'
-				);
-
-				return [
-					'status' => 'ignored',
-					'message' => 'Status transition not allowed',
-					'http_code' => 200,
-				];
-			}
-
 			// Check for duplicate status
 			if ( $this->is_duplicate_status( $current_order_status, $target_wc_status ) ) {
 				LoggerHelper::log_callback_event(
@@ -150,14 +106,25 @@ class IPNDuplicateCheckService {
 				];
 			}
 
-			// Check if current order status is final
-			if (
-				$this->is_final_state( $current_order_status ) &&
-				$this->is_final_state( $target_wc_status ) &&
-				$current_order_status != $target_wc_status
-			) {
-				return $this->handle_final_state_conflict( $order, $charge_id, $current_order_status, $target_wc_status,
-					$ipn_status );
+			if ( !$this->is_status_transition_allowed( $current_order_status, $target_wc_status, $ipn_status ) ) {
+				LoggerHelper::log_callback_event(
+					'IPN processing failed: Status transition not allowed',
+					[
+						'order_id' => $order_id,
+						'charge_id' => $charge_id,
+						'current_order_status' => $current_order_status,
+						'ipn_status' => $ipn_status,
+						'target_wc_status' => $target_wc_status,
+						'action' => 'skipped',
+					],
+					'info'
+				);
+
+				return [
+					'status' => 'ignored',
+					'message' => 'Status transition not allowed',
+					'http_code' => 200,
+				];
 			}
 
 			LoggerHelper::log_callback_event(
@@ -277,7 +244,7 @@ class IPNDuplicateCheckService {
 		string $current_status,
 		string $target_status
 	): void {
-		$stored_charge_id = $order->get_meta( '_powerboard_charge_id' );
+		$stored_charge_id = $order->get_meta( '_power_board_charge_id' );
 		$success_status = [ 'processing', 'completed' ];
 
 		if (
