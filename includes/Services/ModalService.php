@@ -95,9 +95,11 @@ class ModalService {
 		if ( !empty( $_POST['order_id'] ) ) {
 			$order_id = sanitize_text_field( wp_unslash( $_POST['order_id'] ) );
 		} else {
-			wp_send_json_error( [
-				'message' => __( 'Something went wrong on order creation. Please try again.', 'power-board' )
-			] );
+			wp_send_json_error(
+				[
+					'message' => __( 'Something went wrong on order creation. Please try again.', 'power-board' ),
+				]
+			);
 			return;
 		}
 
@@ -240,8 +242,13 @@ class ModalService {
 			return;
 		}
 
-		PaymentProcessingHelper::process_payment_successful( $order, $charge_id,
-			PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $payment_type, $payment_data );
+		PaymentProcessingHelper::process_payment_successful(
+			$order,
+			$charge_id,
+			PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET,
+			$payment_type,
+			$payment_data
+		);
 
 		wp_send_json_success(
 			[
@@ -302,7 +309,11 @@ class ModalService {
 				],
 				'error'
 			);
-			wp_send_json_error( [ 'message' => 'Order not found' ] );
+			wp_send_json_error(
+				[
+					'message' => 'Order not found'
+				]
+			);
 			return;
 		}
 
@@ -482,7 +493,7 @@ class ModalService {
 					'apple'  => 'Apple Pay',
 					'paypal' => 'PayPal',
 				];
-				return $map[$wallet] ?? ucwords( $wallet );
+				return $map[ $wallet ] ?? ucwords( $wallet );
 			}
 
 			$scheme = (string) ( $payment_source['card_scheme'] ?? $payment_source['scheme'] ?? '' );

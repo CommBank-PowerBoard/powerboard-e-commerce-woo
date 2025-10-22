@@ -73,5 +73,4 @@ class ConstantsTest extends TestCase {
 			);
 		}
 	}
-
 }
