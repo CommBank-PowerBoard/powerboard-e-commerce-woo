@@ -29,15 +29,15 @@ class IPNDuplicateCheckService {
 	 * Status mapping from PowerBoard to WooCommerce
 	 */
 	const POWERBOARD_TO_WC_STATUS_MAP = [
-		'complete' => 'completed',
-		'completed' => 'completed',
-		'success' => 'processing',
-		'successful' => 'processing',
-		'processing' => 'processing',
-		'pending' => 'pending',
-		'failed' => 'failed',
-		'cancelled' => 'cancelled',
-		'refunded' => 'refunded',
+		'complete'     => 'completed',
+		'completed'    => 'completed',
+		'success'      => 'processing',
+		'successful'   => 'processing',
+		'processing'   => 'processing',
+		'pending'      => 'pending',
+		'failed'       => 'failed',
+		'cancelled'    => 'cancelled',
+		'refunded'     => 'refunded',
 		'charged_back' => 'refunded',
 	];
 
@@ -66,16 +66,16 @@ class IPNDuplicateCheckService {
 				LoggerHelper::log_callback_event(
 					'IPN processing failed: Order not found',
 					[
-						'order_id' => $order_id,
-						'charge_id' => $charge_id,
+						'order_id'   => $order_id,
+						'charge_id'  => $charge_id,
 						'ipn_status' => $ipn_status,
 					],
 					'error'
 				);
 
 				return [
-					'status' => 'error',
-					'message' => 'Order not found',
+					'status'    => 'error',
+					'message'   => 'Order not found',
 					'http_code' => 404,
 				];
 			}
@@ -90,18 +90,18 @@ class IPNDuplicateCheckService {
 				LoggerHelper::log_callback_event(
 					'IPN duplicate detected - no action taken',
 					[
-						'order_id' => $order_id,
-						'charge_id' => $charge_id,
+						'order_id'       => $order_id,
+						'charge_id'      => $charge_id,
 						'current_status' => $current_order_status,
-						'ipn_status' => $ipn_status,
-						'action' => 'skipped',
+						'ipn_status'     => $ipn_status,
+						'action'         => 'skipped',
 					],
 					'info'
 				);
 
 				return [
-					'status' => 'duplicate',
-					'message' => 'Duplicated',
+					'status'    => 'duplicate',
+					'message'   => 'Duplicated',
 					'http_code' => 200,
 				];
 			}
@@ -110,19 +110,19 @@ class IPNDuplicateCheckService {
 				LoggerHelper::log_callback_event(
 					'IPN processing failed: Status transition not allowed',
 					[
-						'order_id' => $order_id,
-						'charge_id' => $charge_id,
+						'order_id'             => $order_id,
+						'charge_id'            => $charge_id,
 						'current_order_status' => $current_order_status,
-						'ipn_status' => $ipn_status,
-						'target_wc_status' => $target_wc_status,
-						'action' => 'skipped',
+						'ipn_status'           => $ipn_status,
+						'target_wc_status'     => $target_wc_status,
+						'action'               => 'skipped',
 					],
 					'info'
 				);
 
 				return [
-					'status' => 'ignored',
-					'message' => 'Not Allowed',
+					'status'    => 'ignored',
+					'message'   => 'Not Allowed',
 					'http_code' => 200,
 				];
 			}
@@ -130,11 +130,11 @@ class IPNDuplicateCheckService {
 			LoggerHelper::log_callback_event(
 				'IPN received',
 				[
-					'order_id' => $order_id,
-					'charge_id' => $charge_id,
+					'order_id'             => $order_id,
+					'charge_id'            => $charge_id,
 					'current_order_status' => $current_order_status,
-					'ipn_status' => $ipn_status,
-					'target_wc_status' => $target_wc_status,
+					'ipn_status'           => $ipn_status,
+					'target_wc_status'     => $target_wc_status,
 				],
 				'info'
 			);
@@ -148,16 +148,16 @@ class IPNDuplicateCheckService {
 			LoggerHelper::log_callback_event(
 				'IPN processing exception',
 				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
+					'error'    => $e->getMessage(),
+					'trace'    => $e->getTraceAsString(),
 					'ipn_data' => $ipn_data ?? [],
 				],
 				'error'
 			);
 
 			return [
-				'status' => 'error',
-				'message' => 'Internal processing error',
+				'status'    => 'error',
+				'message'   => 'Internal processing error',
 				'http_code' => 500,
 			];
 		}
@@ -171,16 +171,16 @@ class IPNDuplicateCheckService {
 	 */
 	private function map_event_to_status( ?string $event ): string {
 		$event_to_status_map = [
-			'payment_succeeded' => 'success',
-			'payment_captured' => 'success',
+			'payment_succeeded'  => 'success',
+			'payment_captured'   => 'success',
 			'checkout_completed' => 'success',
-			'payment_failed' => 'failed',
-			'checkout_failed' => 'failed',
-			'payment_voided' => 'cancelled',
+			'payment_failed'     => 'failed',
+			'checkout_failed'    => 'failed',
+			'payment_voided'     => 'cancelled',
 			'checkout_cancelled' => 'cancelled',
-			'checkout_expired' => 'cancelled',
-			'payment_created' => 'pending',
-			'checkout_created' => 'pending',
+			'checkout_expired'   => 'cancelled',
+			'payment_created'    => 'pending',
+			'checkout_created'   => 'pending',
 		];
 
 		return $event_to_status_map[ $event ] ?? 'pending';
@@ -257,12 +257,12 @@ class IPNDuplicateCheckService {
 			LoggerHelper::log_callback_event(
 				'WARNING : Possible double payment detected',
 				[
-					'order_id' => $order->get_id(),
+					'order_id'         => $order->get_id(),
 					'stored_charge_id' => $stored_charge_id,
-					'new_charge_id' => $new_charge_id,
-					'current_status' => $current_status,
-					'target_status' => $target_status,
-					'message' => 'Order has a success status and a new success status, this is a possible double payment',
+					'new_charge_id'    => $new_charge_id,
+					'current_status'   => $current_status,
+					'target_status'    => $target_status,
+					'message'          => 'Order has a success status and a new success status, this is a possible double payment',
 				],
 				'warning'
 			);
