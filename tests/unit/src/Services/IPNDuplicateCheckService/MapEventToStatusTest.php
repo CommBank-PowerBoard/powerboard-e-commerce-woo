@@ -1,10 +1,10 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services\IPNDuplicateCheckService;
+namespace unit\src\Services\IPNDuplicateCheckService;
 
-use unit\Services\BaseServiceTest;
 use PowerBoard\Services\IPNDuplicateCheckService;
+use unit\src\Services\BaseServiceTest;
 
 /**
  * Tests for IPNResponseService::map_event_to_status() method

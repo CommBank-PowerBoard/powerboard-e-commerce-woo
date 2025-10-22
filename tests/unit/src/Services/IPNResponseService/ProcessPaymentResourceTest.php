@@ -8,7 +8,7 @@ use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\PaymentProcessingHelper;
 use PowerBoard\Model\Charge;
 use PowerBoard\Model\IPN;
-use unit\Services\BaseServiceTest;
+use unit\src\Services\BaseServiceTest;
 use PowerBoard\Services\IPNResponseService;
 use WC_Order;
 use function Brain\Monkey\Functions\expect;

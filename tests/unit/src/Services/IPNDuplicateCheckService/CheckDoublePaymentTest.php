@@ -1,12 +1,12 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services\IPNDuplicateCheckService;
+namespace unit\src\Services\IPNDuplicateCheckService;
 
 use Mockery;
 use PowerBoard\Helpers\Util\LoggerHelper;
-use unit\Services\BaseServiceTest;
 use PowerBoard\Services\IPNDuplicateCheckService;
+use unit\src\Services\BaseServiceTest;
 use WC_Order;
 
 class CheckDoublePaymentTest extends BaseServiceTest {

@@ -1,7 +1,7 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services\IPNDuplicateCheckService;
+namespace unit\src\Services\IPNDuplicateCheckService;
 
 use PHPUnit\Framework\TestCase;
 use PowerBoard\Services\IPNDuplicateCheckService;

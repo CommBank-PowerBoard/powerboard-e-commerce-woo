@@ -1,13 +1,15 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services\IPNDuplicateCheckService;
+namespace unit\src\Services\IPNDuplicateCheckService;
 
+use Brain\Monkey;
+use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
 use PowerBoard\Services\IPNDuplicateCheckService;
 use ReflectionClass;
-use Brain\Monkey;
-use Brain\Monkey\Functions;
+use function Brain\Monkey;
+use function Brain\Monkey\Functions;
 
 /**
  * Tests for IPNDuplicateCheckService::map_powerboard_status_to_wc() method

@@ -4,7 +4,7 @@ declare( strict_types=1 );
 namespace unit\Services\IPNResponseService;
 
 use Mockery;
-use unit\Services\BaseServiceTest;
+use unit\src\Services\BaseServiceTest;
 use PowerBoard\Services\IPNResponseService;
 use PowerBoard\Services\IPNDuplicateCheckService;
 use PowerBoard\Helpers\Util\PaymentGatewayHelper;

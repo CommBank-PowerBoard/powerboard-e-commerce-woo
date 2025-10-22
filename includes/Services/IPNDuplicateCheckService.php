@@ -101,7 +101,7 @@ class IPNDuplicateCheckService {
 
 				return [
 					'status' => 'duplicate',
-					'message' => 'Duplicate IPN - status unchanged',
+					'message' => 'Duplicated',
 					'http_code' => 200,
 				];
 			}
@@ -122,7 +122,7 @@ class IPNDuplicateCheckService {
 
 				return [
 					'status' => 'ignored',
-					'message' => 'Status transition not allowed',
+					'message' => 'Not Allowed',
 					'http_code' => 200,
 				];
 			}

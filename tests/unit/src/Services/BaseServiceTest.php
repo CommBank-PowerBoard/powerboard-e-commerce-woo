@@ -1,7 +1,7 @@
 <?php
 declare( strict_types=1 );
 
-namespace unit\Services;
+namespace unit\src\Services;
 
 use PHPUnit\Framework\TestCase;
 use Brain\Monkey;
