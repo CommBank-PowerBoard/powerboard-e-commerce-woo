@@ -44,12 +44,12 @@ class ModalService {
 		// Validate nonce for security
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
 		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-create-charge-intent' );
-		if ( ! $valid_nonce ) {
+		if ( !$valid_nonce ) {
 			return;
 		}
 
 		// Check user authorization - either authenticated user or guest checkout allowed
-		if ( ! is_user_logged_in() && get_option( 'woocommerce_enable_guest_checkout', 'yes' ) === 'no' ) {
+		if ( !is_user_logged_in() && get_option( 'woocommerce_enable_guest_checkout', 'yes' ) === 'no' ) {
 			wp_send_json_error( [ 'message' => 'You must be logged in to checkout' ] );
 			return;
 		}
@@ -74,7 +74,7 @@ class ModalService {
 		}
 
 		$billing_address = [];
-		if ( ! empty( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
+		if ( !empty( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
 			$billing_address = array_map( 'sanitize_text_field', wp_unslash( $_POST['address'] ) );
 		}
 
@@ -82,7 +82,7 @@ class ModalService {
 
 		if ( empty( $billing_country ) ) {
 			$countries = WC()->countries;
-			if ( ! empty( $countries ) ) {
+			if ( !empty( $countries ) ) {
 				$allowed_countries = $countries->get_allowed_countries();
 
 				if ( count( $allowed_countries ) === 1 ) {
@@ -92,24 +92,26 @@ class ModalService {
 			}
 		}
 
-		if ( ! empty( $_POST['order_id'] ) ) {
+		if ( !empty( $_POST['order_id'] ) ) {
 			$order_id = sanitize_text_field( wp_unslash( $_POST['order_id'] ) );
 		} else {
-			wp_send_json_error( [ 'message' => __( 'Something went wrong on order creation. Please try again.', 'power-board' ) ] );
+			wp_send_json_error( [
+				'message' => __( 'Something went wrong on order creation. Please try again.', 'power-board' )
+			] );
 			return;
 		}
 
-		if ( ! $this->is_complete_address( $billing_address ) ) {
+		if ( !$this->is_complete_address( $billing_address ) ) {
 			wp_send_json_error( [ 'message' => __( 'Incomplete billing address', 'power-board' ) ] );
 			return;
 		}
 
 		$intent_request_params = [
-			'amount'           => round( $request['total']['total_price'] / 100, 2 ),
-			'version'          => (int) DBSettingsHelper::get_version(),
-			'currency'         => $request['total']['currency_code'],
-			'reference'        => $order_id,
-			'customer'         => [
+			'amount'        => round( $request['total']['total_price'] / 100, 2 ),
+			'version'       => (int) DBSettingsHelper::get_version(),
+			'currency'      => $request['total']['currency_code'],
+			'reference'     => $order_id,
+			'customer'      => [
 				'email'           => $billing_address['email'],
 				'billing_address' => [
 					'first_name'       => $billing_address['first_name'],
@@ -121,29 +123,29 @@ class ModalService {
 					'address_postcode' => $billing_address['postcode'],
 				],
 			],
-			'configuration'    => [
+			'configuration' => [
 				'template_id' => DBSettingsHelper::get_configuration_id(),
 			],
-			'webhook_url' => esc_url_raw( WC()->api_request_url( 'powerboard_ipn' ) ),
+			'webhook_url'   => esc_url_raw( WC()->api_request_url( 'powerboard_ipn' ) ),
 		];
 
 		$customisation_id = DBSettingsHelper::get_customisation_id();
-		if ( ! empty( $customisation_id ) ) {
+		if ( !empty( $customisation_id ) ) {
 			$intent_request_params['customisation']['template_id'] = $customisation_id;
 		}
 
-		if ( ! empty( $billing_address['phone'] ) && MasterWidgetHelper::validate_phone_number( $billing_address['phone'] ) ) {
+		if ( !empty( $billing_address['phone'] ) && MasterWidgetHelper::validate_phone_number( $billing_address['phone'] ) ) {
 			$intent_request_params['customer']['phone'] = preg_replace( '/\s+/', '', $billing_address['phone'] );
 		}
 
-		if ( ! empty( $billing_address['address_2'] ) ) {
+		if ( !empty( $billing_address['address_2'] ) ) {
 			$intent_request_params['customer']['billing_address']['address_line2'] = $billing_address['address_2'];
 		}
 
 		$api_adapter_service = SDKAdapterService::get_instance();
 		$result              = $api_adapter_service->create_checkout_intent( $intent_request_params );
 
-		if ( ! empty( $result['error'] ) ) {
+		if ( !empty( $result['error'] ) ) {
 			wp_send_json_error( [ 'message' => __( 'Something went wrong. Please try again.', 'power-board' ) ] );
 			return;
 		}
@@ -161,15 +163,15 @@ class ModalService {
 	}
 
 	protected function is_complete_address( $address ): bool {
-		return ! empty( $address )
-				&& ! empty( $address['email'] )
-				&& ! empty( $address['first_name'] )
-				&& ! empty( $address['last_name'] )
-				&& ! empty( $address['address_1'] )
-				&& ! empty( $address['city'] )
-				&& ! empty( $address['state'] )
-				&& ! empty( $address['country'] )
-				&& ! empty( $address['postcode'] );
+		return !empty( $address )
+			&& !empty( $address['email'] )
+			&& !empty( $address['first_name'] )
+			&& !empty( $address['last_name'] )
+			&& !empty( $address['address_1'] )
+			&& !empty( $address['city'] )
+			&& !empty( $address['state'] )
+			&& !empty( $address['country'] )
+			&& !empty( $address['postcode'] );
 	}
 
 	/**
@@ -180,7 +182,7 @@ class ModalService {
 		// Validate nonce for security
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
 		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-widget-event' );
-		if ( ! $valid_nonce ) {
+		if ( !$valid_nonce ) {
 			return;
 		}
 
@@ -190,7 +192,7 @@ class ModalService {
 		if ( $order_id ) {
 			$order = wc_get_order( $order_id );
 
-			if ( ! $this->can_user_modify_order( $order ) ) {
+			if ( !$this->can_user_modify_order( $order ) ) {
 				LoggerHelper::log_callback_event(
 					'Error: Payment succeeded and user does not have permissions to modify this order',
 					[
@@ -208,7 +210,7 @@ class ModalService {
 		$charge_id    = isset( $payment_data['charge_id'] ) ? sanitize_text_field( wp_unslash( $payment_data['charge_id'] ) ) : '';
 		$payment_type = $this->get_payment_display_label_from_charge( $charge_id );
 
-		if ( ! $order_id ) {
+		if ( !$order_id ) {
 			LoggerHelper::log_callback_event(
 				'Error: Payment succeeded but order ID is missing',
 				[
@@ -223,7 +225,7 @@ class ModalService {
 			return;
 		}
 
-		if ( ! $order ) {
+		if ( !$order ) {
 			LoggerHelper::log_callback_event(
 				'Error: Payment succeeded but order was not found',
 				[
@@ -238,7 +240,8 @@ class ModalService {
 			return;
 		}
 
-		PaymentProcessingHelper::process_payment_successful( $order, $charge_id, PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $payment_type, $payment_data );
+		PaymentProcessingHelper::process_payment_successful( $order, $charge_id,
+			PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $payment_type, $payment_data );
 
 		wp_send_json_success(
 			[
@@ -260,7 +263,7 @@ class ModalService {
 		// Validate nonce for security
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
 		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-widget-event' );
-		if ( ! $valid_nonce ) {
+		if ( !$valid_nonce ) {
 			return;
 		}
 
@@ -272,7 +275,7 @@ class ModalService {
 		if ( $order_id ) {
 			$order = wc_get_order( $order_id );
 
-			if ( ! $this->can_user_modify_order( $order ) ) {
+			if ( !$this->can_user_modify_order( $order ) ) {
 				LoggerHelper::log_callback_event(
 					'Error: Payment failed and user does not have permissions to modify this order',
 					[
@@ -288,9 +291,9 @@ class ModalService {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized with wc_clean() and wp_unslash()
 		$payment_data = isset( $_REQUEST['payment_data'] ) ? wc_clean( wp_unslash( $_REQUEST['payment_data'] ) ) : [];
 
-		$charge_id = ! empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
+		$charge_id = !empty( $payment_data['charge_id'] ) ? sanitize_text_field( $payment_data['charge_id'] ) : '';
 
-		if ( ! $order ) {
+		if ( !$order ) {
 			LoggerHelper::log_callback_event(
 				'Error: Payment failed but order was not found',
 				[
@@ -304,8 +307,9 @@ class ModalService {
 		}
 
 		$error_message = $payment_data['message'];
-		if ( ! empty( $error_message ) ) {
-			PaymentProcessingHelper::process_payment_failed( $order, $charge_id, PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $error_message );
+		if ( !empty( $error_message ) ) {
+			PaymentProcessingHelper::process_payment_failed( $order, $charge_id,
+				PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $error_message );
 
 			wp_send_json_success(
 				[
@@ -327,7 +331,7 @@ class ModalService {
 		// Validate nonce for security
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
 		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-widget-event' );
-		if ( ! $valid_nonce ) {
+		if ( !$valid_nonce ) {
 			return;
 		}
 
@@ -337,7 +341,7 @@ class ModalService {
 		if ( $order_id ) {
 			$order = wc_get_order( $order_id );
 
-			if ( ! $this->can_user_modify_order( $order ) ) {
+			if ( !$this->can_user_modify_order( $order ) ) {
 				LoggerHelper::log_callback_event(
 					'Error: Payment failed and user does not have permissions to modify this order',
 					[
@@ -352,10 +356,10 @@ class ModalService {
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized with wc_clean() and wp_unslash()
 		$payment_data = isset( $_REQUEST['payment_data'] ) ? wc_clean( wp_unslash( $_REQUEST['payment_data'] ) ) : [];
-        // phpcs:enable
+		// phpcs:enable
 
 		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( !$order ) {
 			LoggerHelper::log_callback_event(
 				'Error: Payment expired but order was not found',
 				[
@@ -395,7 +399,7 @@ class ModalService {
 		// Validate nonce for security
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Nonce verification is performed by NonceHelper which handles sanitization and validation
 		$valid_nonce = NonceHelper::is_valid_nonce( $_REQUEST['_wpnonce'] ?? '', 'power-board-widget-event' );
-		if ( ! $valid_nonce ) {
+		if ( !$valid_nonce ) {
 			return;
 		}
 
@@ -405,10 +409,10 @@ class ModalService {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized with wc_clean() and wp_unslash()
 		$is_user_initiated = isset( $_REQUEST['user_cancelled'] ) ? wc_clean( wp_unslash( $_REQUEST['user_cancelled'] ) ) : [];
 		$error_message     = isset( $_REQUEST['error_message'] ) ? wc_clean( wp_unslash( $_REQUEST['error_message'] ) ) : [];
-        // phpcs:enable
+		// phpcs:enable
 
 		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
+		if ( !$order ) {
 			LoggerHelper::log_callback_event(
 				'Error: Payment cancelled but order was not found',
 				[
@@ -467,7 +471,7 @@ class ModalService {
 			$data           = $res['resource']['data'] ?? ( $res['data'] ?? [] );
 			$payment_source = $data['customer']['payment_source'] ?? ( $data['payment_source'] ?? [] );
 
-			if ( ! is_array( $payment_source ) ) {
+			if ( !is_array( $payment_source ) ) {
 				$payment_source = [];
 			}
 
@@ -478,7 +482,7 @@ class ModalService {
 					'apple'  => 'Apple Pay',
 					'paypal' => 'PayPal',
 				];
-				return $map[ $wallet ] ?? ucwords( $wallet );
+				return $map[$wallet] ?? ucwords( $wallet );
 			}
 
 			$scheme = (string) ( $payment_source['card_scheme'] ?? $payment_source['scheme'] ?? '' );
@@ -486,15 +490,15 @@ class ModalService {
 				return strtoupper( $scheme );
 			}
 
-			if ( ! empty( $payment_source['gateway_type'] ) ) {
+			if ( !empty( $payment_source['gateway_type'] ) ) {
 				return (string) $payment_source['gateway_type'];
 			}
 
-			if ( ! empty( $payment_source['gateway_name'] ) ) {
+			if ( !empty( $payment_source['gateway_name'] ) ) {
 				return (string) $payment_source['gateway_name'];
 			}
 
-			if ( ! empty( $payment_source['type'] ) ) {
+			if ( !empty( $payment_source['type'] ) ) {
 				return ucwords( (string) $payment_source['type'] );
 			}
 		} catch ( \Throwable $e ) {
@@ -520,7 +524,7 @@ class ModalService {
 	 * @return bool True if user can modify order, false otherwise
 	 */
 	private function can_user_modify_order( $order ): bool {
-		if ( ! $order ) {
+		if ( !$order ) {
 			return false;
 		}
 
@@ -541,7 +545,7 @@ class ModalService {
 		}
 
 		// Is user a guest and order should then not have a user id attached
-		if ( ! is_user_logged_in() && ! $order->get_user_id() ) {
+		if ( !is_user_logged_in() && !$order->get_user_id() ) {
 			return true;
 		}
 
