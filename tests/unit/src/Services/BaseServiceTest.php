@@ -101,17 +101,4 @@ class BaseServiceTest extends TestCase {
 	public function StandardTest(): void {
 		$this->assertEquals( 1, 1 );
 	}
-
-    /**
-     * Test that invalid nonces are rejected
-     *
-     * @test
-     */
-    public function StandardTest(): void
-    {
-        $this->assertEquals( 1, 1 );
-
-    }
-
-
 }
