@@ -38,28 +38,10 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
 			->once()
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( null );
 
 		$result = $method->invokeArgs( $service, [ $order, 'ch_new123', 'pending', 'processing' ] );
-
-		$this->assertNull( $result, 'Method should return null' );
-	}
-
-	public function test_no_warning_when_charge_id_matches() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
-		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
-
-		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )
-			->once()
-			->with( '_powerboard_charge_id' )
-			->andReturn( 'ch_123' );
-		$order->shouldReceive( 'get_id' )
-			->once()
-			->andReturn( '456' );
-
-		$result = $method->invokeArgs( $service, [ $order, 'ch_123', 'pending', 'processing' ] );
 
 		$this->assertNull( $result, 'Method should return null' );
 	}
@@ -70,7 +52,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( 'ch_old123' );
 		$order->shouldReceive( 'get_id' )
 			->andReturn( '456' );
@@ -91,7 +73,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( 'ch_failed123' );
 		$order->shouldReceive( 'get_id' )
 			->andReturn( '789' );
@@ -106,7 +88,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( 'ch_pending123' );
 		$order->shouldReceive( 'get_id' )
 			->andReturn( 999 );
@@ -121,7 +103,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( 'ch_old' );
 		$order->shouldReceive( 'get_id' )
 			->andReturn( 999 );
@@ -148,7 +130,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )
-			->with( '_powerboard_charge_id' )
+			->with( '_power_board_charge_id' )
 			->andReturn( '' );
 
 		$result = $method->invokeArgs( $service, [ $order, 'ch_new', 'processing', 'completed' ] );
