@@ -311,7 +311,7 @@ class ModalService {
 			);
 			wp_send_json_error(
 				[
-					'message' => 'Order not found'
+					'message' => 'Order not found',
 				]
 			);
 			return;
@@ -319,8 +319,12 @@ class ModalService {
 
 		$error_message = $payment_data['message'];
 		if ( !empty( $error_message ) ) {
-			PaymentProcessingHelper::process_payment_failed( $order, $charge_id,
-				PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET, $error_message );
+			PaymentProcessingHelper::process_payment_failed(
+				$order,
+				$charge_id,
+				PaymentProcessingHelper::SOURCE_CHECKOUT_WIDGET,
+				$error_message
+			);
 
 			wp_send_json_success(
 				[
