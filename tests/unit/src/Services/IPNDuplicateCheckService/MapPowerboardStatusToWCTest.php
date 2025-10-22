@@ -194,9 +194,9 @@ class MapPowerboardStatusToWCTest extends TestCase {
 
 		// Test all statuses from the constant
 
-		$statusMap = $this->getClassConstant( IPNDuplicateCheckService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
+		$status_map = $this->getClassConstant( IPNDuplicateCheckService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
 
-		foreach ( $statusMap as $powerboard_status => $expected_wc_status ) {
+		foreach ( $status_map as $powerboard_status => $expected_wc_status ) {
 			$result = $method->invokeArgs( $service, [ $powerboard_status ] );
 			$this->assertEquals(
 				$expected_wc_status,
