@@ -56,8 +56,8 @@ class IPNDuplicateCheckService {
 	public function process_ipn_notification( IPN $ipn ): array {
 		try {
 			// Extract essential data from IPN
-			$charge_id = $ipn->get_charge()->get_charge_id();
-			$order_id = $ipn->get_order_id();
+			$charge_id  = $ipn->get_charge()->get_charge_id();
+			$order_id   = $ipn->get_order_id();
 			$ipn_status = $this->map_event_to_status( $ipn->get_event() );
 
 			// Get WooCommerce order
@@ -81,7 +81,7 @@ class IPNDuplicateCheckService {
 			}
 
 			$current_order_status = $order->get_status();
-			$target_wc_status = $this->map_powerboard_status_to_wc( $ipn_status );
+			$target_wc_status     = $this->map_powerboard_status_to_wc( $ipn_status );
 
 			$this->check_double_payment( $order, $charge_id, $current_order_status, $target_wc_status );
 
@@ -245,13 +245,13 @@ class IPNDuplicateCheckService {
 		string $target_status
 	): void {
 		$stored_charge_id = $order->get_meta( '_power_board_charge_id' );
-		$success_status = [ 'processing', 'completed' ];
+		$success_status   = [ 'processing', 'completed' ];
 
 		if (
 			!empty( $stored_charge_id ) &&
 			in_array( $current_status, $success_status, true ) &&
 			in_array( $target_status, $success_status, true ) &&
-			$stored_charge_id != $new_charge_id
+			$stored_charge_id !== $new_charge_id
 		) {
 
 			LoggerHelper::log_callback_event(
@@ -528,5 +528,4 @@ class IPNDuplicateCheckService {
 		$status = strtolower( trim( $powerboard_status ) );
 		return self::POWERBOARD_TO_WC_STATUS_MAP[ $status ] ?? 'pending';
 	}
-
 }
