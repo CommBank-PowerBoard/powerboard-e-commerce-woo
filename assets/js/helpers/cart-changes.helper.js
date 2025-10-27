@@ -15,19 +15,23 @@ class CartChangesHelper {
 		this.cartHash                = null;
 		this.debounceTimer           = null;
 		this.isActive                = false;
-		this.paymentMethodId         = window.powerBoardCartSyncSettings?.paymentMethodId || 'power_board';
-		this.isCheckoutFromSettings  = window.powerBoardCartSyncSettings?.isCheckout || false;
-		this.isCartFromSettings      = window.powerBoardCartSyncSettings?.isCart || false;
-		this.hasMiniCartFromSettings = window.powerBoardCartSyncSettings?.hasMiniCart || false;
+		this.paymentMethodId         = window.powerBoardCartSyncSettings?.paymentMethodId
+			|| 'power_board';
+		this.isCheckoutFromSettings  = window.powerBoardCartSyncSettings?.isCheckout
+			|| false;
+		this.isCartFromSettings      = window.powerBoardCartSyncSettings?.isCart
+			|| false;
+		this.hasMiniCartFromSettings = window.powerBoardCartSyncSettings?.hasMiniCart
+			|| false;
 
 		// Use server-side detection if available, otherwise fall back to client-side detection
-		if (this.hasMiniCartFromSettings && !this.hasMiniCart) {
+		if ( this.hasMiniCartFromSettings && !this.hasMiniCart ) {
 			this.hasMiniCart = true;
 		}
 
-		if (this.isCheckoutPage) {
+		if ( this.isCheckoutPage ) {
 			this.init();
-		} else if (this.isCartPage) {
+		} else if ( this.isCartPage ) {
 			this.initCartPage();
 		} else {
 			this.checkPowerBoardUsage();
@@ -43,7 +47,11 @@ class CartChangesHelper {
 		const hasCartInUrl  = window.location.href.includes( '/cart' );
 		const isCartAjax    = window.location.href.includes( 'wc-ajax=cart' );
 
-		return isClassicCart || isBlockCart || hasCartInUrl || isCartAjax || this.isCartFromSettings;
+		return isClassicCart ||
+			isBlockCart ||
+			hasCartInUrl ||
+			isCartAjax ||
+			this.isCartFromSettings;
 	}
 
 	/**
@@ -71,12 +79,12 @@ class CartChangesHelper {
 		miniCartSelectors.forEach(
 			selector => {
 				const element = document.querySelector( selector );
-				if (element) {
+				if ( element ) {
 					hasMiniCart = true;
 					foundSelectors.push( selector );
 				}
-		}
-			);
+			}
+		);
 
 		return hasMiniCart;
 	}
@@ -96,10 +104,16 @@ class CartChangesHelper {
 	 */
 	checkPowerBoardUsage() {
 		// Look for signs that PowerBoard is being used on the site
-		const hasPaymentMethodCookie = document.cookie.includes( 'wc_selected_payment_method=power_board' );
-		const hasPowerBoardElements  = document.querySelector( '[data-payment-method="power_board"], #payment_method_power_board' ) !== null;
+		const hasPaymentMethodCookie = document.cookie.includes(
+			'wc_selected_payment_method=power_board'
+		);
+		const powerBoardSelectors =
+			'[data-payment-method="power_board"], #payment_method_power_board';
+		const hasPowerBoardElements = document.querySelector(
+			powerBoardSelectors
+		) !== null;
 
-		if (hasPaymentMethodCookie || hasPowerBoardElements || this.hasMiniCart) {
+		if ( hasPaymentMethodCookie || hasPowerBoardElements || this.hasMiniCart ) {
 			this.isActive = true;
 			this.setupEventBasedCartChangeDetection();
 		}
@@ -114,7 +128,8 @@ class CartChangesHelper {
 		const hasCheckoutInUrl  = window.location.href.includes( '/checkout' );
 		const isCheckoutAjax    = window.location.href.includes( 'wc-ajax=checkout' );
 
-		return isClassicCheckout || isBlockCheckout || hasCheckoutInUrl || isCheckoutAjax || this.isCheckoutFromSettings;
+		return isClassicCheckout || isBlockCheckout || hasCheckoutInUrl ||
+			isCheckoutAjax || this.isCheckoutFromSettings;
 	}
 
 	/**
@@ -131,20 +146,20 @@ class CartChangesHelper {
 	 */
 	checkInitialPaymentMethod() {
 		// Check multiple times with increasing delays to handle DOM loading
-		const checkTimes = [100, 500, 1000, 2000];
+		const checkTimes = [ 100, 500, 1000, 2000 ];
 
 		checkTimes.forEach(
-			(delay, index) => {
+			( delay, index ) => {
 				setTimeout(
-				() => {
-					if (this.isPowerBoardSelected()) {
-						this.activateCartSync();
-					}
-				},
-				delay
+					() => {
+						if ( this.isPowerBoardSelected() ) {
+							this.activateCartSync();
+						}
+					},
+					delay
 				);
-		}
-			);
+			}
+		);
 	}
 
 	/**
@@ -154,59 +169,62 @@ class CartChangesHelper {
 		// Monitor for classic checkout payment method changes
 		document.addEventListener(
 			'change',
-			(event) => {
-				if (event.target.name === 'payment_method') {
+			( event ) => {
+				if ( event.target.name === 'payment_method' ) {
 					this.handlePaymentMethodChange( event.target.value );
 				}
-		}
-			);
+			}
+		);
 
 		// Monitor for block checkout payment method changes with more specific selector
 		document.addEventListener(
 			'change',
-			(event) => {
+			( event ) => {
 				const target = event.target;
 				// Check for payment method radio changes (not shipping)
-				if (target.type === 'radio' &&
+				if ( target.type === 'radio' &&
 				target.name &&
 				target.name.includes( 'payment-method' ) &&
-				target.checked) {
-				this.handlePaymentMethodChange( target.value );
+				target.checked ) {
+					this.handlePaymentMethodChange( target.value );
 				}
-		}
-			);
+			}
+		);
 
 		// Additional monitoring using MutationObserver for block checkout
-		if (window.MutationObserver) {
+		if ( window.MutationObserver ) {
 			const paymentObserver = new MutationObserver(
-				(mutations) => {
+				( mutations ) => {
 					mutations.forEach(
-					(mutation) => {
-						if (mutation.type === 'attributes' && mutation.attributeName === 'checked') {
-							const target = mutation.target;
-							if (target.type === 'radio' &&
+						( mutation ) => {
+							if ( mutation.type === 'attributes' &&
+								mutation.attributeName === 'checked' ) {
+								const target = mutation.target;
+								if ( target.type === 'radio' &&
 							target.name &&
 							target.name.includes( 'payment-method' ) &&
-							target.checked) {
-								this.handlePaymentMethodChange( target.value );
+							target.checked ) {
+									this.handlePaymentMethodChange( target.value );
+								}
 							}
 						}
-					}
 					);
-			}
-				);
+				}
+			);
 
 			// Observe payment method container
-			const paymentContainer = document.querySelector( '.wc-block-checkout__payment-method, .wc-block-components-radio-control' );
-			if (paymentContainer) {
+			const paymentContainer = document.querySelector(
+				'.wc-block-checkout__payment-method, .wc-block-components-radio-control'
+			);
+			if ( paymentContainer ) {
 				paymentObserver.observe(
 					paymentContainer,
 					{
 						attributes: true,
 						subtree: true,
-						attributeFilter: ['checked']
-				}
-					);
+						attributeFilter: [ 'checked' ]
+					}
+				);
 			}
 		}
 	}
@@ -214,12 +232,12 @@ class CartChangesHelper {
 	/**
 	 * Handle payment method change
 	 */
-	handlePaymentMethodChange(selectedMethod) {
+	handlePaymentMethodChange( selectedMethod ) {
 		const isPowerBoard = selectedMethod === this.paymentMethodId;
 
-		if (isPowerBoard && !this.isActive) {
+		if ( isPowerBoard && !this.isActive ) {
 			this.activateCartSync();
-		} else if (!isPowerBoard && this.isActive) {
+		} else if ( !isPowerBoard && this.isActive ) {
 			this.deactivateCartSync();
 		}
 	}
@@ -229,9 +247,11 @@ class CartChangesHelper {
 	 */
 	isPowerBoardSelected() {
 		// Check classic checkout
-		const classicPaymentMethod = document.querySelector( 'input[name="payment_method"]:checked' );
-		if (classicPaymentMethod) {
-			if (classicPaymentMethod.value === this.paymentMethodId) {
+		const classicPaymentMethod = document.querySelector(
+			'input[name="payment_method"]:checked'
+		);
+		if ( classicPaymentMethod ) {
+			if ( classicPaymentMethod.value === this.paymentMethodId ) {
 				return true;
 			}
 		}
@@ -244,10 +264,10 @@ class CartChangesHelper {
 			'.wc-block-components-radio-control-accordion-option input:checked'
 		];
 
-		for (const selector of blockSelectors) {
+		for ( const selector of blockSelectors ) {
 			const blockPaymentMethod = document.querySelector( selector );
-			if (blockPaymentMethod) {
-				if (blockPaymentMethod.value === this.paymentMethodId) {
+			if ( blockPaymentMethod ) {
+				if ( blockPaymentMethod.value === this.paymentMethodId ) {
 					return true;
 				}
 			}
@@ -259,12 +279,13 @@ class CartChangesHelper {
 			`#payment_method_${this.paymentMethodId}:checked`,
 			`input[value          ="${this.paymentMethodId}"]:checked`,
 			`.payment_method_${this.paymentMethodId}`,
-			`[name                ="radio-control-wc-payment-method-options"][value="${this.paymentMethodId}"]:checked`
+			`[name                ="radio-control-wc-payment-method-options"]` +
+			`[value               ="${this.paymentMethodId}"]:checked`
 		];
 
-		for (const selector of powerBoardSelectors) {
+		for ( const selector of powerBoardSelectors ) {
 			const powerBoardElement = document.querySelector( selector );
-			if (powerBoardElement) {
+			if ( powerBoardElement ) {
 				return true;
 			}
 		}
@@ -276,7 +297,7 @@ class CartChangesHelper {
 	 * Activate cart synchronization
 	 */
 	activateCartSync() {
-		if (this.isActive) {
+		if ( this.isActive ) {
 			return;
 		}
 
@@ -290,19 +311,19 @@ class CartChangesHelper {
 	 * Deactivate cart synchronization
 	 */
 	deactivateCartSync() {
-		if (!this.isActive) {
+		if ( !this.isActive ) {
 			return;
 		}
 
 		this.isActive = false;
 
 		// Clear any existing timers
-		if (this.debounceTimer) {
+		if ( this.debounceTimer ) {
 			clearTimeout( this.debounceTimer );
 		}
 
 		// Disconnect mutation observer if it exists
-		if (this.cartMutationObserver) {
+		if ( this.cartMutationObserver ) {
 			this.cartMutationObserver.disconnect();
 			this.cartMutationObserver = null;
 		}
@@ -318,20 +339,20 @@ class CartChangesHelper {
 
 		window.addEventListener(
 			'storage',
-			(event) => {
-				if (event.key === this.storageKey && event.newValue) {
+			( event ) => {
+				if ( event.key === this.storageKey && event.newValue ) {
 					try {
 						const cartData = JSON.parse( event.newValue );
 
 						// Prevent self-triggering by checking tab ID
-						if (cartData.tabId === this.tabId) {
+						if ( cartData.tabId === this.tabId ) {
 							return;
 						}
 
 						// Prevent rapid duplicate notifications
-						if (this.lastReceivedNotification &&
-						(Date.now() - this.lastReceivedNotification.timestamp) < 3000 &&
-						this.lastReceivedNotification.cartHash === cartData.cartHash) {
+						if ( this.lastReceivedNotification &&
+						( Date.now() - this.lastReceivedNotification.timestamp ) < 3000 &&
+						this.lastReceivedNotification.cartHash === cartData.cartHash ) {
 							return;
 						}
 
@@ -342,40 +363,40 @@ class CartChangesHelper {
 
 						// On checkout pages, only react if PowerBoard is selected
 						// On cart pages, always react (though it's less common to have cart->cart)
-						if (this.isCheckoutPage) {
-							if (this.isActive && this.isPowerBoardSelected()) {
+						if ( this.isCheckoutPage ) {
+							if ( this.isActive && this.isPowerBoardSelected() ) {
 								this.handleCartChangeFromOtherTab( cartData );
 							} else {
 								// Fallback: retry after a short delay in case of timing issues
-								if (this.isActive && !this.isPowerBoardSelected()) {
+								if ( this.isActive && !this.isPowerBoardSelected() ) {
 									setTimeout(
-									() => {
-										if (this.isPowerBoardSelected()) {
-											this.handleCartChangeFromOtherTab( cartData );
-										}
-									},
-									500
-										);
+										() => {
+											if ( this.isPowerBoardSelected() ) {
+												this.handleCartChangeFromOtherTab( cartData );
+											}
+										},
+										500
+									);
 								}
 							}
 						} else {
 							// For cart and other pages, always handle if active
-							if (this.isActive) {
+							if ( this.isActive ) {
 								this.handleCartChangeFromOtherTab( cartData );
 							}
 						}
-					} catch (error) {
-						console.warn( '[PowerBoard CartSync] Error parsing cart change data:', error );
+					} catch ( error ) {
+						// Ignore
 					}
 				}
-		}
-			);
+			}
+		);
 	}
 
 	/**
 	 * Handle cart change notification from another tab
 	 */
-	handleCartChangeFromOtherTab(cartData) {
+	handleCartChangeFromOtherTab( cartData ) {
 
 		// Show notification before refresh
 		this.showRefreshNotification();
@@ -385,9 +406,9 @@ class CartChangesHelper {
 		this.debounceTimer = setTimeout(
 			() => {
 				this.refreshPage();
-		},
+			},
 			1500
-			); // Increased to 1.5 seconds for better visibility
+		); // Increased to 1.5 seconds for better visibility
 	}
 
 	/**
@@ -397,15 +418,15 @@ class CartChangesHelper {
 
 		// Remove any existing notification
 		const existingNotification = document.getElementById( 'powerboard-cart-sync-notification' );
-		if (existingNotification) {
+		if ( existingNotification ) {
 			existingNotification.remove();
 		}
 
 		// Different messages for cart vs checkout vs mini cart
 		let message = '🛒 Cart updated in another tab. Refreshing...';
-		if (this.isCheckoutPage) {
+		if ( this.isCheckoutPage ) {
 			message = '🛒 Cart updated in another tab. Refreshing PowerBoard checkout...';
-		} else if (this.hasMiniCart && !this.isCartPage) {
+		} else if ( this.hasMiniCart && !this.isCartPage ) {
 			message = '🛒 Cart updated in another tab. Refreshing page...';
 		}
 
@@ -462,10 +483,10 @@ class CartChangesHelper {
 		let cartData = '';
 
 		// For WooCommerce blocks
-		if (window.wp && window.wp.data) {
+		if ( window.wp && window.wp.data ) {
 			try {
 				const cartStore = window.wp.data.select( 'wc/store/cart' );
-				if (cartStore) {
+				if ( cartStore ) {
 					const cart = cartStore.getCartData();
 					// Only include stable cart data, exclude timestamps and dynamic content
 					const cartInfo = {
@@ -479,20 +500,20 @@ class CartChangesHelper {
 					};
 
 					// Add item-specific data (stable parts only)
-					if (cart.items && cart.items.length > 0) {
+					if ( cart.items && cart.items.length > 0 ) {
 						cartInfo.items = cart.items.map(
-							item => ({
+							item => ( {
 								id: item.id,
 								quantity: item.quantity,
 								totals: item.totals?.line_total || '0'
-							})
-							);
+							} )
+						);
 					}
 
 					cartData += JSON.stringify( cartInfo );
 				}
-			} catch (error) {
-				console.log( '[PowerBoard CartSync] Block cart store not available:', error );
+			} catch ( error ) {
+				// Cart store not available
 			}
 		}
 
@@ -508,29 +529,33 @@ class CartChangesHelper {
 			selector => {
 				const elements = document.querySelectorAll( selector );
 				elements.forEach(
-				element => {
-					if (element.tagName === 'INPUT') {
-						cartData += element.value || '';
-					} else {
+					element => {
+						if ( element.tagName === 'INPUT' ) {
+							cartData += element.value || '';
+						} else {
 						// Remove currency symbols and whitespace for stability
-						const text = (element.textContent || '').replace( /[$£€¥\s,]/g, '' );
-						cartData  += text;
+							const text = ( element.textContent || '' ).replace(
+								/[$£€¥\s,]/g, ''
+							);
+							cartData  += text;
+						}
 					}
-				}
 				);
-		}
-			);
+			}
+		);
 
 		// Include cart item quantities from stable sources
-		const quantityInputs = document.querySelectorAll( 'input[name*="cart"][name*="qty"], .qty' );
+		const quantityInputs = document.querySelectorAll(
+			'input[name*="cart"][name*="qty"], .qty'
+		);
 		quantityInputs.forEach(
 			input => {
 				cartData    += input.value || '0';
-		}
-			);
+			}
+		);
 
 		// Include mini cart data for hash calculation
-		if (this.hasMiniCart) {
+		if ( this.hasMiniCart ) {
 			const miniCartData = this.getMiniCartData();
 			cartData          += miniCartData;
 		}
@@ -575,18 +600,20 @@ class CartChangesHelper {
 			selector => {
 				const elements = document.querySelectorAll( selector );
 				elements.forEach(
-				element => {
+					element => {
 					// Remove currency symbols and whitespace for stability
-					const text    = (element.textContent || '').replace( /[$£€¥\s,]/g, '' );
-					miniCartData += text;
-				}
+						const text    = ( element.textContent || '' ).replace( /[$£€¥\s,]/g, '' );
+						miniCartData += text;
+					}
 				);
-		}
-			);
+			}
+		);
 
 		// Get mini cart item count
-		const miniCartCount = document.querySelector( '.cart-contents-count, .cart-count, .mini-cart-count' );
-		if (miniCartCount) {
+		const miniCartCount = document.querySelector(
+			'.cart-contents-count, .cart-count, .mini-cart-count'
+		);
+		if ( miniCartCount ) {
 			miniCartData += miniCartCount.textContent || '0';
 		}
 
@@ -596,15 +623,15 @@ class CartChangesHelper {
 	/**
 	 * Simple hash function
 	 */
-	simpleHash(str) {
+	simpleHash( str ) {
 		let hash = 0;
-		if (str.length === 0) {
+		if ( str.length === 0 ) {
 			return hash;
 		}
 		const strLength = str.length;
-		for (let i = 0; i < strLength; i++) {
+		for ( let i = 0; i < strLength; i++ ) {
 			const char = str.charCodeAt( i );
-			hash       = ((hash << 5) - hash) + char;
+			hash       = ( ( hash << 5 ) - hash ) + char;
 			hash       = hash & hash; // Convert to 32-bit integer
 		}
 		return hash.toString();
@@ -616,7 +643,7 @@ class CartChangesHelper {
 	setupEventBasedCartChangeDetection() {
 
 		// Clear any existing timer-based monitoring
-		if (this.cartCheckInterval) {
+		if ( this.cartCheckInterval ) {
 			clearInterval( this.cartCheckInterval );
 			this.cartCheckInterval = null;
 		}
@@ -624,100 +651,123 @@ class CartChangesHelper {
 		// Listen for shipping method changes specifically
 		document.addEventListener(
 			'change',
-			(event) => {
-				if (!this.isActive) {
+			( event ) => {
+				if ( !this.isActive ) {
 					return;
 				}
 				const target = event.target;
 				// Detect shipping method changes
-				if (target.name && target.name.includes( 'shipping_method' )) {
+				if ( target.name && target.name.includes( 'shipping_method' ) ) {
 					this.handleCartChangeEvent( 'shipping_method_change' );
 				}
 
 				// Detect quantity changes
-				if (target.name && (target.name.includes( 'cart' ) && target.name.includes( 'qty' ))) {
+				if ( target.name && (
+					target.name.includes( 'cart' ) && target.name.includes( 'qty' )
+				) ) {
 					this.handleCartChangeEvent( 'quantity_change' );
 				}
 
 				// Detect mini cart quantity changes
-				if (target.closest( '.widget_shopping_cart, .mini_cart, .woocommerce-mini-cart, .mini-cart, .cart-dropdown, .wc-block-mini-cart' ) &&
-				(target.type === 'number' || target.name.includes( 'qty' ))) {
-				this.handleCartChangeEvent( 'mini_cart_quantity_change' );
+				const miniCartSelectors = [
+					'.widget_shopping_cart', '.mini_cart', '.woocommerce-mini-cart',
+					'.mini-cart', '.cart-dropdown', '.wc-block-mini-cart'
+				].join( ', ' );
+				if ( target.closest( miniCartSelectors ) &&
+				( target.type === 'number' || target.name.includes( 'qty' ) ) ) {
+					this.handleCartChangeEvent( 'mini_cart_quantity_change' );
 				}
 
 				// Detect coupon-related changes
-				if (target.name && target.name.includes( 'coupon' )) {
+				if ( target.name && target.name.includes( 'coupon' ) ) {
 					this.handleCartChangeEvent( 'coupon_change' );
 				}
 
 				// Detect block checkout shipping changes
-				if (target.type === 'radio' && target.closest( '.wc-block-components-radio-control-accordion-option' )) {
+				if ( target.type === 'radio' && target.closest(
+					'.wc-block-components-radio-control-accordion-option'
+				) ) {
 					this.handleCartChangeEvent( 'block_shipping_change' );
 				}
-		}
-			);
+			}
+		);
 
 		// Listen for form submissions that might change cart
 		document.addEventListener(
 			'submit',
-			(event) => {
-				if (!this.isActive) {
+			( event ) => {
+				if ( !this.isActive ) {
 					return;
 				}
-				const form = event.target;
-				if (form.classList.contains( 'woocommerce-cart-form' ) ||
+				const form              = event.target;
+				const miniCartSelectors = [
+					'.widget_shopping_cart', '.mini_cart', '.woocommerce-mini-cart',
+					'.mini-cart', '.cart-dropdown', '.wc-block-mini-cart'
+				].join( ', ' );
+				if ( form.classList.contains( 'woocommerce-cart-form' ) ||
 				form.closest( '.woocommerce-cart-form' ) ||
 				form.classList.contains( 'checkout' ) ||
 				form.closest( '.checkout' ) ||
-				form.closest( '.widget_shopping_cart, .mini_cart, .woocommerce-mini-cart, .mini-cart, .cart-dropdown, .wc-block-mini-cart' )) {
-				this.handleCartChangeEvent( 'form_submission' );
+				form.closest( miniCartSelectors ) ) {
+					this.handleCartChangeEvent( 'form_submission' );
 				}
-		}
-			);
+			}
+		);
 
 		// Listen for button clicks that might change cart
 		document.addEventListener(
 			'click',
-			(event) => {
-				if (!this.isActive) {
+			( event ) => {
+				if ( !this.isActive ) {
 					return;
 				}
 				const target = event.target;
 				// Update cart button
-				if (target.name === 'update_cart' || target.value === 'Update cart') {
+				if ( target.name === 'update_cart' || target.value === 'Update cart' ) {
 					this.handleCartChangeEvent( 'update_cart_click' );
 				}
 
 				// Apply coupon button
-				if (target.name === 'apply_coupon' || target.classList.contains( 'button' ) && target.textContent.includes( 'Apply' )) {
+				if ( target.name === 'apply_coupon' ||
+					target.classList.contains( 'button' ) &&
+					target.textContent.includes( 'Apply' ) ) {
 					this.handleCartChangeEvent( 'apply_coupon_click' );
 				}
 
 				// Remove item links
-				if (target.classList.contains( 'remove' ) || target.closest( '.remove' )) {
+				if ( target.classList.contains( 'remove' ) || target.closest( '.remove' ) ) {
 					this.handleCartChangeEvent( 'remove_item_click' );
 				}
 
 				// Mini cart specific buttons
-				if (target.closest( '.widget_shopping_cart, .mini_cart, .woocommerce-mini-cart, .mini-cart, .cart-dropdown, .wc-block-mini-cart' )) {
-					if (target.classList.contains( 'remove' ) ||
+				const miniCartSelectors = [
+					'.widget_shopping_cart',
+					'.mini_cart',
+					'.woocommerce-mini-cart',
+					'.mini-cart',
+					'.cart-dropdown',
+					'.wc-block-mini-cart'
+				].join( ', ' );
+				if ( target.closest( miniCartSelectors ) ) {
+					if ( target.classList.contains( 'remove' ) ||
 					target.closest( '.remove' ) ||
 					target.classList.contains( 'remove_from_cart_button' ) ||
 					target.name === 'update_cart' ||
 					target.classList.contains( 'plus' ) ||
 					target.classList.contains( 'minus' ) ||
 					target.classList.contains( 'quantity-plus' ) ||
-					target.classList.contains( 'quantity-minus' )) {
+					target.classList.contains( 'quantity-minus' ) ) {
 						this.handleCartChangeEvent( 'mini_cart_interaction' );
 					}
 				}
 
 				// Block checkout buttons
-				if (target.closest( '.wc-block-cart' ) || target.closest( '.wc-block-checkout' )) {
+				if ( target.closest( '.wc-block-cart' ) ||
+					target.closest( '.wc-block-checkout' ) ) {
 					this.handleCartChangeEvent( 'block_interaction' );
 				}
-		}
-			);
+			}
+		);
 
 		// Listen for common WooCommerce events
 		const wooCommerceEvents = [
@@ -738,25 +788,25 @@ class CartChangesHelper {
 		wooCommerceEvents.forEach(
 			eventName => {
 				document.addEventListener(
-				eventName,
-				() => {
-					if (this.isActive) {
-						this.handleCartChangeEvent( eventName );
+					eventName,
+					() => {
+						if ( this.isActive ) {
+							this.handleCartChangeEvent( eventName );
+						}
 					}
-				}
 				);
-		}
-			);
+			}
+		);
 
 		// Listen for AJAX complete events that might indicate cart updates
-		if (window.jQuery) {
+		if ( window.jQuery ) {
 			window.jQuery( document ).ajaxComplete(
-				(event, xhr, settings) => {
-					if (!this.isActive) {
+				( event, xhr, settings ) => {
+					if ( !this.isActive ) {
 						return;
 					}
-					if (settings.url && (
-					settings.url.includes( 'wc-ajax=add_to_cart' ) ||
+					if ( settings.url && (
+						settings.url.includes( 'wc-ajax=add_to_cart' ) ||
 					settings.url.includes( 'wc-ajax=remove_from_cart' ) ||
 					settings.url.includes( 'wc-ajax=update_cart' ) ||
 					settings.url.includes( 'wc-ajax=apply_coupon' ) ||
@@ -772,78 +822,87 @@ class CartChangesHelper {
 					settings.url.includes( 'wc-ajax=update_shipping_method' ) ||
 					settings.url.includes( 'wc-ajax=get_shipping_methods' ) ||
 					settings.url.includes( 'shipping_method' ) ||
-					settings.url.includes( 'checkout' ) && settings.data && settings.data.includes( 'shipping' )
-					)) {
-					this.handleCartChangeEvent( 'ajax_cart_update' );
+					settings.url.includes( 'checkout' ) &&
+						settings.data && settings.data.includes( 'shipping' )
+					) ) {
+						this.handleCartChangeEvent( 'ajax_cart_update' );
 					}
-			}
-				);
+				}
+			);
 		}
 
 		// Setup DOM mutation observer for cart, shipping, and mini cart changes
-		if (window.MutationObserver && !this.cartMutationObserver) {
+		if ( window.MutationObserver && !this.cartMutationObserver ) {
 			this.cartMutationObserver = new MutationObserver(
-				(mutations) => {
-					if (!this.isActive) {
+				( mutations ) => {
+					if ( !this.isActive ) {
 						return;
 					}
 					let cartChanged     = false;
 					let shippingChanged = false;
 					let miniCartChanged = false;
 					mutations.forEach(
-					(mutation) => {
+						( mutation ) => {
 						// Look for changes in cart-related elements
-						if (mutation.target.closest) {
-							const isCartRelated     = mutation.target.closest( '.cart-contents, .wc-block-cart, .woocommerce-cart-form, .cart_totals, .order-total, .cart-subtotal' );
-							const isShippingRelated = mutation.target.closest(
-							'.shipping, .wc-block-components-totals-shipping, ' +
+							if ( mutation.target.closest ) {
+								const cartSelectors = [
+									'.cart-contents',
+									'.wc-block-cart',
+									'.woocommerce-cart-form',
+									'.cart_totals',
+									'.order-total',
+									'.cart-subtotal'
+								].join( ', ' );
+								const isCartRelated = mutation.target.closest( cartSelectors );
+								const isShippingRelated = mutation.target.closest(
+									'.shipping, .wc-block-components-totals-shipping, ' +
 							'.wc-block-components-radio-control-accordion-option, ' +
 							'.woocommerce-shipping-totals, .cart-shipping, ' +
 							'[data-title="Shipping"], .shipping-total'
-							);
-							const isMiniCartRelated = mutation.target.closest(
-								'.widget_shopping_cart, .mini_cart, .woocommerce-mini-cart, ' +
+								);
+								const isMiniCartRelated = mutation.target.closest(
+									'.widget_shopping_cart, .mini_cart, .woocommerce-mini-cart, ' +
 								'.mini-cart, .cart-dropdown, .wc-block-mini-cart, ' +
 								'.cart-contents-count, .cart-count, .mini-cart-count'
-							);
+								);
 
-							if (isCartRelated) {
-								cartChanged = true;
+								if ( isCartRelated ) {
+									cartChanged = true;
+								}
+								if ( isShippingRelated ) {
+									shippingChanged = true;
+								}
+								if ( isMiniCartRelated ) {
+									miniCartChanged = true;
+								}
 							}
-							if (isShippingRelated) {
-								shippingChanged = true;
-							}
-							if (isMiniCartRelated) {
-								miniCartChanged = true;
+
+							// Also check if shipping method inputs changed
+							if ( mutation.type === 'attributes' &&
+								mutation.attributeName === 'checked' ) {
+								const target = mutation.target;
+								if ( target.name && target.name.includes( 'shipping_method' ) ) {
+									shippingChanged = true;
+								}
 							}
 						}
-
-						// Also check if shipping method inputs changed
-						if (mutation.type === 'attributes' && mutation.attributeName === 'checked') {
-							const target = mutation.target;
-							if (target.name && target.name.includes( 'shipping_method' )) {
-								shippingChanged = true;
-							}
-						}
-					}
 					);
-				if (cartChanged || shippingChanged || miniCartChanged) {
-					const changeTypes = [];
-					if (cartChanged) {
-						changeTypes.push( 'cart' );
-					}
-					if (shippingChanged) {
-						changeTypes.push( 'shipping' );
-					}
-					if (miniCartChanged) {
-						changeTypes.push( 'mini cart' );
-					}
+					if ( cartChanged || shippingChanged || miniCartChanged ) {
+						const changeTypes = [];
+						if ( cartChanged ) {
+							changeTypes.push( 'cart' );
+						}
+						if ( shippingChanged ) {
+							changeTypes.push( 'shipping' );
+						}
+						if ( miniCartChanged ) {
+							changeTypes.push( 'mini cart' );
+						}
 
-					const changeType = changeTypes.join( ' and ' );
-					this.handleCartChangeEvent( 'dom_mutation' );
+						this.handleCartChangeEvent( 'dom_mutation' );
+					}
 				}
-			}
-				);
+			);
 
 			// Observe the entire document but filter for cart-related changes
 			this.cartMutationObserver.observe(
@@ -853,9 +912,9 @@ class CartChangesHelper {
 					subtree: true,
 					characterData: true,
 					attributes: true,
-					attributeFilter: ['checked', 'selected', 'value']
-			}
-				);
+					attributeFilter: [ 'checked', 'selected', 'value' ]
+				}
+			);
 
 		}
 
@@ -863,38 +922,38 @@ class CartChangesHelper {
 		window.addEventListener(
 			'popstate',
 			() => {
-				if (this.isActive) {
+				if ( this.isActive ) {
 					this.handleCartChangeEvent( 'navigation' );
 				}
-		}
-			);
+			}
+		);
 
 		// Listen for focus events that might indicate the user returned to the tab
 		window.addEventListener(
 			'focus',
 			() => {
-				if (this.isActive) {
+				if ( this.isActive ) {
 					this.handleCartChangeEvent( 'window_focus' );
 				}
-		}
-			);
+			}
+		);
 
 		// Initial cart check with delay to let page stabilize
 		setTimeout(
 			() => {
-				if (this.isActive) {
+				if ( this.isActive ) {
 					this.checkForCartChanges();
 				}
-		},
+			},
 			3000
-			);
+		);
 
 	}
 
 	/**
 	 * Handle cart change events with debouncing
 	 */
-	handleCartChangeEvent(eventType) {
+	handleCartChangeEvent( eventType ) {
 
 		// Different debounce times for different event types
 		const debounceTimeMap = {
@@ -912,57 +971,57 @@ class CartChangesHelper {
 			'default': 1500
 		};
 
-		const debounceTime = debounceTimeMap[eventType] || debounceTimeMap['default'];
+		const debounceTime = debounceTimeMap[ eventType ] || debounceTimeMap[ 'default' ];
 
 		// Clear any existing timeout for this event type
 		const timeoutKey = `${eventType}Timeout`;
-		if (this[timeoutKey]) {
-			clearTimeout( this[timeoutKey] );
+		if ( this[ timeoutKey ] ) {
+			clearTimeout( this[ timeoutKey ] );
 		}
 
 		// Set new timeout
-		this[timeoutKey] = setTimeout(
+		this[ timeoutKey ] = setTimeout(
 			() => {
 				this.checkForCartChanges();
-		},
+			},
 			debounceTime
-			);
+		);
 	}
 
 	/**
 	 * Check if cart has changed and notify other tabs
 	 */
 	checkForCartChanges() {
-		if (!this.isActive) {
+		if ( !this.isActive ) {
 			return;
 		}
 
 		// Prevent too frequent checks to avoid false positives
 		const now = Date.now();
-		if (this.lastCheckTime && (now - this.lastCheckTime) < 2000) {
+		if ( this.lastCheckTime && ( now - this.lastCheckTime ) < 2000 ) {
 			return;
 		}
 		this.lastCheckTime = now;
 
 		const newCartHash = this.getCurrentCartHash();
 
-		if (this.cartHash !== null && this.cartHash !== newCartHash) {
+		if ( this.cartHash !== null && this.cartHash !== newCartHash ) {
 			// Additional validation - make sure this isn't a false positive
 
 			// Wait a moment and check again to confirm the change is stable
 			setTimeout(
 				() => {
 					const confirmHash = this.getCurrentCartHash();
-					if (confirmHash === newCartHash && confirmHash !== this.cartHash) {
+					if ( confirmHash === newCartHash && confirmHash !== this.cartHash ) {
 						this.notifyOtherTabs( newCartHash );
 						this.cartHash = newCartHash;
 					} else {
 						// Keep the original hash since the change wasn't stable
 					}
-			},
+				},
 				1000
-				);
-		} else if (this.cartHash === null) {
+			);
+		} else if ( this.cartHash === null ) {
 			this.cartHash = newCartHash;
 		}
 	}
@@ -970,12 +1029,12 @@ class CartChangesHelper {
 	/**
 	 * Notify other tabs about cart changes
 	 */
-	notifyOtherTabs(cartHash = null) {
+	notifyOtherTabs( cartHash = null ) {
 		const currentUrl = window.location.href;
 
 		// Don't notify if we're on the same page (prevent self-triggering)
-		if (this.lastNotificationUrl === currentUrl && this.lastNotificationTime &&
-			(Date.now() - this.lastNotificationTime) < 5000) {
+		if ( this.lastNotificationUrl === currentUrl && this.lastNotificationTime &&
+			( Date.now() - this.lastNotificationTime ) < 5000 ) {
 			return;
 		}
 
@@ -1000,14 +1059,14 @@ class CartChangesHelper {
 				() => {
 					try {
 						localStorage.removeItem( this.storageKey );
-					} catch (error) {
-						console.warn( '[PowerBoard CartSync] Could not clear notification:', error );
+					} catch ( error ) {
+						// Could not clear notification
 					}
-			},
+				},
 				2000
-				);
-		} catch (error) {
-			console.warn( '[PowerBoard CartSync] Could not save cart change notification:', error );
+			);
+		} catch ( error ) {
+			// Could not save cart change notification
 		}
 	}
 
@@ -1025,10 +1084,10 @@ class CartChangesHelper {
 		this.showRefreshNotification();
 		setTimeout(
 			() => {
-				console.log( '[PowerBoard CartSync] Test refresh (not actually refreshing)' );
-		},
+				// Test refresh (not actually refreshing)
+			},
 			1500
-			);
+		);
 	}
 
 	/**
@@ -1041,13 +1100,14 @@ class CartChangesHelper {
 			isCartPage: this.isCartPage,
 			hasMiniCart: this.hasMiniCart,
 			pageType: this.isCheckoutPage ? 'checkout' : this.isCartPage ? 'cart' : 'other',
-			isPowerBoardSelected: this.isCheckoutPage ? this.isPowerBoardSelected() : 'N/A (cart page)',
+			isPowerBoardSelected: this.isCheckoutPage ?
+				this.isPowerBoardSelected() : 'N/A (cart page)',
 			paymentMethodId: this.paymentMethodId,
 			cartHash: this.cartHash,
 			monitoringType: 'Event-based (no timers)',
 			miniCartSupport: this.hasMiniCart ? 'Enabled' : 'Not detected',
 			behavior: this.isCartPage ? 'Always monitor changes and notify' :
-					this.isCheckoutPage ? 'Monitor only when PowerBoard selected' :
+				this.isCheckoutPage ? 'Monitor only when PowerBoard selected' :
 					'Conditional monitoring'
 		};
 	}
@@ -1056,7 +1116,7 @@ class CartChangesHelper {
 	 * Get instance singleton
 	 */
 	static getInstance() {
-		if (!window.powerBoardCartChangesHelper) {
+		if ( !window.powerBoardCartChangesHelper ) {
 			window.powerBoardCartChangesHelper = new CartChangesHelper();
 		}
 		return window.powerBoardCartChangesHelper;
@@ -1064,13 +1124,13 @@ class CartChangesHelper {
 }
 
 // Auto-initialize and expose for debugging
-if (document.readyState === 'loading') {
+if ( document.readyState === 'loading' ) {
 	document.addEventListener(
 		'DOMContentLoaded',
 		() => {
 			CartChangesHelper.getInstance();
-	}
-		);
+		}
+	);
 } else {
 	CartChangesHelper.getInstance();
 }
@@ -1090,18 +1150,14 @@ window.powerBoardCartSyncDebug = {
 
 	checkPaymentMethod: () => {
 		const instance   = CartChangesHelper.getInstance();
-		const isSelected = instance.isPowerBoardSelected();
-		console.log( 'PowerBoard selected:', isSelected );
-		console.log( 'Is active:', instance.isActive );
-		return isSelected;
+		// PowerBoard selection and activity status checked
+		return instance.isPowerBoardSelected();
 	},
 
 	checkMiniCart: () => {
 		const instance = CartChangesHelper.getInstance();
-		console.log( 'Has mini cart:', instance.hasMiniCart );
-		if (instance.hasMiniCart) {
-			const miniCartData = instance.getMiniCartData();
-			console.log( 'Mini cart data:', miniCartData );
+		if ( instance.hasMiniCart ) {
+			// Mini cart data available
 		}
 		return { hasMiniCart: instance.hasMiniCart };
 	},
@@ -1109,17 +1165,17 @@ window.powerBoardCartSyncDebug = {
 	testCartHashStability: () => {
 		const instance = CartChangesHelper.getInstance();
 		const hashes   = [];
-		for (let i = 0; i < 3; i++) {
+		for ( let i = 0; i < 3; i++ ) {
 			hashes.push( instance.getCurrentCartHash() );
 		}
-		const stable = hashes.every( hash => hash === hashes[0] );
-		console.log( 'Hash stability:', stable ? 'STABLE' : 'UNSTABLE' );
+		const stable = hashes.every( hash => hash === hashes[ 0 ] );
+		// Hash stability checked
 		return { stable, hashes };
 	},
 
 	stopConstantRefresh: () => {
 		const instance = CartChangesHelper.getInstance();
-		if (instance.cartMutationObserver) {
+		if ( instance.cartMutationObserver ) {
 			instance.cartMutationObserver.disconnect();
 		}
 		instance.isActive = false;

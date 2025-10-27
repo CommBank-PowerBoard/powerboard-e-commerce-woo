@@ -3,6 +3,8 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Services;
 
+use PowerBoard\Helpers\DBSettingsHelper;
+
 class TemplateService {
 	public $setting_service;
 	private const TEMPLATE_DIR          = 'templates';
@@ -21,7 +23,7 @@ class TemplateService {
 	}
 
 	public function include_admin_html( string $template, array &$data = [] ): void {
-		$settings         = SettingsService::get_instance();
+		$settings         = DBSettingsHelper::get_powerboard_settings();
 		$data['settings'] = $settings;
 
 		$data['template_service'] = $this;
@@ -49,7 +51,6 @@ class TemplateService {
 	 * Uses a function (plugin_dir_path) from WordPress
 	 */
 	private function get_template_path( string $template ): string {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		return plugin_dir_path( POWER_BOARD_PLUGIN_FILE ) . $template . self::TEMPLATE_END;
 	}
 

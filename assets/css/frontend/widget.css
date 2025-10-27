@@ -1,31 +1,28 @@
-#powerBoardCheckout_wrapper,
-#classic-powerBoardCheckout_wrapper,
-#wc-classic-power-board-checkout {
-	min-height: 92px;
-	scrollbar-width: thin;
-	position: relative;
+/* Classic Checkout - PowerBoard payment method styles */
+.wc_payment_method.payment_method_power_board label {
+	display: inline-flex !important;
+	align-items: center;
+	flex-wrap: wrap;
+	max-width: calc(100% - 35px);
+	width: -moz-available;
+	width: -webkit-fill-available;
+	width: stretch;
+	column-gap: 4px;
 }
 
-#loading {
-	font-size: 12px;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 0;
+.wc_payment_method.payment_method_power_board.contains-input label {
+	max-width: 100%;
+	align-items: baseline;
 }
 
-#loading p {
+.woocommerce-checkout #payment ul.payment_methods li.payment_method_power_board label img {
+	align-self: center;
+	height: 24px;
+	margin: 0 0 0 auto;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li.payment_method_power_board img.payment-method {
 	margin: 0;
-}
-
-#loading.hide {
-	display: none;
-}
-
-#classic-powerBoardCheckout_wrapper {
-	position: relative;
-	z-index: 1;
 }
 
 #wc-classic-power-board-checkout {
@@ -35,118 +32,90 @@
 	border: none;
 }
 
-.woocommerce-page .logo-comm-bank img {
-	height: 50px;
+/* Blocks Checkout - PowerBoard payment method styles */
+.master-widget-wrapper {
+	position: relative;
+	margin-top: -8px;
+}
+
+.power-board-payment-method-label-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: start;
+	width: 100%;
 }
 
 .power-board-payment-method-label {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	flex-wrap: wrap;
-	box-sizing: content-box;
 	width: 100%;
 }
 
 .power-board-payment-method-label-logo {
 	margin: 0;
-	height: 36px !important;
-	max-height: 36px !important;
+	height: 24px !important;
+	max-height: 24px !important;
 }
 
-.wc-orders-list-table .status-power-board-p-paid .order_total > span {
-	display: none;
+.power-board-payment-method-label-text {
+	margin-right: 8px;
+	vertical-align: top;
 }
 
-#classic-power_board {
-	min-height: 260px;
-	scrollbar-width: thin;
-	position: relative;
+.payment_method_power_board label img {
+	height: 24px !important;
+	max-height: 24px !important;
 }
 
-#classic-power_board iframe {
-	border: 0;
-	width: 100%;
-	height: 280px;
-}
-
-#required-fields-validation-error,
-#intent-creation-error,
-#invalid-fields-error {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	left: 0;
+/* PowerBoard available payment methods list styling */
+.powerboard-payment-methods-wrapper {
 	display: flex;
-	align-items: center;
-	justify-content: center;
+	align-content: center;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
-#required-fields-validation-error.hide,
-#intent-creation-error.hide,
-#invalid-fields-error.hide {
-	display: none;
+.powerboard-payment-methods-wrapper img.payment-method {
+	height: 24px;
 }
 
-#required-fields-validation-error .power-board-validation-error,
-#intent-creation-error .power-board-validation-error,
-#invalid-fields-error .power-board-validation-error {
-	color: red;
-	text-align: center;
+/* Payment info message styling */
+#powerboard-payment-info {
+	background-color: #f8f9fa;
+	border: 1px solid #dee2e6;
+	border-radius: 4px;
+	padding: 12px 8px;
+	margin: 8px 0;
+}
+
+#powerboard-payment-info p {
 	margin: 0;
+	color: #495057;
+	font-size: 14px;
+	line-height: 1.5;
 }
 
-.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-phone,
-.woocommerce form .form-row.woocommerce-validated input.input-text.power-board-invalid-postcode,
-.woocommerce form .form-row.woocommerce-invalid-email input.input-text#billing_email {
-	border-color: #cc1818;
+/* Checkout widget styles */
+.powerboard-modal-body #standaloneWidget .gpay-card-info-container-fill .gpay-card-info-animation-container,
+.powerboard-modal-body #standaloneWidget .gpay-card-info-container-fill .gpay-card-info-iframe {
+	right: 0;
 }
 
-.power-board-account-error-message {
-	color: #cc1818;
-	font-size: 0.75em;
-	max-width: 100%;
-	min-height: 1em;
-	margin: 8px 0 0;
-	white-space: normal;
-}
-
-.payment_box p {
-	width: 100%;
-}
-
-.master-widget-wrapper {
-	position: relative;
-}
-
-.wc-block-components-notice-banner.hide,
-.wc-block-components-checkout-place-order-button.hide,
-#place_order.hide {
-	display: none;
-}
-
-.zipmoney-overlay {
-	position: fixed !important;
-	inset: 0;
-}
-
-.classic-checkout-validation-error {
-	color: #cc1818;
+.powerboard-modal-body #standaloneWidget .paypal-buttons {
+	right: 0;
+	padding-bottom: 0;
+	margin: 0 10px 10px 10px;
 }
 
 @media screen and (max-width: 450px) {
-	#powerBoardCheckout_wrapper,
-	#powerBoardCheckout_wrapper #list,
-	#powerBoardCheckout_wrapper #list iframe,
-	#classic-powerBoardCheckout_wrapper,
-	#classic-powerBoardCheckout_wrapper #list,
-	#classic-powerBoardCheckout_wrapper #list iframe,
-	#standaloneWidget,
-	#standaloneWidget iframe {
-		min-width: auto !important;
-	}
-
-	#standaloneWidget button {
+	.powerboard-modal-body #standaloneWidget button {
 		width: 100% !important;
 	}
+}
+
+/* Utilities */
+.wc-block-components-notice-banner.hide {
+	display: none;
 }

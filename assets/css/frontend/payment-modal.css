@@ -1,0 +1,153 @@
+/* PowerBoard Payment Modal Styles */
+.powerboard-modal {
+	position: fixed;
+	z-index: 999;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(2px);
+}
+
+.powerboard-modal-opened .blockOverlay {
+	z-index: 998 !important;
+}
+
+.powerboard-modal-content {
+	background-color: #fefefe;
+	margin: 5% auto;
+	padding: 0;
+	border: none;
+	border-radius: 8px;
+	width: 90%;
+	max-width: 600px;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-50px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.powerboard-modal-header {
+	padding: 20px 24px 16px 24px;
+	border-bottom: 1px solid #e1e5e9;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-color: #f8f9fa;
+	border-radius: 8px 8px 0 0;
+}
+
+.powerboard-modal-header h3 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: #2c3e50;
+}
+
+.powerboard-modal-close {
+	color: #95a5a6;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	line-height: 1;
+	transition: color 0.2s ease;
+}
+
+.powerboard-modal-close:hover,
+.powerboard-modal-close:focus {
+	color: #e74c3c;
+	text-decoration: none;
+}
+
+.powerboard-modal-body {
+	padding: 24px;
+	min-height: 200px;
+	position: relative;
+}
+
+#powerboard-modal-loading {
+	text-align: center;
+	padding: 40px 20px;
+}
+
+#powerboard-modal-loading .loading-text {
+	margin: 0;
+	color: #7f8c8d;
+	font-size: 16px;
+}
+
+#powerboard-modal-widget-wrapper {
+	min-height: 300px;
+	display: none;
+}
+
+#powerboard-modal-widget-wrapper.active {
+	display: block;
+}
+
+#powerboard-modal-error {
+	text-align: center;
+	padding: 20px;
+	background-color: #fdf2f2;
+	border: 1px solid #fecaca;
+	border-radius: 4px;
+	margin: 20px 0;
+}
+
+#powerboard-modal-error .power-board-validation-error {
+	color: #dc2626;
+	margin: 0;
+	font-weight: 500;
+}
+
+/* Loading spinner */
+#powerboard-modal-loading::after {
+	content: '';
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	border: 3px solid #f3f3f3;
+	border-top: 3px solid #3498db;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-left: 10px;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.powerboard-modal-content {
+		margin: 2% auto;
+		width: 95%;
+		max-height: 95vh;
+	}
+
+	.powerboard-modal-header {
+		padding: 16px 20px 12px 20px;
+	}
+
+	.powerboard-modal-header h3 {
+		font-size: 16px;
+	}
+
+	.powerboard-modal-body {
+		padding: 20px;
+	}
+}

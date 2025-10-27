@@ -4,14 +4,16 @@ declare( strict_types=1 );
 namespace PowerBoard\API;
 
 use PowerBoard\Enums\ConfigAPIEnum;
+use PowerBoard\Helpers\DBSettingsHelper;
 
 class ConfigService {
 	public static ?string $environment  = null;
 	public static ?string $access_token = null;
 
-	public static function init( ?string $environment, ?string $access_token ): void {
-		self::$environment  = $environment;
-		self::$access_token = $access_token;
+	public static function init(): void {
+		$settings           = DBSettingsHelper::get_powerboard_settings();
+		self::$environment  = $settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ];
+		self::$access_token = $settings[ DBSettingsHelper::LOCAL_ACCESS_TOKEN_ID ];
 	}
 
 	public static function build_api_url( ?string $endpoint = null ): string {

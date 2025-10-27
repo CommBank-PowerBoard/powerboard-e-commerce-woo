@@ -1,5 +1,0 @@
-plugins:
-  eslint:
-    enabled: true
-    config:
-      file: "eslint.config.mjs"

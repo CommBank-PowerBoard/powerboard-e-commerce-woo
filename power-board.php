@@ -10,18 +10,16 @@
  * Description: PowerBoard is a payment orchestration solution that delivers payment choice, operational efficiency and security for your business.
  * Author: PowerBoard
  * Author URI: https://www.commbank.com.au/business/payments/take-online-payments/powerboard.html#getting-started
- * Version: 1.5.0
+ * Version: 2.1.0
  * Requires at least: 6.6
  * Text Domain: power-board
- * Tested up to: 6.8.1
- * Stable tag: 1.5.0
+ * Tested up to: 6.8.3
+ * Stable tag: 2.1.0
  * License: GPL-3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  * WC requires at least: 6.6
  * WC tested up to: 9.9.3
  * Requires Plugins: woocommerce
- *
- * @noinspection PhpUndefinedFunctionInspection for plugin_dir_url
  */
 
 declare( strict_types=1 );
@@ -39,7 +37,7 @@ if ( ! defined( 'POWER_BOARD_PLUGIN_URL' ) ) {
 }
 
 if ( ! defined( 'POWER_BOARD_PLUGIN_VERSION' ) ) {
-	define( 'POWER_BOARD_PLUGIN_VERSION', '1.5.0' );
+	define( 'POWER_BOARD_PLUGIN_VERSION', '2.1.0' );
 }
 
 if ( ! defined( 'POWER_BOARD_PLUGIN_PREFIX' ) ) {
@@ -61,7 +59,6 @@ function check_the_directory(): void {
 
 	if ( $current_dir !== $implied_dir ) {
 		if ( ! function_exists( 'deactivate_plugins' ) ) {
-			/* @noinspection PhpUndefinedConstantInspection */
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 

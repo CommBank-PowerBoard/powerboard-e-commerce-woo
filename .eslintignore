@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+assets/build/
+dist/
+
+# Minified files
+**/*.min.js
+
+# Cache files
+.phpcs.cache
+.eslintcache
+
+# Generated files
+languages/
+*.pot
+*.po
+*.mo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

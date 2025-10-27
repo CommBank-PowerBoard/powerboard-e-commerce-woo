@@ -10,9 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/* @noinspection PhpUndefinedFunctionInspection */
 \settings_fields( 'powerboard_settings' );
-/* @noinspection PhpUndefinedFunctionInspection */
 \settings_errors( 'powerboard_checkout_version' );
 
 if ( isset( $data['template_service'] ) ) {

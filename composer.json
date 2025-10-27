@@ -9,6 +9,11 @@
             "PowerBoard\\": "includes/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "unit\\": "tests/unit/"
+        }
+    },
     "require": {
         "php": ">=7.4",
         "ext-json": "*"
@@ -21,7 +26,11 @@
         "squizlabs/php_codesniffer": "3.*",
         "woocommerce/woocommerce-sniffs": "dev-trunk",
         "phpcompatibility/phpcompatibility-wp": "*",
-        "phpunit/phpunit": "^12.1@dev"
+        "phpunit/phpunit": "^10.0",
+        "brain/monkey": "^2.6",
+        "mockery/mockery": "^1.6",
+        "php-stubs/wordpress-stubs": "^6.0",
+        "php-stubs/woocommerce-stubs": "^8.0"
     },
     "config": {
         "allow-plugins": {

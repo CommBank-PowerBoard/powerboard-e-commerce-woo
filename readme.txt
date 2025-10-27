@@ -5,8 +5,8 @@ https://www.commbank.com.au/
 Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
-Tested up to: 6.8
-Stable tag: 1.4.0
+Tested up to: 6.8.3
+Stable tag: 2.1.0
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -22,7 +22,7 @@ With a few quick configuration steps, this plugin provides you with access to Po
 Please note that WooCommerce must be installed and active before this plugin can be used.
 Prerequisites to install and configure the PowerBoard plugin, you will need a WordPress instance running:
 
-* WooCommerce version: 9.9.3
+* WooCommerce version: 10.2.2
 * [WooCommerce Server Requirements](https://woocommerce.com/document/server-requirements/)
 * [WooCommerce PHP and WordPress Support](https://woocommerce.com/document/update-php-wordpress/)
 
@@ -72,6 +72,38 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 2.1.0 =
+
+* Compatibility
+
+  - Compatible with Wordpress version `6.8.3`
+  - Compatible with WooCommerce version `9.9.3`.
+
+* Added
+
+  - Plugin configuration data is now automatically removed upon uninstallation
+
+* Bug fixes
+
+  - Implemented fix to prevent WooCommerce themes from overriding the colour of the Google Pay "Pay" button
+  - Update GooglePay mark icon used
+
+= 2.0.0 =
+
+* Compatibility
+
+  - Compatible with Wordpress version `6.8.2`
+  - Compatible with WooCommerce version `9.9.3`.
+
+* Added
+
+  - Redesigned the order flow by implementing modal popup solution for PowerBoard payments, further enhancing the checkout and payment flow
+  - Added support for custom title & description in the plugin settings page.
+
+* Bug fixes
+
+  - Fixed an error in the plugin settings page.
 
 = 1.5.0 =
 

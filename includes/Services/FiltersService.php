@@ -25,11 +25,8 @@ class FiltersService {
 	 * Uses a function (add_filter) from WordPress
 	 */
 	protected function add_woocommerce_filters(): void {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_filter( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_filter( 'admin_notices', [ $this, 'order_status_bulk_update' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_filter( 'woocommerce_available_payment_gateways', [ $this, 'my_account_pay_for_order' ] );
 	}
 
@@ -42,11 +39,8 @@ class FiltersService {
 			return;
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		require_once plugin_dir_path( POWER_BOARD_PLUGIN_FILE ) . 'includes/Services/PaymentGateway/MasterWidgetPaymentService.php';
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_filter( 'woocommerce_payment_gateways', [ $this, 'register_in_woocommerce_payment_class' ] );
-		/* @noinspection PhpUndefinedFunctionInspection */
 		require_once plugin_dir_path( POWER_BOARD_PLUGIN_FILE ) . 'includes/Util/MasterWidgetBlock.php';
 	}
 
@@ -63,9 +57,7 @@ class FiltersService {
 	 * @return void
 	 */
 	public function order_status_bulk_update() {
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$is_wc_orders_page = isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'wc-orders';
-		/* @noinspection PhpUndefinedFunctionInspection */
+		$is_wc_orders_page  = isset( $_GET['page'] ) && sanitize_text_field( wp_unslash( $_GET['page'] ) ) === 'wc-orders';
 		$is_shop_order_page = isset( $_GET['post_type'] ) && sanitize_text_field( wp_unslash( $_GET['post_type'] ) ) === 'shop_order';
 
 		if (
@@ -86,7 +78,6 @@ class FiltersService {
 	 * Uses functions (add_filter, plugin_basename) from WordPress
 	 */
 	protected function add_settings_link(): void {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		add_filter( 'plugin_action_links_' . plugin_basename( POWER_BOARD_PLUGIN_FILE ), [ $this, 'get_setting_link' ] );
 	}
 
@@ -94,7 +85,6 @@ class FiltersService {
 	 * Uses functions (admin_url and __) from WordPress
 	 */
 	public function get_setting_link( array $links ): array {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		array_unshift(
 			$links,
 			sprintf(
@@ -108,7 +98,6 @@ class FiltersService {
 	}
 
 	public function my_account_pay_for_order( $gateways ) {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( is_wc_endpoint_url( 'order-pay' ) ) {
 			if ( ! empty( $gateways['power_board'] ) ) {
 				unset( $gateways['power_board'] );

@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.1.0] - 2025-10-20
+
+### Compatibility
+
+- Compatible with Wordpress version `6.8.3`
+- Compatible with WooCommerce version `9.9.3`.
+
+### Added
+
+- Plugin configuration data is now automatically removed upon uninstallation
+
+### Fixed
+
+- Implemented fix to prevent WooCommerce themes from overriding the colour of the Google Pay "Pay" button
+- Update GooglePay mark icon used
+
+## [2.0.0] - 2025-09-29
+
+### Compatibility
+
+- Compatible with Wordpress version `6.8.2`
+- Compatible with WooCommerce version `9.9.3`.
+
+### Added
+
+- Redesigned the order flow by implementing modal popup solution for PowerBoard payments, further enhancing the checkout and payment flow
+- Added support for custom title & description in the plugin settings page.
+
+### Fixed
+
+- Fixed an error in the plugin settings page.
+
 ## [1.5.0] - 2025-07-25
 
 ### Compatibility

@@ -11,8 +11,11 @@ declare( strict_types=1 );
 namespace PowerBoard\Util;
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
+use PowerBoard\Helpers\AdminPanelHelpers\MasterWidgetSettingsHelper;
+use PowerBoard\Helpers\DBSettingsHelper;
+use PowerBoard\Helpers\MasterWidgetHelper;
+use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;
 use PowerBoard\Services\SDKAdapterService;
-use PowerBoard\Services\SettingsService;
 
 /**
  * Settings property used comes from the extension AbstractPaymentMethodType from WooCommerce
@@ -38,7 +41,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	 * @noinspection PhpUnused
 	 */
 	public function initialize(): void {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$this->settings = get_option( 'woocommerce_power_board_settings', [] );
 	}
 
@@ -49,7 +51,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	 * @noinspection PhpUnused
 	 */
 	public function is_active() {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$payment_gateways_class = WC()->payment_gateways();
 		$payment_gateways       = $payment_gateways_class->payment_gateways();
 
@@ -63,13 +64,11 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	 * @return bool
 	 */
 	private function is_checkout_block_page(): bool {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( ! function_exists( 'has_block' ) ) {
 			return false;
 		}
 
 		// Check if the checkout page contains the checkout block
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( has_block( 'woocommerce/checkout' ) ) {
 			return true;
 		}
@@ -91,9 +90,7 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	 * @noinspection PhpUnused
 	 */
 	public function get_payment_method_script_handles(): array {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( ! self::$is_load && is_checkout() ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_enqueue_script(
 				'power-board-form-helpers',
 				POWER_BOARD_PLUGIN_URL . 'assets/js/helpers/form.helper.js',
@@ -102,28 +99,24 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 				true
 			);
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_localize_script(
 				'power-board-form-helpers',
 				'PowerBoardAjaxError',
 				[
-					'url'                 => admin_url( 'admin-ajax.php' ),
-					'wpnonce_error'       => wp_create_nonce( 'power-board-create-error-notice' ),
-					'wpnonce_check_email' => wp_create_nonce( 'power-board-check-email' ),
+					'url'           => admin_url( 'admin-ajax.php' ),
+					'wpnonce_error' => wp_create_nonce( 'power-board-create-error-notice' ),
 				]
 			);
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_enqueue_script(
 				'power-board-api',
-				SettingsService::get_instance()->get_widget_script_url(),
+				MasterWidgetHelper::get_widget_script_url(),
 				[],
 				POWER_BOARD_PLUGIN_VERSION,
 				true
 			);
 
 			if ( $this->is_checkout_block_page() ) {
-				/* @noinspection PhpUndefinedFunctionInspection */
 				wp_enqueue_script(
 					'power-board-form',
 					POWER_BOARD_PLUGIN_URL . 'assets/js/frontend/form.js',
@@ -132,7 +125,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 					true
 				);
 			} else {
-				/* @noinspection PhpUndefinedFunctionInspection */
 				wp_enqueue_script(
 					'power-board-classic-form',
 					POWER_BOARD_PLUGIN_URL . '/assets/js/frontend/classic-form.js',
@@ -142,40 +134,32 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 				);
 			}
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_localize_script(
 				'power-board-form',
 				'PowerBoardAjaxCheckout',
 				[
-					'url'                        => admin_url( 'admin-ajax.php' ),
-					'wpnonce_intent'             => wp_create_nonce( 'power-board-create-charge-intent' ),
-					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
-					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
-					'wpnonce_check_postcode'     => wp_create_nonce( 'power-board-check-postcode' ),
-					'wpnonce_check_email'        => wp_create_nonce( 'power-board-check-email' ),
-					'wpnonce_process_payment'    => wp_create_nonce( 'power-board-process-payment-result' ),
+					'url' => admin_url( 'admin-ajax.php' ),
 				]
 			);
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_localize_script(
 				'power-board-classic-form',
 				'PowerBoardAjaxCheckout',
 				[
-					'url'                        => admin_url( 'admin-ajax.php' ),
-					'wpnonce_intent'             => wp_create_nonce( 'power-board-create-charge-intent' ),
-					'wpnonce_update_shipping'    => wp_create_nonce( 'power-board-update-shipping' ),
-					'wpnonce_update_order_notes' => wp_create_nonce( 'power-board-update-order-notes' ),
-					'wpnonce_check_postcode'     => wp_create_nonce( 'power-board-check-postcode' ),
-					'wpnonce_check_email'        => wp_create_nonce( 'power-board-check-email' ),
-					'wpnonce_process_payment'    => wp_create_nonce( 'power-board-process-payment-result' ),
+					'url' => admin_url( 'admin-ajax.php' ),
 				]
 			);
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_enqueue_style(
 				'power-board-widget-css',
 				POWER_BOARD_PLUGIN_URL . 'assets/css/frontend/widget.css',
+				[],
+				POWER_BOARD_PLUGIN_VERSION
+			);
+
+			wp_enqueue_style(
+				'power-board-modal-css',
+				POWER_BOARD_PLUGIN_URL . 'assets/css/frontend/payment-modal.css',
 				[],
 				POWER_BOARD_PLUGIN_VERSION
 			);
@@ -185,10 +169,9 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 
 		$script_path       = 'assets/build/js/frontend/' . $this->script . '.js';
 		$script_asset_path = 'assets/build/js/frontend/' . $this->script . '.asset.php';
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$script_url   = plugins_url( $script_path, POWER_BOARD_PLUGIN_FILE );
-		$script_name  = POWER_BOARD_PLUGIN_PREFIX . '-' . $this->script;
-		$script_asset = file_exists( $script_asset_path ) ? require $script_asset_path : [
+		$script_url        = plugins_url( $script_path, POWER_BOARD_PLUGIN_FILE );
+		$script_name       = POWER_BOARD_PLUGIN_PREFIX . '-' . $this->script;
+		$script_asset      = file_exists( $script_asset_path ) ? require $script_asset_path : [
 			'dependencies' => [],
 			'version'      => POWER_BOARD_PLUGIN_VERSION,
 		];
@@ -198,7 +181,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			$script_asset['version'] = filemtime( $js_file );
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_register_script(
 			$script_name,
 			$script_url,
@@ -207,7 +189,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 			true
 		);
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_localize_script(
 			$script_name,
 			'powerBoardWidgetSettings',
@@ -217,7 +198,6 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 		);
 
 		if ( function_exists( 'wp_set_script_translations' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			wp_set_script_translations( $script_name );
 		}
 
@@ -233,30 +213,28 @@ final class MasterWidgetBlock extends AbstractPaymentMethodType {
 	 */
 	public function get_payment_method_data(): array {
 		SDKAdapterService::get_instance();
-		$settings_service = SettingsService::get_instance();
+		$powerboard_settings = DBSettingsHelper::get_powerboard_settings();
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		if ( ! is_admin() ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			WC()->cart->calculate_totals();
+		$title = MasterWidgetSettingsHelper::get_gateway_title( $this->settings, MasterWidgetPaymentService::TITLE_MAX ?? null );
+
+		if ( $title === '' ) {
+			$title = MasterWidgetPaymentService::DEFAULT_TITLE;
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$total = ! is_admin() ? WC()->cart->get_total() : 0;
+		$payment_gateways_class = WC()->payment_gateways();
+		$gateways               = $payment_gateways_class->payment_gateways();
+		$gateway                = $gateways[ POWER_BOARD_PLUGIN_PREFIX ] ?? null;
+		$payment_info_text      = $gateway ? MasterWidgetHelper::get_payment_info_text( $gateway ) : MasterWidgetHelper::DEFAULT_PAYMENT_INFO;
 
 		/* @noinspection PhpUndefinedFunctionInspection */
 		return [
-			// Woocommerce data.
-			'amount'                  => $total,
-			'currency'                => strtoupper( get_woocommerce_currency() ),
-			// Widget.
-			'title'                   => 'PowerBoard',
-			// Keys.
-			'environment'             => $settings_service->get_environment(),
-			// Master Widget Checkout.
-			'checkoutTemplateVersion' => $settings_service->get_checkout_template_version(),
-			'checkoutCustomisationId' => $settings_service->get_checkout_customisation_id(),
-			'checkoutConfigurationId' => $settings_service->get_checkout_configuration_id(),
+			'title'                     => esc_html( $title ),
+			'payment_info_text'         => $payment_info_text,
+			'environment'               => $powerboard_settings[ DBSettingsHelper::LOCAL_ENVIRONMENT_ID ],
+			'checkout_template_version' => $powerboard_settings[ DBSettingsHelper::LOCAL_VERSION_ID ],
+			'checkout_customisation_id' => $powerboard_settings[ DBSettingsHelper::LOCAL_CUSTOMISATION_TEMPLATE_ID ],
+			'checkout_configuration_id' => $powerboard_settings[ DBSettingsHelper::LOCAL_CONFIGURATION_TEMPLATE_ID ],
+			'available_payment_methods' => $powerboard_settings[ DBSettingsHelper::LOCAL_AVAILABLE_PAYMENT_METHODS_ID ],
 		];
 	}
 }

@@ -5,7 +5,7 @@ namespace PowerBoard\Abstracts;
 
 use LogicException;
 use PowerBoard\API\ConfigService;
-use PowerBoard\Helpers\LoggerHelper;
+use PowerBoard\Helpers\Util\LoggerHelper;
 
 abstract class AbstractApiService {
 	const METHOD_GET  = 'GET';
@@ -35,8 +35,7 @@ abstract class AbstractApiService {
 	 * Uses a function (WC) from WooCommerce
 	 */
 	protected function run_call( $args ): array {
-		$url = ConfigService::build_api_url( $this->build_endpoint() );
-		/* @noinspection PhpUndefinedFunctionInspection */
+		$url                                   = ConfigService::build_api_url( $this->build_endpoint() );
 		$args['headers']['X-Power-Board-Meta'] = 'V'
 												. POWER_BOARD_PLUGIN_VERSION
 												. '_woocommerce_'
@@ -44,7 +43,6 @@ abstract class AbstractApiService {
 
 		switch ( $this->allowed_action[ $this->action ] ) {
 			case 'POST':
-				/* @noinspection PhpUndefinedFunctionInspection */
 				$args['body'] = wp_json_encode( $this->parameters, JSON_PRETTY_PRINT );
 				$parsed_args  = wp_parse_args(
 					$args,
@@ -55,7 +53,6 @@ abstract class AbstractApiService {
 				);
 				break;
 			default:
-				/* @noinspection PhpUndefinedFunctionInspection */
 				$parsed_args = wp_parse_args(
 					$args,
 					[
@@ -64,10 +61,7 @@ abstract class AbstractApiService {
 					]
 				);
 		}
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$request = wp_remote_request( $url, $parsed_args );
-
-		/* @noinspection PhpUndefinedFunctionInspection */
 		if ( is_wp_error( $request ) ) {
 			return [
 				'status' => 403,
@@ -75,16 +69,21 @@ abstract class AbstractApiService {
 			];
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$response_body = wp_remote_retrieve_body( $request );
 		$body          = json_decode( $response_body, true );
 
 		if ( $body === null && json_last_error() !== JSON_ERROR_NONE ) {
-			return [
+			$error_log_data = [
 				'status' => 403,
 				'error'  => [ 'message' => 'Oops! We\'re experiencing some technical difficulties at the moment. Please try again later. ' ],
 				'body'   => $request['body'],
 			];
+
+			LoggerHelper::log_api_request(
+				$error_log_data,
+				! empty( $this->request_action ) ? $this->request_action : $url,
+			);
+			return $error_log_data;
 		}
 
 		if ( ! empty( $this->parameters['reference'] ) && empty( $this->parameters['order_id'] ) ) {
@@ -116,7 +115,6 @@ abstract class AbstractApiService {
 	/**
 	 * Uses a function (esc_html) from WordPress
 	 *
-	 * @noinspection PhpUndefinedFunctionInspection
 	 * @throws LogicException If action is not allowed
 	 */
 	protected function set_action( $action ): void {

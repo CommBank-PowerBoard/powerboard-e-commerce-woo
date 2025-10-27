@@ -2,7 +2,7 @@
 // noinspection JSUnresolvedReference
 
 jQuery(
-	function ( $ ) {
+	function( $ ) {
 		if ( !window.powerBoardWidgetSettings || !window.powerBoardWidgetSettings.pluginName ) {
 			return;
 		}
@@ -12,7 +12,7 @@ jQuery(
 		$( document ).on(
 			'click',
 			'a[href*="plugins.php?action=deactivate"][aria-label="Deactivate ' + pluginName + '"]',
-			function ( e ) {
+			function( e ) {
 				e.preventDefault();
 				// noinspection JSUnresolvedReference
 				const urlRedirect = $( this ).attr( 'href' );

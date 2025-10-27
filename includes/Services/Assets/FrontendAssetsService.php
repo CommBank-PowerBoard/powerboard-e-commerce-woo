@@ -9,8 +9,6 @@ class FrontendAssetsService {
 	public function __construct() {
 		/**
 		 * Use hook wp_enqueue_scripts for frontend scripts
-		 *
-		 * @noinspection PhpUndefinedFunctionInspection
 		 */
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_scripts' ] );
 	}
@@ -45,7 +43,6 @@ class FrontendAssetsService {
 
 		// Ensure constants are defined
 		if ( ! defined( 'POWER_BOARD_PLUGIN_URL' ) || ! defined( 'POWER_BOARD_PLUGIN_VERSION' ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 				error_log( '[PowerBoard] Plugin constants not defined when trying to enqueue cart sync script' );
@@ -66,7 +63,6 @@ class FrontendAssetsService {
 		}
 
 		// Enqueue cart changes helper for cross-tab synchronization
-		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_enqueue_script(
 			'power-board-cart-changes-helper',
 			$script_url,
@@ -76,7 +72,6 @@ class FrontendAssetsService {
 		);
 
 		// Localize script with PowerBoard settings
-		/* @noinspection PhpUndefinedFunctionInspection */
 		wp_localize_script(
 			'power-board-cart-changes-helper',
 			'powerBoardCartSyncSettings',

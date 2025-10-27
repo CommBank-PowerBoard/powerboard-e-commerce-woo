@@ -17,9 +17,18 @@ class PaymentController {
 	 * @throws Exception If is refund has failed
 	 */
 	public function refund_process( $refund, $args ): void {
-		$order_id = $args['order_id'];
-		/* @noinspection PhpUndefinedFunctionInspection */
-		$order = wc_get_order( $order_id );
+		// Check user authorization - only users who can manage shop orders can process refunds
+		if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			throw new Exception( esc_html( __( 'Insufficient permissions to process refunds', 'power-board' ) ) );
+		}
+
+		// Validate order_id parameter
+		if ( ! isset( $args['order_id'] ) || ! is_numeric( $args['order_id'] ) || $args['order_id'] <= 0 ) {
+			throw new Exception( esc_html( __( 'Invalid order ID provided for refund processing', 'power-board' ) ) );
+		}
+
+		$order_id = absint( $args['order_id'] );
+		$order    = wc_get_order( $order_id );
 
 		if ( ! $order || strpos( $order->get_payment_method(), POWER_BOARD_PLUGIN_PREFIX ) === false ) {
 			return;
@@ -27,23 +36,22 @@ class PaymentController {
 
 		$power_board_charge_id = $order->get_meta( '_power_board_charge_id' );
 		if ( empty( $power_board_charge_id ) ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			$error = __( 'Unable to process refund. The payment for this order was not successfully completed.', 'power-board' );
-			/* @noinspection PhpUndefinedFunctionInspection */
 			throw new Exception( esc_html( $error ) );
 		}
 
-		if ( isset( $args['amount'] ) && $args['amount'] <= 0 ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
-			$error = __( 'Please enter a valid amount and/or stock quantity to process a refund', 'power-board' );
-			/* @noinspection PhpUndefinedFunctionInspection */
-			throw new Exception( esc_html( $error ) );
-		}
+		// Validate amount parameter with comprehensive checks
+		if ( isset( $args['amount'] ) ) {
+			// Ensure amount is numeric and properly formatted
+			if ( ! is_numeric( $args['amount'] ) || $args['amount'] <= 0 ) {
+				$error = __( 'Please enter a valid refund amount greater than zero', 'power-board' );
+				throw new Exception( esc_html( $error ) );
+			}
 
-		if ( empty( $args['amount'] ) && is_object( $order ) ) {
-			$amount = $order->get_total();
+			$amount = floatval( $args['amount'] );
 		} else {
-			$amount = $args['amount'];
+			$error = __( 'Amount should always be specified', 'power-board' );
+			throw new Exception( esc_html( $error ) );
 		}
 
 		if ( ! in_array(
@@ -59,12 +67,10 @@ class PaymentController {
 			return;
 		}
 
-		/* @noinspection PhpUndefinedFunctionInspection */
-
 		$action = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '';
 
 		$amount_to_refund = round( (float) $amount, 2 );
-		if ( ( $action === 'edit_order' || $action === 'editpost' ) ) {
+		if ( $action === 'edit_order' || $action === 'editpost' ) {
 			if ( $order->get_meta( '_status_change_verification_failed' ) === '1' ) {
 				$refund->set_amount( 0 );
 				$refund->set_total( 0 );
@@ -90,12 +96,10 @@ class PaymentController {
 		) ) {
 			$status = 'refunded';
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			$status_note = __( 'The refund of', 'power-board' )
 							. " $amount_to_refund "
 							. __( 'has been successfully processed.', 'power-board' );
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			remove_action( 'woocommerce_order_status_refunded', 'wc_order_fully_refunded' );
 			if ( $order->get_status() === $status ) {
 				$order->add_order_note( $status_note );
@@ -111,20 +115,16 @@ class PaymentController {
 					&& $result['error']['details']['path'] === 'status'
 					&& strpos( $result['error']['message'], 'refund request' ) !== false
 				) {
-					/* @noinspection PhpUndefinedFunctionInspection */
 					$result['error'] = __( 'The previous refund is not yet finished, please try again later', 'power-board' );
 				} else {
 					$result['error'] = implode( '; ', $result['error'] );
 				}
 			}
 			$order->add_order_note( 'PowerBoard refund failed: ' . $result['error'] );
-			/* @noinspection PhpUndefinedFunctionInspection */
 			throw new Exception( esc_html( $result['error'] ) );
 		} else {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			$error = __( 'The refund process has failed; please try again.', 'power-board' );
 
-			/* @noinspection PhpUndefinedFunctionInspection */
 			throw new Exception( esc_html( $error ) );
 		}
 	}
@@ -135,7 +135,6 @@ class PaymentController {
 	 * Uses a function (wc_get_order) from WooCommerce
 	 */
 	public function after_refund_process( $order_id ): void {
-		/* @noinspection PhpUndefinedFunctionInspection */
 		$order = wc_get_order( $order_id );
 
 		if ( ! $order || strpos( $order->get_payment_method(), POWER_BOARD_PLUGIN_PREFIX ) === false ) {
@@ -145,7 +144,6 @@ class PaymentController {
 		$order_status = $order->get_status();
 
 		if ( is_object( $order ) && $order_status !== 'refunded' ) {
-			/* @noinspection PhpUndefinedFunctionInspection */
 			remove_action( 'woocommerce_order_status_refunded', 'wc_order_fully_refunded' );
 			OrderService::update_status( $order_id, 'refunded' );
 			$order->save();
