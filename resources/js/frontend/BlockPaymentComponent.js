@@ -60,7 +60,7 @@ export const BlockPaymentComponent                                   = ( props )
 					try {
 						const result = checkoutHandler.processCheckoutValidation();
 						if ( result.type === emitResponse.responseTypes.SUCCESS ) {
-							return { type: emitResponse.responseTypes.SUCCESS };
+							return true;
 						}
 
 						// Clear existing notices from previous validations
