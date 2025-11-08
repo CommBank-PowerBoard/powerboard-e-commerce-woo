@@ -58,4 +58,27 @@ class PaymentGatewayHelper {
 
 		return str_ends_with( $http_host, ConfigAPIEnum::DOMAIN_API );
 	}
+
+	/**
+	 * Check for https requests
+	 *
+	 * @return bool
+	 */
+	public static function is_https(){
+		if ( isset( $_SERVER['HTTPS'] ) ) {
+
+			if(is_bool($_SERVER['HTTPS'])){
+				return $_SERVER['HTTPS'];
+			}
+
+			if ( 'on' === strtolower( (string) $_SERVER['HTTPS'] ) ) {
+				return true;
+			}
+			if ( '1' === (string) $_SERVER['HTTPS'] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

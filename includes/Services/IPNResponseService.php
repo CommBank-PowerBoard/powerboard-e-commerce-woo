@@ -25,6 +25,12 @@ class IPNResponseService {
 	 * Handles IPN response with comprehensive duplicate checking
 	 */
 	public function handle_ipn_response() {
+
+		if( !PaymentGatewayHelper::is_https() ){
+			LoggerHelper::log_callback_event( 'Invalid IPN Request HTTP', [ 'http_host'   => $http_host, ], 'error' );
+			return false;
+		}
+
 		$http_host    = !empty( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
 		$valid_domain = PaymentGatewayHelper::is_valid_domain_name( $http_host );
 		if ( !$valid_domain ) {
