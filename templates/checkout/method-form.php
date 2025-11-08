@@ -62,7 +62,7 @@ declare( strict_types=1 );
 	<input id="chargeid" type="hidden" name="chargeid">
 	<input id="intentid" type="hidden" name="intentid">
 	<input id="classic-<?php echo esc_attr( $data['id'] ); ?>-nonce" type="hidden" name="_wpnonce"
-			value="<?php echo esc_attr( $data['nonce'] ); ?>">
+			value="<?php if(isset($data['nonce'])){ echo esc_attr( $data['nonce'] ); } ?>">
 	<input id="classic-<?php echo esc_attr( $data['id'] ); ?>-settings" type="hidden"
 			value='<?php echo esc_attr( wc_esc_json( $data['settings'] ) ); ?>'>
 	<div id="paymentSourceToken"></div>
