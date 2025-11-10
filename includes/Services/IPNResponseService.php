@@ -26,8 +26,8 @@ class IPNResponseService {
 	 */
 	public function handle_ipn_response() {
 
-		if( !PaymentGatewayHelper::is_https() ){
-			LoggerHelper::log_callback_event( 'Invalid IPN Request HTTP', [ 'http_host'   => $http_host, ], 'error' );
+		if ( !PaymentGatewayHelper::is_https() ) {
+			LoggerHelper::log_callback_event( 'Invalid IPN Request HTTPS', [], 'error' );
 			return false;
 		}
 

@@ -176,9 +176,9 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_false_when_server_has_other_keys_but_not_https() {
 		$_SERVER = [
-			'HTTP_HOST' => 'example.com',
+			'HTTP_HOST'      => 'example.com',
 			'REQUEST_METHOD' => 'GET',
-			'SERVER_NAME' => 'example.com',
+			'SERVER_NAME'    => 'example.com',
 		];
 
 		$result = PaymentGatewayHelper::is_https();
@@ -191,10 +191,10 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_set_with_other_keys() {
 		$_SERVER = [
-			'HTTP_HOST' => 'example.com',
+			'HTTP_HOST'      => 'example.com',
 			'REQUEST_METHOD' => 'GET',
-			'SERVER_NAME' => 'example.com',
-			'HTTPS' => 'on',
+			'SERVER_NAME'    => 'example.com',
+			'HTTPS'          => 'on',
 		];
 
 		$result = PaymentGatewayHelper::is_https();
