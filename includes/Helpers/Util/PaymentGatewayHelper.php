@@ -13,8 +13,8 @@ class PaymentGatewayHelper {
 	public static function get_payment_gateway(): ?MasterWidgetPaymentService {
 		$payment_gateways = WC()->payment_gateways->get_available_payment_gateways();
 
-		if ( isset( $payment_gateways[POWER_BOARD_PLUGIN_PREFIX] ) ) {
-			return $payment_gateways[POWER_BOARD_PLUGIN_PREFIX];
+		if ( isset( $payment_gateways[ POWER_BOARD_PLUGIN_PREFIX ] ) ) {
+			return $payment_gateways[ POWER_BOARD_PLUGIN_PREFIX ];
 		} else {
 			wp_send_json_error( [ 'message' => 'PowerBoard gateway not available' ] );
 			return null;
@@ -66,8 +66,7 @@ class PaymentGatewayHelper {
 	 */
 	public static function is_https(): bool {
 		// Safely get and sanitize the HTTPS server variable
-		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( $_SERVER['HTTPS'],
-			FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
+		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( stripslashes( (string) $_SERVER['HTTPS'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
 
 		// Handle boolean values directly
 		if ( is_bool( $https ) ) {
@@ -76,17 +75,14 @@ class PaymentGatewayHelper {
 
 		// Handle string values after sanitization
 		if ( $https !== null ) {
-			// Check for 'on' (case-insensitive)
 			if ( strtolower( (string) $https ) === 'on' ) {
 				return true;
 			}
 
-			// Check for '1'
 			if ( (string) $https === '1' ) {
 				return true;
 			}
 
-			// Check for integer 1
 			if ( is_numeric( $https ) && (int) $https === 1 ) {
 				return true;
 			}
