@@ -202,4 +202,3 @@ class IsHttpsTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 }
-
