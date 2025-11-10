@@ -19,10 +19,6 @@ class HandleIPNResponseTest extends BaseServiceTest {
 		}
 	}
 
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
 	public function test_handle_ipn_response_method_exists() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
 		$this->assertTrue(

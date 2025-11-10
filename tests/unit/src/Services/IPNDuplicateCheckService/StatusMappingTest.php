@@ -35,10 +35,6 @@ class StatusMappingTest extends TestCase {
 			);
 	}
 
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
 	/**
 	 * Test the PowerBoard to WooCommerce status mapping
 	 */

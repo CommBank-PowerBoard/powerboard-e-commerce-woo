@@ -34,10 +34,6 @@ class ProcessPaymentResourceTest extends BaseServiceTest {
 			->andReturnNull();
 	}
 
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
 	public function test_process_payment_resource_method_exists() {
 		$service = $this->createPartialMockService( IPNResponseService::class );
 

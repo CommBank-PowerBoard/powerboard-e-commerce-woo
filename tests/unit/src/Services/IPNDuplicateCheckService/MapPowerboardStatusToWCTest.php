@@ -29,10 +29,6 @@ class MapPowerboardStatusToWCTest extends TestCase {
 		Functions\when( 'sanitize_text_field' )->returnArg();
 	}
 
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
 	/**
 	 * Get a private or protected method for testing using reflection
 	 */

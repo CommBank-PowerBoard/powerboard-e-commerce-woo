@@ -35,10 +35,6 @@ class BaseServiceTest extends TestCase {
 		Functions\when( 'wp_send_json_error' )->justReturn( true );
 	}
 
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-
 	/**
 	 * Create a mock WooCommerce order for testing
 	 */

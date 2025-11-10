@@ -26,10 +26,6 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 			->shouldReceive( 'log_callback_event' )
 			->andReturn( true );
 	}
-	protected function tearDown(): void {
-		// Let parent handle tearDown which already calls Monkey\tearDown() which calls Mockery::close()
-		parent::tearDown();
-	}
 
 	public function test_no_warning_when_no_stored_charge_id() {
 		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
