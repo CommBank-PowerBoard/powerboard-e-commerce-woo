@@ -6,6 +6,7 @@ namespace unit\src\Helpers\Util\PaymentGatewayHelper;
 
 use PHPUnit\Framework\TestCase;
 use PowerBoard\Helpers\Util\PaymentGatewayHelper;
+use Brain\Monkey\Functions;
 
 class IsHttpsTest extends TestCase {
 	private ?array $original_server;
@@ -29,6 +30,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_true_when_https_is_on() {
 		$_SERVER['HTTPS'] = 'ON';
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 'ON' )
+			->andReturn( 'ON' );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertTrue( $result );
@@ -39,6 +45,10 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_on1() {
 		$_SERVER['HTTPS'] = 'on';
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 'on' )
+			->andReturn( 'on' );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -51,6 +61,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_true_when_https_is_on2() {
 		$_SERVER['HTTPS'] = 'On';
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 'On' )
+			->andReturn( 'On' );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertTrue( $result );
@@ -61,6 +76,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_one() {
 		$_SERVER['HTTPS'] = '1';
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( '1' )
+			->andReturn( '1' );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -74,6 +94,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_true_when_https_is_off() {
 		$_SERVER['HTTPS'] = 'off';
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 'off' )
+			->andReturn( 'off' );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertFalse( $result );
@@ -85,6 +110,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_zero() {
 		$_SERVER['HTTPS'] = '0';
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( '0' )
+			->andReturn( '0' );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -98,6 +128,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_true_when_https_is_empty_string() {
 		$_SERVER['HTTPS'] = '';
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( '' )
+			->andReturn( '' );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertFalse( $result );
@@ -108,6 +143,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_false_when_https_is_not_set() {
 		unset( $_SERVER['HTTPS'] );
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( null )
+			->andReturn( null );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -120,6 +160,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_false_when_server_is_empty() {
 		$_SERVER = [];
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( null )
+			->andReturn( null );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertFalse( $result );
@@ -130,6 +175,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_boolean_true() {
 		$_SERVER['HTTPS'] = true;
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( true )
+			->andReturn( true );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -143,6 +193,11 @@ class IsHttpsTest extends TestCase {
 	public function test_is_https_returns_true_when_https_is_boolean_false() {
 		$_SERVER['HTTPS'] = false;
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( false )
+			->andReturn( false );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertFalse( $result );
@@ -153,6 +208,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_integer_one() {
 		$_SERVER['HTTPS'] = 1;
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 1 )
+			->andReturn( 1 );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -165,6 +225,11 @@ class IsHttpsTest extends TestCase {
 	 */
 	public function test_is_https_returns_true_when_https_is_integer_zero() {
 		$_SERVER['HTTPS'] = 0;
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 0 )
+			->andReturn( 0 );
 
 		$result = PaymentGatewayHelper::is_https();
 
@@ -181,6 +246,11 @@ class IsHttpsTest extends TestCase {
 			'SERVER_NAME'    => 'example.com',
 		];
 
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( null )
+			->andReturn( null );
+
 		$result = PaymentGatewayHelper::is_https();
 
 		$this->assertFalse( $result );
@@ -196,6 +266,11 @@ class IsHttpsTest extends TestCase {
 			'SERVER_NAME'    => 'example.com',
 			'HTTPS'          => 'on',
 		];
+
+		Functions\expect( 'wp_unslash' )
+			->once()
+			->with( 'on' )
+			->andReturn( 'on' );
 
 		$result = PaymentGatewayHelper::is_https();
 

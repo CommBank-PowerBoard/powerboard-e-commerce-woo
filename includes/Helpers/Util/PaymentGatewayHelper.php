@@ -66,7 +66,7 @@ class PaymentGatewayHelper {
 	 */
 	public static function is_https(): bool {
 		// Safely get and sanitize the HTTPS server variable
-		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( stripslashes( (string) $_SERVER['HTTPS'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
+		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( wp_unslash( $_SERVER['HTTPS'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
 
 		// Handle boolean values directly
 		if ( is_bool( $https ) ) {
