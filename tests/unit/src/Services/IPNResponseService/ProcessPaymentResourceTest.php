@@ -35,7 +35,6 @@ class ProcessPaymentResourceTest extends BaseServiceTest {
 	}
 
 	protected function tearDown(): void {
-		Mockery::close();
 		parent::tearDown();
 	}
 

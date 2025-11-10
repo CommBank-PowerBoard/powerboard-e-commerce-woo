@@ -27,7 +27,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 			->andReturn( true );
 	}
 	protected function tearDown(): void {
-		Mockery::close();
+		// Let parent handle tearDown which already calls Monkey\tearDown() which calls Mockery::close()
 		parent::tearDown();
 	}
 

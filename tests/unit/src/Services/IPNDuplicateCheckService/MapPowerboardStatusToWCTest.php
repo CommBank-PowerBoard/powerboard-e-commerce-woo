@@ -30,7 +30,6 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		Monkey\tearDown();
 		parent::tearDown();
 	}
 

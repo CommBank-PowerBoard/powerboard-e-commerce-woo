@@ -36,7 +36,6 @@ class BaseServiceTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
-		Monkey\tearDown();
 		parent::tearDown();
 	}
 
