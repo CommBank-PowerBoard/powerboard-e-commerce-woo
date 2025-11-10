@@ -6,7 +6,7 @@ namespace unit\Services\IPNResponseService;
 use Mockery;
 use unit\src\Services\BaseServiceTest;
 use PowerBoard\Services\IPNResponseService;
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use PowerBoard\Helpers\Util\PaymentGatewayHelper;
 
 class HandleIPNResponseTest extends BaseServiceTest {
@@ -39,14 +39,14 @@ class HandleIPNResponseTest extends BaseServiceTest {
 		$reflection = new \ReflectionClass( $service );
 
 		$this->assertTrue(
-			$reflection->hasProperty( 'duplicate_check_service' ),
-			'Service should have duplicate_check_service property'
+			$reflection->hasProperty( 'ipn_validation_service' ),
+			'Service should have ipn_validation_service property'
 		);
 
-		$property = $reflection->getProperty( 'duplicate_check_service' );
+		$property = $reflection->getProperty( 'ipn_validation_service' );
 		$this->assertTrue(
 			$property->isProtected(),
-			'duplicate_check_service property should be protected'
+			'ipn_validation_service property should be protected'
 		);
 	}
 

@@ -5,7 +5,7 @@ namespace unit\src\Services\IPNDuplicateCheckService;
 
 use Mockery;
 use PowerBoard\Helpers\Util\LoggerHelper;
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use unit\src\Services\BaseServiceTest;
 use WC_Order;
 
@@ -28,7 +28,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_no_warning_when_no_stored_charge_id() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );
@@ -43,7 +43,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_logs_warning_for_double_successful_payment() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );
@@ -64,7 +64,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_logs_info_for_retry_after_failure() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );
@@ -79,7 +79,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_logs_info_for_different_charge_pending_to_success() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );
@@ -94,7 +94,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_various_status_combinations() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );
@@ -121,7 +121,7 @@ class CheckDoublePaymentTest extends BaseServiceTest {
 	}
 
 	public function test_edge_cases() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'check_double_payment' );
 
 		$order = Mockery::mock( WC_Order::class );

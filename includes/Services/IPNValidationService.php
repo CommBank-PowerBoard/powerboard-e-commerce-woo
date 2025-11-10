@@ -23,7 +23,7 @@ use WC_Order;
  * - Order Update based on API: Update only if API returns different status
  * - Logging of Resolution: Log all decisions
  */
-class IPNDuplicateCheckService {
+class IPNValidationService {
 
 	/**
 	 * Status mapping from PowerBoard to WooCommerce
@@ -88,7 +88,7 @@ class IPNDuplicateCheckService {
 			// Check for duplicate status
 			if ( $this->is_duplicate_status( $current_order_status, $target_wc_status ) ) {
 				LoggerHelper::log_callback_event(
-					'IPN duplicate detected - no action taken',
+					' Order Updated - no action taken',
 					[
 						'order_id'       => $order_id,
 						'charge_id'      => $charge_id,
@@ -100,8 +100,8 @@ class IPNDuplicateCheckService {
 				);
 
 				return [
-					'status'    => 'duplicate',
-					'message'   => 'Duplicated',
+					'status'    => 'updated',
+					'message'   => 'Updated',
 					'http_code' => 200,
 				];
 			}
@@ -161,6 +161,42 @@ class IPNDuplicateCheckService {
 				'http_code' => 500,
 			];
 		}
+	}
+
+	public function authenticate_ipn( $ipn ) {
+		$api_response = $this->sdk_adapter->get_charge( $ipn->get_charge()->get_charge_id() );
+		$api_status   = $this->extract_status_from_api_response( $api_response );
+		$api_status   = $this->map_powerboard_status_to_wc( $api_status );
+		$ipn_status   = $this->map_event_to_status( $ipn->get_event() );
+
+		if ( $api_status === $ipn_status ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Extract status from PowerBoard API response
+	 *
+	 * @param array $api_response API response from get_charge
+	 * @return string|null Status or null if not found
+	 */
+	private function extract_status_from_api_response( array $api_response ): ?string {
+		// Check common response structures
+		if ( !empty( $api_response['resource']['data']['status'] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response['resource']['data']['status'] ) );
+		}
+
+		if ( !empty( $api_response['data']['status'] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response['data']['status'] ) );
+		}
+
+		if ( !empty( $api_response['status'] ) ) {
+			return strtolower( sanitize_text_field( (string) $api_response['status'] ) );
+		}
+
+		return null;
 	}
 
 	/**

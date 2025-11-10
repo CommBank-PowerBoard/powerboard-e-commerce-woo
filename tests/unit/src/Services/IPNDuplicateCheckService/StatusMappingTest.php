@@ -6,7 +6,7 @@ namespace unit\src\Services\IPNDuplicateCheckService;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use ReflectionClass;
 use function Brain\Monkey;
 use function Brain\Monkey\Functions;
@@ -39,7 +39,7 @@ class StatusMappingTest extends TestCase {
 	 * Test the PowerBoard to WooCommerce status mapping
 	 */
 	public function test_powerboard_status_mapping() {
-		$service = $this->createPartialMock( IPNDuplicateCheckService::class, [] );
+		$service = $this->createPartialMock( IPNValidationService::class, [] );
 
 		$test_cases = [
 			'complete'       => 'completed',
@@ -73,7 +73,7 @@ class StatusMappingTest extends TestCase {
 	 * Test the status mapping constant structure
 	 */
 	public function test_status_mapping_constant() {
-		$reflection = new ReflectionClass( IPNDuplicateCheckService::class );
+		$reflection = new ReflectionClass( IPNValidationService::class );
 		$status_map = $reflection->getConstant( 'POWERBOARD_TO_WC_STATUS_MAP' );
 
 		$this->assertIsArray( $status_map );
@@ -93,7 +93,7 @@ class StatusMappingTest extends TestCase {
 	 * Test case sensitivity in status mapping
 	 */
 	public function test_status_mapping_case_sensitivity() {
-		$service    = $this->createPartialMock( IPNDuplicateCheckService::class, [] );
+		$service    = $this->createPartialMock( IPNValidationService::class, [] );
 		$reflection = new ReflectionClass( $service );
 		$method     = $reflection->getMethod( 'map_powerboard_status_to_wc' );
 		$method->setAccessible( true );

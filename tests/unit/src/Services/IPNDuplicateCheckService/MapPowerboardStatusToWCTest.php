@@ -6,7 +6,7 @@ namespace unit\src\Services\IPNDuplicateCheckService;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use PHPUnit\Framework\TestCase;
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use ReflectionClass;
 use function Brain\Monkey;
 use function Brain\Monkey\Functions;
@@ -55,7 +55,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_with_valid_statuses() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		$test_cases = [
@@ -82,7 +82,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_with_unknown_statuses() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		// Test unknown statuses (should default to 'pending')
@@ -101,7 +101,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_is_case_insensitive() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		// Test case insensitive mapping
@@ -126,7 +126,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_handles_null_and_empty() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		// Test null input
@@ -143,7 +143,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_trims_whitespace() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		// Test whitespace handling with actual whitespace characters
@@ -168,7 +168,7 @@ class MapPowerboardStatusToWCTest extends TestCase {
 
 	public function test_map_powerboard_status_to_wc_matches_constants() {
 		// Verify the mapping uses the POWERBOARD_TO_WC_STATUS_MAP constant
-		$status_map = $this->getClassConstant( IPNDuplicateCheckService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
+		$status_map = $this->getClassConstant( IPNValidationService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
 
 		$this->assertIsArray( $status_map );
 		$this->assertArrayHasKey( 'complete', $status_map );
@@ -184,12 +184,12 @@ class MapPowerboardStatusToWCTest extends TestCase {
 	}
 
 	public function test_map_powerboard_status_to_wc_comprehensive_mapping() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'map_powerboard_status_to_wc' );
 
 		// Test all statuses from the constant
 
-		$status_map = $this->getClassConstant( IPNDuplicateCheckService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
+		$status_map = $this->getClassConstant( IPNValidationService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
 
 		foreach ( $status_map as $powerboard_status => $expected_wc_status ) {
 			$result = $method->invokeArgs( $service, [ $powerboard_status ] );

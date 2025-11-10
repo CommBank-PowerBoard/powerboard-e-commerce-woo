@@ -4,7 +4,7 @@ declare( strict_types=1 );
 namespace unit\src\Services\IPNDuplicateCheckService;
 
 use PHPUnit\Framework\TestCase;
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use ReflectionClass;
 
 /**
@@ -31,7 +31,7 @@ class ConstantsTest extends TestCase {
 
 
 	public function test_powerboard_to_wc_status_map_constant() {
-		$status_map = $this->getClassConstant( IPNDuplicateCheckService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
+		$status_map = $this->getClassConstant( IPNValidationService::class, 'POWERBOARD_TO_WC_STATUS_MAP' );
 
 		$this->assertIsArray( $status_map );
 		$this->assertNotEmpty( $status_map );

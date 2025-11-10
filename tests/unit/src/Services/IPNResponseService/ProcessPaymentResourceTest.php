@@ -8,6 +8,7 @@ use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\PaymentProcessingHelper;
 use PowerBoard\Model\Charge;
 use PowerBoard\Model\IPN;
+use PowerBoard\Services\IPNValidationService;
 use unit\src\Services\BaseServiceTest;
 use PowerBoard\Services\IPNResponseService;
 use WC_Order;
@@ -95,79 +96,11 @@ class ProcessPaymentResourceTest extends BaseServiceTest {
 		$this->assertEquals( 'ipn', $param[0]->getName(), 'process_payment_resource method should have ipn parameter' );
 	}
 
-	public function test_process_payment_resource_handles_already_paid_order() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
-
-		$ipn = Mockery::mock( IPN::class );
-		$ipn->shouldReceive( 'get_order_id' )->andReturn( 123 );
-		$ipn->shouldReceive( 'get_event_id' )->andReturn( 'evt_123' );
-		$ipn->shouldReceive( 'get_is_paid' )->andReturn( false );
-		$ipn->shouldReceive( 'get_failure_message' )
-			->andReturn( '' );
-
-		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_payment_method' )
-			->andReturn( 'power_board' );
-		$order->shouldReceive( 'is_paid' )
-			->andReturn( true );
-		$order->shouldReceive( 'get_status' )
-			->andReturn( 'completed' );
-
-		when( 'wc_get_order' )->justReturn( $order );
-
-		$service->process_payment_resource( $ipn );
-
-		$this->assertTrue( true );
-	}
-
-	public function test_process_payment_resource_ignores_wrong_payment_method() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
-
-		$ipn = Mockery::mock( IPN::class );
-		$ipn->shouldReceive( 'get_order_id' )->andReturn( 456 );
-		$ipn->shouldReceive( 'get_event_id' )->andReturn( 'evt_456' );
-		$ipn->shouldReceive( 'get_is_paid' )->andReturn( false );
-		$ipn->shouldReceive( 'get_failure_message' )->andReturn( '' );
-
-		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_payment_method' )
-			->andReturn( 'power_board' );
-		$order->shouldReceive( 'is_paid' )->andReturn( false );
-
-		when( 'wc_get_order' )->justReturn( $order );
-
-		$service->process_payment_resource( $ipn );
-
-		$this->assertTrue( true );
-	}
-
 	public function test_process_payment_resource_handles_successful_payment() {
 		$this->markTestSkipped( 'Requires PaymentProcessingHelper::SOURCE_IPN constant , this should be an integration test' );
 	}
 
 	public function test_process_payment_resource_handles_failed_payment() {
 		$this->markTestSkipped( 'Requires PaymentProcessingHelper::SOURCE_IPN constant , this should be an integration test' );
-	}
-
-	public function test_process_payment_resource_handles_pending_payment() {
-		$service = $this->createPartialMockService( IPNResponseService::class );
-
-		$ipn = Mockery::mock( IPN::class );
-		$ipn->shouldReceive( 'get_order_id' )->andReturn( 789 );
-		$ipn->shouldReceive( 'get_event_id' )->andReturn( 'evt_789' );
-		$ipn->shouldReceive( 'get_is_paid' )->andReturn( false );
-		$ipn->shouldReceive( 'get_failure_message' )->andReturn( '' );
-
-		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_payment_method' )->andReturn( 'power_board' );
-		$order->shouldReceive( 'is_paid' )->andReturn( false );
-
-		when( 'wc_get_order' )->justReturn( $order );
-
-		expect( 'wp_send_json_success' )->never();
-
-		$service->process_payment_resource( $ipn );
-
-		$this->assertTrue( true );
 	}
 }

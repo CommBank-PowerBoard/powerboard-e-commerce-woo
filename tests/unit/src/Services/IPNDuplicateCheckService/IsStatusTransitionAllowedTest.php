@@ -3,7 +3,7 @@ declare( strict_types=1 );
 
 namespace unit\src\Services\IPNDuplicateCheckService;
 
-use PowerBoard\Services\IPNDuplicateCheckService;
+use PowerBoard\Services\IPNValidationService;
 use unit\src\Services\BaseServiceTest;
 
 /**
@@ -15,7 +15,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test success IPN with failed order allows transition from failed to processing
 	 */
 	public function test_success_ipn_with_failed_order_allows_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertTrue(
@@ -38,7 +38,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test that success IPN with pending order allows transition from pending to processing
 	 */
 	public function test_success_ipn_with_pending_order_allows_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertTrue(
@@ -56,7 +56,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test failed IPN with pending order allows transition from failed to processing
 	 */
 	public function test_failed_ipn_with_pending_order_allows_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertTrue(
@@ -69,7 +69,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test failed IPN with processing order blocks transition from processing to failed
 	 */
 	public function test_failed_ipn_with_processing_order_blocks_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertFalse(
@@ -82,7 +82,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test failed IPN with completed order blocks transition from completed to failed
 	 */
 	public function test_failed_ipn_with_completed_order_blocks_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertFalse(
@@ -95,7 +95,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test refund IPN blocks transition from any status to refunded
 	 */
 	public function test_refund_ipn_blocks_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertFalse(
@@ -113,7 +113,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test pending IPN blocks transitions
 	 */
 	public function test_pending_ipn_blocks_transition() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertFalse(
@@ -131,7 +131,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test default allows other transitions
 	 */
 	public function test_default_allows_other_transitions() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertFalse(
@@ -149,7 +149,7 @@ class IsStatusTransitionAllowedTest extends BaseServiceTest {
 	 * Test business logic scenarios
 	 */
 	public function test_business_logic_scenarios() {
-		$service = $this->createPartialMockService( IPNDuplicateCheckService::class );
+		$service = $this->createPartialMockService( IPNValidationService::class );
 		$method  = $this->getPrivateMethod( $service, 'is_status_transition_allowed' );
 
 		$this->assertTrue(

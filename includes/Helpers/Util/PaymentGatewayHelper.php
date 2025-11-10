@@ -65,29 +65,57 @@ class PaymentGatewayHelper {
 	 * @return bool
 	 */
 	public static function is_https(): bool {
-		// Safely get and sanitize the HTTPS server variable
-		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( wp_unslash( $_SERVER['HTTPS'] ), FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
 
-		// Handle boolean values directly
-		if ( is_bool( $https ) ) {
-			return $https;
+		if ( is_ssl() ) {
+			return true;
 		}
 
-		// Handle string values after sanitization
-		if ( $https !== null ) {
-			if ( strtolower( (string) $https ) === 'on' ) {
-				return true;
+		$protocols = [ self::ssl_reverse_proxy(), self::ssl_proxy() ];
+
+		foreach ( $protocols as $protocol ) {
+			// Handle boolean values directly
+			if ( is_bool( $protocol ) ) {
+				return $protocol;
 			}
 
-			if ( (string) $https === '1' ) {
-				return true;
-			}
+			// Handle string values after sanitization
+			if ( $protocol !== null ) {
+				if ( strtolower( (string) $protocol ) === 'on' ) {
+					return true;
+				}
 
-			if ( is_numeric( $https ) && (int) $https === 1 ) {
-				return true;
+				if ( strtolower( (string) $protocol ) === 'https' ) {
+					return true;
+				}
+
+				if ( (string) $protocol === '1' ) {
+					return true;
+				}
+
+				if ( is_numeric( $protocol ) && (int) $protocol === 1 ) {
+					return true;
+				}
 			}
 		}
 
 		return false;
+	}
+
+	private static function ssl_reverse_proxy() {
+		return isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ?
+			filter_var(
+				wp_unslash( $_SERVER['HTTP_X_FORWARDED_PROTO'] ),
+			FILTER_SANITIZE_FULL_SPECIAL_CHARS
+			)
+			: null;
+	}
+
+	private static function ssl_proxy() {
+		return isset( $_SERVER['HTTP_X_FORWARDED_SSL'] ) ?
+			filter_var(
+				wp_unslash( $_SERVER['HTTP_X_FORWARDED_SSL'] ),
+			FILTER_SANITIZE_FULL_SPECIAL_CHARS
+			)
+			: null;
 	}
 }
