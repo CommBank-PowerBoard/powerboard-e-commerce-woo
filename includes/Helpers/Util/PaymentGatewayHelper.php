@@ -65,16 +65,29 @@ class PaymentGatewayHelper {
 	 * @return bool
 	 */
 	public static function is_https(): bool {
-		if ( isset( $_SERVER['HTTPS'] ) ) {
+		// Safely get and sanitize the HTTPS server variable
+		$https = isset( $_SERVER['HTTPS'] ) ? filter_var( $_SERVER['HTTPS'],
+			FILTER_SANITIZE_FULL_SPECIAL_CHARS ) : null;
 
-			if ( is_bool( $_SERVER['HTTPS'] ) ) {
-				return $_SERVER['HTTPS'];
-			}
+		// Handle boolean values directly
+		if ( is_bool( $https ) ) {
+			return $https;
+		}
 
-			if ( strtolower( (string) $_SERVER['HTTPS'] ) === 'on' ) {
+		// Handle string values after sanitization
+		if ( $https !== null ) {
+			// Check for 'on' (case-insensitive)
+			if ( strtolower( (string) $https ) === 'on' ) {
 				return true;
 			}
-			if ( (string) $_SERVER['HTTPS'] === '1' ) {
+
+			// Check for '1'
+			if ( (string) $https === '1' ) {
+				return true;
+			}
+
+			// Check for integer 1
+			if ( is_numeric( $https ) && (int) $https === 1 ) {
 				return true;
 			}
 		}
