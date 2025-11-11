@@ -2,6 +2,8 @@
 
 namespace PowerBoard\Model;
 
+use PowerBoard\Enums\PaymentNotification\PBPaymentNotificationEnum;
+
 class Charge {
 	/**
 	 * Unique identifier of the charge.
@@ -26,7 +28,12 @@ class Charge {
 	 * @param array $data Raw charge data from API/webhook.
 	 */
 	public function __construct( $data ) {
-		$this->set_charge_id( $data['charge']['_id'] );
+		if( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED] ) ) {
+			$this->set_charge_id( $data['error']['charge_id'] );
+		}else{
+			$this->set_charge_id( $data['charge']['_id'] );
+		}
+
 		$this->set_payment_source( $data['charge']['customer']['payment_source'] ?? $data['charge']['payment_source'] ?? [] );
 	}
 

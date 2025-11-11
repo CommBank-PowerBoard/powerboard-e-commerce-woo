@@ -128,6 +128,19 @@ class IPN {
 	 * @return bool
 	 */
 	public function validate_ipn_response_data( $data ) {
+
+			if( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED] ) ) {
+			return $this->is_valid_string( $data['error']['charge_id'] )
+				&& $this->is_valid_string( $data['intent_id'] )
+				&& $this->is_valid_int( (int) $data['reference'] )
+				&& $this->is_valid_amount( $data['amount'] )
+				&& !empty( $data['currency'] )
+				&& $this->is_valid_int( $data['timestamp'] )
+				&& $this->validate_ipn_object_type( $data['object_type'] )
+				&& $this->is_valid_string( $data['event_id'] )
+				&& $this->validate_ipn_event( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ) );
+		}
+
 		return $this->is_valid_string( $data['charge']['_id'] )
 			&& $this->is_valid_string( $data['intent_id'] )
 			&& $this->is_valid_int( (int) $data['reference'] )
