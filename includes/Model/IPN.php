@@ -5,6 +5,7 @@ namespace PowerBoard\Model;
 
 use PowerBoard\Enums\AvailablePaymentMethods\PBAvailablePaymentMethodsEnum;
 use PowerBoard\Enums\PaymentNotification\PBPaymentNotificationEnum;
+use PowerBoard\Helpers\Util\LoggerHelper;
 
 class IPN {
 
@@ -98,6 +99,7 @@ class IPN {
 	public function __construct( $data ) {
 
 		if ( ! $this->validate_ipn_response_data( $data ) ) {
+			LoggerHelper::log_callback_event( 'Invalid IPN payload: missing or invalid fields.', [], 'error' );
 			wp_send_json_error(
 				[ 'message' => 'Invalid IPN payload: missing or invalid fields.' ],
 				400
@@ -107,13 +109,13 @@ class IPN {
 		// Map according to actual PowerBoard IPN format
 		$this->charge          = new Charge( $data );
 		$this->intent_id       = (string) $data['intent_id'] ?? null;
-		$this->order_id        = (int) $data['order_id']?? null;
+		$this->order_id        = (int) $data['reference']?? null;
 		$this->failure_message = (string) $data['failure_message'] ?? null;
 		$this->amount          = (float) $data['amount'] ?? 0;
 		$this->currency        = (string) $data['currency'] ?? null;
 		$this->timestamp       = (int) $data['timestamp'] ?? null;
 		$this->payment_method  = (string) PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method'] );
-		$this->object_type     = (string) $data['event_type'] ?? null;
+		$this->object_type     = (string) $data['object_type'] ?? null;
 		$this->event_id        = (string) $data['event_id']?? null;
 		$this->event           = (string) PBPaymentNotificationEnum::get_ipn_event( $data['event'] );
 		$this->is_paid         = (bool) $data['is_paid'] ?? null;
@@ -126,14 +128,14 @@ class IPN {
 	 * @return bool
 	 */
 	public function validate_ipn_response_data( $data ) {
-		return $this->is_valid_string( $data['charge_id'] )
+		return $this->is_valid_string( $data['charge']['_id'] )
 			&& $this->is_valid_string( $data['intent_id'] )
-			&& $this->is_valid_int( (int) $data['order_id'] )
+			&& $this->is_valid_int( (int) $data['reference'] )
 			&& $this->is_valid_amount( $data['amount'] )
 			&& !empty( $data['currency'] )
 			&& $this->is_valid_int( $data['timestamp'] )
-			&& $this->validate_payment_method( PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method'] ) )
-			&& $this->validate_ipn_object_type( $data['event_type'] )
+			&& $this->validate_payment_method( PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['charge']['customer']['payment_source']['type'] ) )
+			&& $this->validate_ipn_object_type( $data['object_type'] )
 			&& $this->is_valid_string( $data['event_id'] )
 			&& $this->validate_ipn_event( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ) );
 	}

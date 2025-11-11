@@ -26,7 +26,7 @@ class Charge {
 	 * @param array $data Raw charge data from API/webhook.
 	 */
 	public function __construct( $data ) {
-		$this->set_charge_id( $data['charge_id'] );
+		$this->set_charge_id( $data['charge']['_id'] );
 		$this->set_payment_source( $data['charge']['customer']['payment_source'] ?? $data['charge']['payment_source'] ?? [] );
 	}
 
