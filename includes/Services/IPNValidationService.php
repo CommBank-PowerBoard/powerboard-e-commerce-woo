@@ -49,7 +49,7 @@ class IPNValidationService {
 		'processing' => 'success',
 		'pending'    => 'pending',
 		'failed'     => 'failed',
-		'cancelled'  => 'cancelled'
+		'cancelled'  => 'cancelled',
 	];
 
 	private SDKAdapterService $sdk_adapter;
