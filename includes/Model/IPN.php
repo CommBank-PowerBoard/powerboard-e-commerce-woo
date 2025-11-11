@@ -110,7 +110,7 @@ class IPN {
 		$this->charge          = new Charge( $data );
 		$this->intent_id       = (string) $data['intent_id'] ?? null;
 		$this->order_id        = (int) $data['reference']?? null;
-		$this->failure_message = (string) $data['failure_message'] ?? null;
+		$this->failure_message = (string) $data['error']['err_message'] ?? null;
 		$this->amount          = (float) $data['amount'] ?? 0;
 		$this->currency        = (string) $data['currency'] ?? null;
 		$this->timestamp       = (int) $data['timestamp'] ?? null;
