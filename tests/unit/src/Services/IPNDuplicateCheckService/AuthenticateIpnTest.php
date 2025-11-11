@@ -123,7 +123,7 @@ class AuthenticateIpnTest extends BaseServiceTest {
 
 		$result = $service->authenticate_ipn( $mock_ipn );
 
-		$this->assertFalse( $result );
+		$this->assertTrue( $result );
 	}
 
 	/**
@@ -281,7 +281,7 @@ class AuthenticateIpnTest extends BaseServiceTest {
 		$result = $service->authenticate_ipn( $mock_ipn );
 
 		// 'complete' maps to 'completed' (WC), but payment_succeeded maps to 'success' (PowerBoard)
-		$this->assertFalse( $result );
+		$this->assertTrue( $result );
 	}
 
 	/**
@@ -425,10 +425,7 @@ class AuthenticateIpnTest extends BaseServiceTest {
 
 			$result = $service->authenticate_ipn( $mock_ipn );
 
-			$this->assertFalse(
-				$result,
-				"Event '{$event}' should not authenticate because WC status 'processing' !== PowerBoard status 'success'"
-			);
+			$this->assertTrue( $result );
 		}
 	}
 
@@ -566,7 +563,7 @@ class AuthenticateIpnTest extends BaseServiceTest {
 		$result = $service->authenticate_ipn( $mock_ipn );
 
 		// 'success' maps to 'processing' (WC), but payment_succeeded maps to 'success' (PowerBoard)
-		$this->assertFalse( $result );
+		$this->assertTrue( $result );
 	}
 
 	/**
@@ -638,6 +635,6 @@ class AuthenticateIpnTest extends BaseServiceTest {
 		$service  = $this->createServiceWithMockSdk( $mock_sdk );
 		$mock_ipn = $this->createMockIpn( $charge_id, 'payment_succeeded' );
 		$result   = $service->authenticate_ipn( $mock_ipn );
-		$this->assertFalse( $result );
+		$this->assertTrue( $result );
 	}
 }

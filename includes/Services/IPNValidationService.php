@@ -41,6 +41,17 @@ class IPNValidationService {
 		'charged_back' => 'refunded',
 	];
 
+	const API_TO_IPN_STATUS_MAP = [
+		'complete'   => 'success',
+		'completed'  => 'success',
+		'success'    => 'success',
+		'successful' => 'success',
+		'processing' => 'success',
+		'pending'    => 'pending',
+		'failed'     => 'failed',
+		'cancelled'  => 'cancelled'
+	];
+
 	private SDKAdapterService $sdk_adapter;
 
 	public function __construct() {
@@ -166,7 +177,7 @@ class IPNValidationService {
 	public function authenticate_ipn( $ipn ) {
 		$api_response = $this->sdk_adapter->get_charge( $ipn->get_charge()->get_charge_id() );
 		$api_status   = $this->extract_status_from_api_response( $api_response );
-		$api_status   = $this->map_powerboard_status_to_wc( $api_status );
+		$api_status   = self::API_TO_IPN_STATUS_MAP[ $api_status ] ?? null;
 		$ipn_status   = $this->map_event_to_status( $ipn->get_event() );
 
 		if ( $api_status === $ipn_status ) {
