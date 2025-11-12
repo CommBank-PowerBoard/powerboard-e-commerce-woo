@@ -110,11 +110,11 @@ class IPN {
 		$this->charge          = new Charge( $data );
 		$this->intent_id       = (string) $data['intent_id'] ?? null;
 		$this->order_id        = (int) $data['reference']?? null;
-		$this->failure_message = (string) $data['error']['err_message'] ?? null;
+		$this->failure_message = isset( $data['error'] ) ? (string) $data['error']['err_message'] : null;
 		$this->amount          = (float) $data['amount'] ?? 0;
 		$this->currency        = (string) $data['currency'] ?? null;
 		$this->timestamp       = (int) $data['timestamp'] ?? null;
-		$this->payment_method  = (string) PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method'] );
+		$this->payment_method  = isset($data['payment_method'] ) ? (string) PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method'] ) : null;
 		$this->object_type     = (string) $data['object_type'] ?? null;
 		$this->event_id        = (string) $data['event_id']?? null;
 		$this->event           = (string) PBPaymentNotificationEnum::get_ipn_event( $data['event'] );
