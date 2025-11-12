@@ -46,5 +46,4 @@ class PBAvailablePaymentMethodsEnum {
 			'image'     => 'zip.svg',
 		],
 	];
-
 }

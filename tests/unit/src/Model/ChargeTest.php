@@ -23,8 +23,7 @@ class ChargeTest extends TestCase {
 		parent::setUp();
 
 		$this->valid_charge_data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'type'         => 'card',
@@ -34,6 +33,7 @@ class ChargeTest extends TestCase {
 						'wallet_type'  => '',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 	}
@@ -57,8 +57,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_constructor_with_charge_payment_source() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'payment_source' => [
 					'type'         => 'card',
 					'card_scheme'  => 'mastercard',
@@ -66,6 +65,7 @@ class ChargeTest extends TestCase {
 					'gateway_name' => 'PayPal Gateway',
 					'wallet_type'  => '',
 				],
+				'_id'            => 'ch_test_123456789',
 			],
 		];
 
@@ -83,10 +83,7 @@ class ChargeTest extends TestCase {
 	 * Test constructor with empty payment source data
 	 */
 	public function test_constructor_with_empty_payment_source() {
-		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [],
-		];
+		$data['charge']['_id'] = 'ch_test_123456789';
 
 		$charge = new Charge( $data );
 
@@ -103,9 +100,7 @@ class ChargeTest extends TestCase {
 	 * Test constructor with missing charge data
 	 */
 	public function test_constructor_with_missing_charge_data() {
-		$data = [
-			'charge_id' => 'ch_test_123456789',
-		];
+		$data['charge']['_id'] = 'ch_test_123456789';
 
 		$charge = new Charge( $data );
 
@@ -118,8 +113,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_with_wallet_type() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => 'apple',
@@ -128,6 +122,7 @@ class ChargeTest extends TestCase {
 						'gateway_type' => 'paydock',
 						'gateway_name' => 'Paydock Gateway',
 					],
+					'_id'            => 'ch_test_123456789',
 				],
 			],
 		];
@@ -141,8 +136,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_with_card_scheme() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => '',
@@ -152,6 +146,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => 'Paydock Gateway',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -164,8 +159,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_with_gateway_type() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => '',
@@ -175,6 +169,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => 'Paydock Gateway',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -187,8 +182,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_with_gateway_name() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => '',
@@ -198,6 +192,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => 'Paydock Gateway',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -210,8 +205,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_with_type() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => '',
@@ -221,6 +215,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => '',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -246,8 +241,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_get_charge_label_priority_order() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => 'google', // Should be highest priority
@@ -257,6 +251,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => 'Paydock Gateway',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -329,8 +324,7 @@ class ChargeTest extends TestCase {
 
 		foreach ( $wallet_types as $wallet_type => $expected_label ) {
 			$data = [
-				'charge_id' => 'ch_test_123456789',
-				'charge'    => [
+				'charge' => [
 					'customer' => [
 						'payment_source' => [
 							'wallet_type'  => $wallet_type,
@@ -340,6 +334,7 @@ class ChargeTest extends TestCase {
 							'gateway_name' => '',
 						],
 					],
+					'_id'      => 'ch_test_123456789',
 				],
 			];
 
@@ -353,8 +348,7 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_with_null_empty_values() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => [
 						'wallet_type'  => null,
@@ -364,6 +358,7 @@ class ChargeTest extends TestCase {
 						'gateway_name' => null,
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -383,8 +378,8 @@ class ChargeTest extends TestCase {
 		];
 
 		foreach ( $special_ids as $charge_id ) {
-			$data              = $this->valid_charge_data;
-			$data['charge_id'] = $charge_id;
+			$data                  = $this->valid_charge_data;
+			$data['charge']['_id'] = $charge_id;
 
 			$charge = new Charge( $data );
 			$this->assertEquals( $charge_id, $charge->get_charge_id() );
@@ -418,11 +413,11 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_with_malformed_payment_source_data() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [
 					'payment_source' => 'not_an_array',
 				],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -437,9 +432,9 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_with_missing_payment_source_key() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => [],
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 
@@ -453,9 +448,9 @@ class ChargeTest extends TestCase {
 	 */
 	public function test_with_nested_missing_keys() {
 		$data = [
-			'charge_id' => 'ch_test_123456789',
-			'charge'    => [
+			'charge' => [
 				'customer' => null,
+				'_id'      => 'ch_test_123456789',
 			],
 		];
 

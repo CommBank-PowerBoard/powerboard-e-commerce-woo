@@ -3,6 +3,7 @@ declare( strict_types=1 );
 
 namespace unit\src\Model;
 
+use Mockery;
 use PHPUnit\Framework\TestCase;
 use PowerBoard\Model\IPN;
 use PowerBoard\Model\Charge;
@@ -10,6 +11,7 @@ use PowerBoard\Enums\AvailablePaymentMethods\PBAvailablePaymentMethodsEnum;
 use PowerBoard\Enums\PaymentNotification\PBPaymentNotificationEnum;
 use PowerBoard\Enums\PaymentNotification\APIPaymentNotificationEnum;
 use PowerBoard\Enums\AvailablePaymentMethods\APIAvailablePaymentMethodsEnum;
+use PowerBoard\Helpers\Util\LoggerHelper;
 
 /**
  * Unit tests for IPN class
@@ -38,16 +40,22 @@ class IPNTest extends TestCase {
 			$function_declared = true;
 		}
 
+		if ( !defined( 'POWER_BOARD_PLUGIN_NAME' ) ) {
+			define( 'POWER_BOARD_PLUGIN_NAME', 'PowerBoard for WooCommerce' );
+		}
+
+		Mockery::mock( 'alias:' . LoggerHelper::class )
+			->shouldReceive( 'log_callback_event' )
+			->andReturnNull();
+
 		$this->valid_ipn_data = [
-			'charge_id'       => 'ch_test_123456789',
 			'intent_id'       => 'intent_test_123456789',
-			'order_id'        => 12345,
+			'reference'       => 12345,
 			'failure_message' => '',
 			'amount'          => 25.99,
 			'currency'        => 'USD',
 			'timestamp'       => 1640995200,
-			'payment_method'  => APIAvailablePaymentMethodsEnum::CARD,
-			'event_type'      => 'payment',
+			'object_type'     => 'payment',
 			'event_id'        => 'evt_test_123456789',
 			'event'           => APIPaymentNotificationEnum::PAYMENT_SUCCEEDED,
 			'is_paid'         => true,
@@ -60,7 +68,9 @@ class IPNTest extends TestCase {
 						'gateway_name' => 'Paydock Gateway',
 					],
 				],
+				'_id'      => 'ch_test_123456789',
 			],
+			'error'           => [ 'charge_id' => 'ch_test_123456789' ],
 		];
 	}
 
@@ -77,7 +87,6 @@ class IPNTest extends TestCase {
 		$this->assertEquals( 25.99, $ipn->get_amount() );
 		$this->assertEquals( 'USD', $ipn->get_currency() );
 		$this->assertEquals( 1640995200, $ipn->get_timestamp() );
-		$this->assertEquals( PBAvailablePaymentMethodsEnum::CARD_KEY, $ipn->get_payment_method() );
 		$this->assertEquals( 'payment', $ipn->get_object_type() );
 		$this->assertEquals( 'evt_test_123456789', $ipn->get_event_id() );
 		$this->assertEquals( PBPaymentNotificationEnum::PAYMENT_SUCCEEDED, $ipn->get_event() );
@@ -89,43 +98,20 @@ class IPNTest extends TestCase {
 	 */
 	public function test_constructor_with_invalid_data() {
 		$invalid_data = [
-			'charge_id'      => '', // Empty charge_id should fail validation
-			'intent_id'      => 'intent_test_123456789',
-			'order_id'       => 12345,
-			'amount'         => 25.99,
-			'currency'       => 'USD',
-			'timestamp'      => 1640995200,
-			'payment_method' => APIAvailablePaymentMethodsEnum::CARD,
-			'event_type'     => 'payment',
-			'event_id'       => 'evt_test_123456789',
-			'event'          => APIPaymentNotificationEnum::PAYMENT_SUCCEEDED,
+			'charge_id'   => '', // Empty charge_id should fail validation
+			'intent_id'   => 'intent_test_123456789',
+			'reference'   => 12345,
+			'amount'      => 25.99,
+			'currency'    => 'USD',
+			'timestamp'   => 1640995200,
+			'object_type' => 'payment',
+			'event_id'    => 'evt_test_123456789',
+			'event'       => APIPaymentNotificationEnum::PAYMENT_SUCCEEDED,
 		];
 
 		$this->expectException( \Exception::class );
 
 		new IPN( $invalid_data );
-	}
-
-	/**
-	 * Test validation with different payment methods
-	 */
-	public function test_validation_with_different_payment_methods() {
-		$payment_methods = [
-			APIAvailablePaymentMethodsEnum::CARD      => PBAvailablePaymentMethodsEnum::CARD_KEY,
-			APIAvailablePaymentMethodsEnum::APPLEPAY  => PBAvailablePaymentMethodsEnum::APPLE_PAY_KEY,
-			APIAvailablePaymentMethodsEnum::GOOGLEPAY => PBAvailablePaymentMethodsEnum::GOOGLE_PAY_KEY,
-			APIAvailablePaymentMethodsEnum::PAYPAL    => PBAvailablePaymentMethodsEnum::PAYPAL_KEY,
-			APIAvailablePaymentMethodsEnum::AFTERPAY  => PBAvailablePaymentMethodsEnum::AFTERPAY_KEY,
-			APIAvailablePaymentMethodsEnum::ZIP       => PBAvailablePaymentMethodsEnum::ZIP_KEY,
-		];
-
-		foreach ( $payment_methods as $api_method => $expected_method ) {
-			$data                   = $this->valid_ipn_data;
-			$data['payment_method'] = $api_method;
-
-			$ipn = new IPN( $data );
-			$this->assertEquals( $expected_method, $ipn->get_payment_method() );
-		}
 	}
 
 	/**
@@ -161,24 +147,12 @@ class IPNTest extends TestCase {
 		$object_types = [ 'payment', 'refund' ];
 
 		foreach ( $object_types as $object_type ) {
-			$data               = $this->valid_ipn_data;
-			$data['event_type'] = $object_type;
+			$data                = $this->valid_ipn_data;
+			$data['object_type'] = $object_type;
 
 			$ipn = new IPN( $data );
 			$this->assertEquals( $object_type, $ipn->get_object_type() );
 		}
-	}
-
-	/**
-	 * Test validation with invalid payment method
-	 */
-	public function test_validation_with_invalid_payment_method() {
-		$data                   = $this->valid_ipn_data;
-		$data['payment_method'] = 'invalid_payment_method';
-
-		$this->expectException( \Exception::class );
-
-		new IPN( $data );
 	}
 
 	/**
@@ -197,8 +171,8 @@ class IPNTest extends TestCase {
 	 * Test validation with invalid object type
 	 */
 	public function test_validation_with_invalid_object_type() {
-		$data               = $this->valid_ipn_data;
-		$data['event_type'] = 'invalid_type';
+		$data                = $this->valid_ipn_data;
+		$data['object_type'] = 'invalid_type';
 
 		$this->expectException( \Exception::class );
 
@@ -233,8 +207,8 @@ class IPNTest extends TestCase {
 	 * Test validation with invalid order_id (non-integer)
 	 */
 	public function test_validation_with_invalid_order_id() {
-		$data             = $this->valid_ipn_data;
-		$data['order_id'] = 'not_an_integer';
+		$data              = $this->valid_ipn_data;
+		$data['reference'] = 'not_an_integer';
 
 		$this->expectException( \Exception::class );
 
@@ -285,8 +259,8 @@ class IPNTest extends TestCase {
 	 * Test validation with null values
 	 */
 	public function test_validation_with_null_values() {
-		$data              = $this->valid_ipn_data;
-		$data['charge_id'] = null;
+		$data                  = $this->valid_ipn_data;
+		$data['charge']['_id'] = null;
 
 		$this->expectException( \Exception::class );
 
@@ -345,8 +319,8 @@ class IPNTest extends TestCase {
 		$order_ids = [ 1, 100, 1000, 99999 ];
 
 		foreach ( $order_ids as $order_id ) {
-			$data             = $this->valid_ipn_data;
-			$data['order_id'] = $order_id;
+			$data              = $this->valid_ipn_data;
+			$data['reference'] = $order_id;
 
 			$ipn = new IPN( $data );
 			$this->assertEquals( $order_id, $ipn->get_order_id() );
@@ -357,9 +331,9 @@ class IPNTest extends TestCase {
 	 * Test validation with failure message
 	 */
 	public function test_validation_with_failure_message() {
-		$data                    = $this->valid_ipn_data;
-		$data['failure_message'] = 'Payment failed due to insufficient funds';
-		$data['is_paid']         = false;
+		$data                         = $this->valid_ipn_data;
+		$data['error']['err_message'] = 'Payment failed due to insufficient funds';
+		$data['is_paid']              = false;
 
 		$ipn = new IPN( $data );
 		$this->assertEquals( 'Payment failed due to insufficient funds', $ipn->get_failure_message() );
@@ -371,10 +345,10 @@ class IPNTest extends TestCase {
 	 * Test edge case with special characters in strings
 	 */
 	public function test_validation_with_special_characters() {
-		$data              = $this->valid_ipn_data;
-		$data['charge_id'] = 'ch_test_123-456_789';
-		$data['intent_id'] = 'intent_test_123-456_789';
-		$data['event_id']  = 'evt_test_123-456_789';
+		$data                  = $this->valid_ipn_data;
+		$data['charge']['_id'] = 'ch_test_123-456_789';
+		$data['intent_id']     = 'intent_test_123-456_789';
+		$data['event_id']      = 'evt_test_123-456_789';
 
 		$ipn = new IPN( $data );
 		$this->assertEquals( 'ch_test_123-456_789', $ipn->get_charge()->get_charge_id() );
@@ -395,7 +369,6 @@ class IPNTest extends TestCase {
 		$this->assertIsFloat( $ipn->get_amount() );
 		$this->assertIsString( $ipn->get_currency() );
 		$this->assertIsInt( $ipn->get_timestamp() );
-		$this->assertIsString( $ipn->get_payment_method() );
 		$this->assertIsString( $ipn->get_object_type() );
 		$this->assertIsString( $ipn->get_event_id() );
 		$this->assertIsString( $ipn->get_event() );
@@ -410,8 +383,8 @@ class IPNTest extends TestCase {
 		unset( $data['charge'] );
 
 		// This should still work as Charge constructor handles missing data only change_id is required
-		$ipn = new IPN( $data );
-		$this->assertInstanceOf( Charge::class, $ipn->get_charge() );
+		$this->expectException( \Exception::class );
+		new IPN( $data );
 	}
 
 	/**
@@ -421,7 +394,7 @@ class IPNTest extends TestCase {
 		$data           = $this->valid_ipn_data;
 		$data['charge'] = [];
 
-		$ipn = new IPN( $data );
-		$this->assertInstanceOf( Charge::class, $ipn->get_charge() );
+		$this->expectException( \Exception::class );
+		new IPN( $data );
 	}
 }

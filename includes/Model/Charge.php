@@ -28,9 +28,9 @@ class Charge {
 	 * @param array $data Raw charge data from API/webhook.
 	 */
 	public function __construct( $data ) {
-		if( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED] ) ) {
+		if ( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [ PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED ] ) ) {
 			$this->set_charge_id( $data['error']['charge_id'] );
-		}else{
+		} else {
 			$this->set_charge_id( $data['charge']['_id'] );
 		}
 
