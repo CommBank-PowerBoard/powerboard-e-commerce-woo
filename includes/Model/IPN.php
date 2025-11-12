@@ -114,7 +114,6 @@ class IPN {
 		$this->amount          = (float) $data['amount'] ?? 0;
 		$this->currency        = (string) $data['currency'] ?? null;
 		$this->timestamp       = (int) $data['timestamp'] ?? null;
-		$this->payment_method  = isset($data['payment_method'] ) ? (string) PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['payment_method'] ) : null;
 		$this->object_type     = (string) $data['object_type'] ?? null;
 		$this->event_id        = (string) $data['event_id']?? null;
 		$this->event           = (string) PBPaymentNotificationEnum::get_ipn_event( $data['event'] );
@@ -129,16 +128,8 @@ class IPN {
 	 */
 	public function validate_ipn_response_data( $data ) {
 
-			if( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED] ) ) {
-			return $this->is_valid_string( $data['error']['charge_id'] )
-				&& $this->is_valid_string( $data['intent_id'] )
-				&& $this->is_valid_int( (int) $data['reference'] )
-				&& $this->is_valid_amount( $data['amount'] )
-				&& !empty( $data['currency'] )
-				&& $this->is_valid_int( $data['timestamp'] )
-				&& $this->validate_ipn_object_type( $data['object_type'] )
-				&& $this->is_valid_string( $data['event_id'] )
-				&& $this->validate_ipn_event( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ) );
+		if( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED] ) ) {
+			$data['charge']['_id'] = $data['error']['charge_id'];
 		}
 
 		return $this->is_valid_string( $data['charge']['_id'] )
@@ -147,12 +138,10 @@ class IPN {
 			&& $this->is_valid_amount( $data['amount'] )
 			&& !empty( $data['currency'] )
 			&& $this->is_valid_int( $data['timestamp'] )
-			&& $this->validate_payment_method( PBAvailablePaymentMethodsEnum::get_available_payment_method( $data['charge']['customer']['payment_source']['type'] ) )
 			&& $this->validate_ipn_object_type( $data['object_type'] )
 			&& $this->is_valid_string( $data['event_id'] )
 			&& $this->validate_ipn_event( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ) );
 	}
-
 
 	/**
 	 * Check if value is a valid string.
@@ -202,16 +191,6 @@ class IPN {
 	 */
 	private function validate_ipn_event( $event ): bool {
 		return in_array( $event, PBPaymentNotificationEnum::EVENTS, true );
-	}
-
-	/**
-	 * Check if value is a valid Payment Method.
-	 *
-	 * @param string $payment_method
-	 * @return bool
-	 */
-	private function validate_payment_method( $payment_method ): bool {
-		return in_array( $payment_method, PBAvailablePaymentMethodsEnum::PAYMENT_METHODS, true );
 	}
 
 	public function get_charge(): ?Charge {

@@ -47,29 +47,4 @@ class PBAvailablePaymentMethodsEnum {
 		],
 	];
 
-	public const PAYMENT_METHODS = [
-		self::CARD_KEY,
-		self::AFTERPAY_KEY,
-		self::APPLE_PAY_KEY,
-		self::GOOGLE_PAY_KEY,
-		self::PAYPAL_KEY,
-		self::ZIP_KEY,
-	];
-
-	public static function get_available_payment_method( $api_event ): ?string {
-		if ( in_array( $api_event, APIAvailablePaymentMethodsEnum::PAYMENT_METHODS, true ) ) {
-			$available_events = [
-				APIAvailablePaymentMethodsEnum::CARD      => self::CARD_KEY,
-				APIAvailablePaymentMethodsEnum::AFTERPAY  => self::AFTERPAY_KEY,
-				APIAvailablePaymentMethodsEnum::APPLEPAY  => self::APPLE_PAY_KEY,
-				APIAvailablePaymentMethodsEnum::GOOGLEPAY => self::GOOGLE_PAY_KEY,
-				APIAvailablePaymentMethodsEnum::PAYPAL    => self::PAYPAL_KEY,
-				APIAvailablePaymentMethodsEnum::ZIP       => self::ZIP_KEY,
-			];
-
-			return $available_events[ $api_event ];
-		}
-
-		return null;
-	}
 }

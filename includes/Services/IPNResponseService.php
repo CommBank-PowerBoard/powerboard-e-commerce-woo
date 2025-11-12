@@ -109,23 +109,21 @@ class IPNResponseService {
 			return false;
 		}
 
-		if ( $order->get_payment_method() === POWER_BOARD_PLUGIN_PREFIX ) {
-			if ( $order->is_paid() ) {
-				wp_send_json_success(
-					[
-						'message' => 'IPN acknowledged',
-					],
-					200
-				);
-			}
+		if ( $order->is_paid() ) {
+			wp_send_json_success(
+				[
+					'message' => 'IPN acknowledged',
+				],
+				200
+			);
+		}
 
-			if ( $ipn->get_is_paid() ) {
-				$this->process_successful_payment( $ipn, $order );
-			}
+		if ( $ipn->get_is_paid() ) {
+			$this->process_successful_payment( $ipn, $order );
+		}
 
-			if ( !empty( $ipn->get_failure_message() ) ) {
-				$this->process_failed_payment( $ipn, $order );
-			}
+		if ( !empty( $ipn->get_failure_message() ) ) {
+			$this->process_failed_payment( $ipn, $order );
 		}
 	}
 
