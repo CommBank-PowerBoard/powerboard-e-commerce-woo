@@ -180,7 +180,7 @@ class IPNValidationService {
 		$api_status   = self::API_TO_IPN_STATUS_MAP[ $api_status ] ?? null;
 		$ipn_status   = $this->map_event_to_status( $ipn->get_event() );
 
-		if ( $api_status === $ipn_status ) {
+		if ( $api_status === $ipn_status && (int) $ipn->get_order_id() === (int) $api_response['resource']['data']['reference']) {
 			return true;
 		}
 
