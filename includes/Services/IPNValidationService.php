@@ -111,8 +111,8 @@ class IPNValidationService {
 				);
 
 				return [
-					'status'    => 'updated',
-					'message'   => 'Updated',
+					'status'    => 'duplicate',
+					'message'   => 'No action taken',
 					'http_code' => 200,
 				];
 			}
