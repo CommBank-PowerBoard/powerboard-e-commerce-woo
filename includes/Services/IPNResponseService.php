@@ -5,7 +5,6 @@ namespace PowerBoard\Services;
 
 use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\PaymentGatewayHelper;
-use PowerBoard\Helpers\Util\PaymentNotificationValidation;
 use PowerBoard\Helpers\Util\PaymentProcessingHelper;
 use PowerBoard\Model\IPN;
 use WC_Order;

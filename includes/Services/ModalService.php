@@ -7,7 +7,6 @@ use PowerBoard\Helpers\DBSettingsHelper;
 use PowerBoard\Helpers\MasterWidgetHelper;
 use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Helpers\Util\NonceHelper;
-use PowerBoard\Helpers\Util\PaymentLabelHelper;
 use PowerBoard\Helpers\Util\PaymentProcessingHelper;
 
 class ModalService {

@@ -28,6 +28,12 @@ class PBPaymentNotificationEnum {
 		self::CHECKOUT_COMPLETED,
 	];
 
+	public const FAIL_EVENTS = [
+		self::PAYMENT_FAILED,
+		self::CHECKOUT_FAILED,
+		self::CHECKOUT_CANCELLED
+	];
+
 	public static function get_ipn_event( $api_event ): ?string {
 		if ( in_array( $api_event, APIPaymentNotificationEnum::API_EVENTS, true ) ) {
 			$available_events = [

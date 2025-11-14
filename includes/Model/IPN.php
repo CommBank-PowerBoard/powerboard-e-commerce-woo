@@ -128,7 +128,7 @@ class IPN {
 	 */
 	public function validate_ipn_response_data( $data ) {
 
-		if ( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), [ PBPaymentNotificationEnum::PAYMENT_FAILED, PBPaymentNotificationEnum::CHECKOUT_FAILED, PBPaymentNotificationEnum::CHECKOUT_CANCELLED ], true ) ) {
+		if ( in_array( PBPaymentNotificationEnum::get_ipn_event( $data['event'] ), PBPaymentNotificationEnum::FAIL_EVENTS, true ) ) {
 			$data['charge']['_id'] = $data['error']['charge_id'];
 		}
 
