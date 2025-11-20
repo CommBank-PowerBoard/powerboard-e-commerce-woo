@@ -1,4 +1,16 @@
 *** PowerBoard for WooCommerce Changelog ***
+[2.2.0] - 2025-11-18
+* Compatibility
+  - Compatible with Wordpress version `6.8.3`
+  - Compatible with WooCommerce version `10.2.2`.
+
+* Added
+  - Introduced instant payment notification webhooks
+
+* Fixed
+  - Resolved compatibility conflict for Block WooCommerce v9.7.1
+  - Improved the appearance and consistency of the Google Pay button
+
 [2.1.0] - 2025-10-20
 * Compatibility
   - Compatible with Wordpress version `6.8.3`

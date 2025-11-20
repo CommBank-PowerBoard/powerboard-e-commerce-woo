@@ -6,7 +6,7 @@ Tags: powerboard, woocommerce, payment, gateways, payment gateways
 Requires PHP: 7.4
 Requires at least: 6.6
 Tested up to: 6.8.3
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 License: GPL-3.0
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,22 @@ Also, we use helper code that not need compile what contained in assets path.
 2. Admin side settings
 
 == Changelog ==
+
+= 2.2.0 =
+
+* Compatibility
+
+  - Compatible with Wordpress version `6.8.3`
+  - Compatible with WooCommerce version `10.2.2`.
+
+* Added
+
+  - Introduced instant payment notification webhooks
+
+* Fixed
+
+  - Resolved compatibility conflict for Block WooCommerce v9.7.1
+  - Improved the appearance and consistency of the Google Pay button
 
 = 2.1.0 =
 
