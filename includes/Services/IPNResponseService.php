@@ -30,17 +30,7 @@ class IPNResponseService {
 			return false;
 		}
 
-		$http_host    = !empty( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
-		$valid_domain = PaymentGatewayHelper::is_valid_domain_name( $http_host );
-		if ( !$valid_domain ) {
-			wp_send_json_error(
-				[
-					'message' => 'Unauthorized IPN origin: invalid domain.',
-					'host'    => $http_host,
-				],
-				401
-			);
-		}
+		$http_host = !empty( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
 
 		// Get raw IPN payload
 		$raw_input = file_get_contents( 'php://input' );
