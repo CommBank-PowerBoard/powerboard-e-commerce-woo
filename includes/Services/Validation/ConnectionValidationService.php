@@ -5,7 +5,7 @@ namespace PowerBoard\Services\Validation;
 
 use Exception;
 use PowerBoard\API\ConfigService;
-use PowerBoard\Enums\MasterWidgetSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\MasterWidgetSettingsEnum;
 use PowerBoard\Helpers\AdminPanelHelpers\MasterWidgetTemplatesHelper;
 use PowerBoard\Helpers\DBSettingsHelper;
 use PowerBoard\Services\PaymentGateway\MasterWidgetPaymentService;

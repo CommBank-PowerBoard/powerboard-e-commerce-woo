@@ -68,7 +68,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::PRODUCTION_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url( $this->endpoint );
-		$expected = ConfigAPIEnum::PRODUCTION_API_URL . $this->endpoint;
+		$expected = ConfigAPIEnum::PRODUCTION_API_URL . ConfigAPIEnum::API_VERSION_URL . $this->endpoint;
 
 		$this->assertEquals( $expected, $actual, 'Should return valid endpoint with a the correct production url.' );
 	}
@@ -86,7 +86,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::STAGING_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url( $this->endpoint );
-		$expected = ConfigAPIEnum::STAGING_API_URL . $this->endpoint;
+		$expected = ConfigAPIEnum::STAGING_API_URL . ConfigAPIEnum::API_VERSION_URL . $this->endpoint;
 
 		$this->assertEquals( $expected, $actual, 'Should return valid endpoint with a the correct staging url.' );
 	}
@@ -104,7 +104,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::SANDBOX_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url( $this->endpoint );
-		$expected = ConfigAPIEnum::SANDBOX_API_URL . $this->endpoint;
+		$expected = ConfigAPIEnum::SANDBOX_API_URL . ConfigAPIEnum::API_VERSION_URL . $this->endpoint;
 
 		$this->assertEquals( $expected, $actual, 'Should return valid endpoint with a the correct sandbox url.' );
 	}
@@ -122,7 +122,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::PRODUCTION_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url();
-		$expected = ConfigAPIEnum::PRODUCTION_API_URL;
+		$expected = ConfigAPIEnum::PRODUCTION_API_URL . ConfigAPIEnum::API_VERSION_URL;
 
 		$this->assertEquals( $expected, $actual, 'Should return the correct production url.' );
 	}
@@ -140,7 +140,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::STAGING_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url();
-		$expected = ConfigAPIEnum::STAGING_API_URL;
+		$expected = ConfigAPIEnum::STAGING_API_URL . ConfigAPIEnum::API_VERSION_URL;
 
 		$this->assertEquals( $expected, $actual, 'Should return the correct staging url.' );
 	}
@@ -158,7 +158,7 @@ class BuildApiUrlTest extends TestCase {
 		$this->setup_settings( ConfigAPIEnum::SANDBOX_ENVIRONMENT_VALUE );
 		$this->config_service->init();
 		$actual   = $this->config_service->build_api_url();
-		$expected = ConfigAPIEnum::SANDBOX_API_URL;
+		$expected = ConfigAPIEnum::SANDBOX_API_URL . ConfigAPIEnum::API_VERSION_URL;
 
 		$this->assertEquals( $expected, $actual, 'Should return the correct sandbox url.' );
 	}

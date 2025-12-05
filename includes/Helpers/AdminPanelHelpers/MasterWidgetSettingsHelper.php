@@ -3,7 +3,7 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers\AdminPanelHelpers;
 
-use PowerBoard\Enums\MasterWidgetSettingsEnum;
+use PowerBoard\Enums\AdminPanelSettings\MasterWidgetSettingsEnum;
 use PowerBoard\Helpers\DBSettingsHelper;
 use PowerBoard\Helpers\Util\LoggerHelper;
 use PowerBoard\Services\Settings\APIAdapterService;

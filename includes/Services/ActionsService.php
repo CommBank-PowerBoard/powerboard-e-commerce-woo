@@ -13,9 +13,9 @@ namespace PowerBoard\Services;
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use PowerBoard\Controllers\Integrations\PaymentController;
-use PowerBoard\Enums\SettingsSectionEnum;
+use PowerBoard\Enums\AdminPanelSettings\SettingsSectionEnum;
 use PowerBoard\Helpers\Util\NonceHelper;
-use PowerBoard\Helpers\Util\PaymentMethodHelper;
+use PowerBoard\Helpers\Util\PaymentGatewayHelper;
 use PowerBoard\Util\MasterWidgetBlock;
 use WC_Order;
 
@@ -162,7 +162,7 @@ class ActionsService {
 	}
 
 	public function process_successful_order() {
-		PaymentMethodHelper::get_payment_gateway()->process_successful_order();
+		PaymentGatewayHelper::get_payment_gateway()->process_successful_order();
 	}
 
 	public function add_edit_order_actions() {

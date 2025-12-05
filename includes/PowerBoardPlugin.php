@@ -63,23 +63,6 @@ if ( ! class_exists( '\PowerBoard\PowerBoardPlugin' ) ) {
 		public function register_style_fixes(): void {
 			?>
 			<style>
-				#classic-powerBoardCheckout_wrapper button,
-				#standaloneWidget button,
-				#standaloneWidget #afterpay-checkout-button,
-				#standaloneWidget #gpay-button-online-api-id,
-				#standaloneWidget .zip-button,
-				#standaloneWidget apple-pay-button,
-				#standaloneWidget .paypal-buttons button {
-					background-image: none !important;
-				}
-				#classic-powerBoardCheckout_wrapper iframe {
-					background: transparent !important;
-					display: block !important;
-					max-width: 100% !important;
-				}
-				.checkout-overlay {
-					z-index: 999 ! important;
-				}
 				#standaloneWidget #gpay-button-online-api-id {
 					background-color: #000 !important;
 				}

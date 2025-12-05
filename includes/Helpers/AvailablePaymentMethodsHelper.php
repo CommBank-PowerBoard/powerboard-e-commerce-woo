@@ -3,7 +3,8 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers;
 
-use PowerBoard\Enums\AvailablePaymentMethodsEnum;
+use PowerBoard\Enums\AvailablePaymentMethods\APIAvailablePaymentMethodsEnum;
+use PowerBoard\Enums\AvailablePaymentMethods\PBAvailablePaymentMethodsEnum;
 use PowerBoard\Helpers\Util\JsonHelper;
 use PowerBoard\Services\Settings\APIAdapterService;
 
@@ -28,23 +29,23 @@ class AvailablePaymentMethodsHelper {
 					}
 
 					switch ( $key ) {
-						case 'card':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::CARD );
+						case APIAvailablePaymentMethodsEnum::CARD:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::CARD );
 							break;
-						case 'afterpay_checkout':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::AFTERPAY );
+						case APIAvailablePaymentMethodsEnum::AFTERPAY:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::AFTERPAY );
 							break;
-						case 'applepay_wallet':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::APPLE_PAY );
+						case APIAvailablePaymentMethodsEnum::APPLEPAY:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::APPLE_PAY );
 							break;
-						case 'googlepay_wallet':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::GOOGLE_PAY );
+						case APIAvailablePaymentMethodsEnum::GOOGLEPAY:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::GOOGLE_PAY );
 							break;
-						case 'paypal_wallet':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::PAYPAL );
+						case APIAvailablePaymentMethodsEnum::PAYPAL:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::PAYPAL );
 							break;
-						case 'zip_checkout':
-							$payment_methods = array_merge( $payment_methods, AvailablePaymentMethodsEnum::ZIP );
+						case APIAvailablePaymentMethodsEnum::ZIP:
+							$payment_methods = array_merge( $payment_methods, PBAvailablePaymentMethodsEnum::ZIP );
 							break;
 					}
 				}

@@ -26,7 +26,7 @@ class ValidatePhoneNumberTest extends TestCase {
 		$this->assertEquals( false, $result );
 	}
 
-	public function validPhoneNumbersProvider(): array {
+	public static function validPhoneNumbersProvider(): array {
 		return [
 			'Already formatted international number' => [ '+61412345678', true ],
 			'Different country code'                 => [ '+44123456789', true ],
@@ -48,7 +48,7 @@ class ValidatePhoneNumberTest extends TestCase {
 		$this->assertEquals( $expected, $result );
 	}
 
-	public function invalidNumbersProvider(): array {
+	public static function invalidNumbersProvider(): array {
 		return [
 			'Letters in number'             => [ '04abc12345678', false ],
 			'Special characters'            => [ '04!@#$%^&*()12345678', false ],
@@ -86,7 +86,7 @@ class ValidatePhoneNumberTest extends TestCase {
 		$this->assertEquals( $expected, $result );
 	}
 
-	public function differentCountryCodesProvider(): array {
+	public static function differentCountryCodesProvider(): array {
 		return [
 			'UK number' => [ '+44123456789', true ],
 			'US number' => [ '+1123456789', true ],

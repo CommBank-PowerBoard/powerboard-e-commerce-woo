@@ -10,6 +10,7 @@
         <!-- Primary tests -->
         <testsuite name="unit">
             <directory>tests/unit/</directory>
+            <exclude>./tests/unit/src/Services/BaseServiceTest.php</exclude>
         </testsuite>
     </testsuites>
     

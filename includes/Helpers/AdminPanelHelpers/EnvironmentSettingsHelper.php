@@ -3,8 +3,8 @@ declare( strict_types=1 );
 
 namespace PowerBoard\Helpers\AdminPanelHelpers;
 
+use PowerBoard\Enums\AdminPanelSettings\EnvironmentSettingsEnum;
 use PowerBoard\Enums\ConfigAPIEnum;
-use PowerBoard\Enums\EnvironmentSettingsEnum;
 
 class EnvironmentSettingsHelper {
 	public static function get_input_type( string $key ): string {

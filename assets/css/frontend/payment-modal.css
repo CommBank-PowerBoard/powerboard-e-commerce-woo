@@ -113,6 +113,10 @@
 	font-weight: 500;
 }
 
+.checkout-overlay {
+    z-index: 9999;
+}
+
 /* Loading spinner */
 #powerboard-modal-loading::after {
 	content: '';

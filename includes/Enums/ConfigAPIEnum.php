@@ -4,9 +4,12 @@ declare( strict_types=1 );
 namespace PowerBoard\Enums;
 
 class ConfigAPIEnum {
-	public const PRODUCTION_API_URL             = 'https://api.powerboard.commbank.com.au/v1/';
-	public const SANDBOX_API_URL                = 'https://api.preproduction.powerboard.commbank.com.au/v1/';
-	public const STAGING_API_URL                = 'https://api.staging.powerboard.commbank.com.au/v1/';
+
+	public const DOMAIN_API                     = 'commbank.com.au';
+	public const PRODUCTION_API_URL             = 'https://api.powerboard.commbank.com.au/';
+	public const SANDBOX_API_URL                = 'https://api.preproduction.powerboard.commbank.com.au/';
+	public const STAGING_API_URL                = 'https://api.staging.powerboard.commbank.com.au/';
+	public const API_VERSION_URL                = 'v1/';
 	public const PRODUCTION_ENVIRONMENT_VALUE   = 'production_cba';
 	public const SANDBOX_ENVIRONMENT_VALUE      = 'preproduction_cba';
 	public const STAGING_ENVIRONMENT_VALUE      = 'staging_cba';

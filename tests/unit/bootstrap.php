@@ -134,3 +134,19 @@ if ( ! function_exists( 'esc_html' ) ) {
 		return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
 	}
 }
+
+if ( ! function_exists( 'wp_unslash' ) ) {
+	/**
+	 * Global mock WordPress wp_unslash function
+	 * This will be available to all namespaces
+	 *
+	 * @param mixed $value Value to unslash.
+	 * @return mixed Unslashed value.
+	 */
+	function wp_unslash( $value ) {
+		if ( is_string( $value ) ) {
+			return stripslashes( $value );
+		}
+		return $value;
+	}
+}

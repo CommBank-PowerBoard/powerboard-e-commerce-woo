@@ -1,7 +1,7 @@
 <?php
 declare( strict_types=1 );
 
-namespace PowerBoard\Enums;
+namespace PowerBoard\Enums\AdminPanelSettings;
 
 use PowerBoard\Abstracts\AbstractEnum;
 

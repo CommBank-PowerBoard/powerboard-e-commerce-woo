@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.2.0] - 2025-11-18
+
+### Compatibility
+
+- Compatible with Wordpress version `6.8.3`
+- Compatible with WooCommerce version `10.2.2`.
+
+### Added
+
+- Plugin configuration data is now automatically removed upon uninstallation
+
+### Fixed
+
+- Implemented fix to prevent WooCommerce themes from overriding the colour of the Google Pay "Pay" button
+- Update GooglePay mark icon used
+
 ## [2.1.0] - 2025-10-20
 
 ### Compatibility
