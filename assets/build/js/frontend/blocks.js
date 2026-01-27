@@ -2,11 +2,11 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./resources/js/frontend/BlockCheckoutHandler.js":
+/***/ "./resources/js/frontend/BlockCheckoutHandler.js"
 /*!*******************************************************!*\
   !*** ./resources/js/frontend/BlockCheckoutHandler.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -199,13 +199,13 @@ class BlockCheckoutHandler {
   }
 }
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/BlockDataService.js":
+/***/ "./resources/js/frontend/BlockDataService.js"
 /*!***************************************************!*\
   !*** ./resources/js/frontend/BlockDataService.js ***!
   \***************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -456,13 +456,13 @@ class BlockDataService {
   }
 }
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/BlockModalManager.js":
+/***/ "./resources/js/frontend/BlockModalManager.js"
 /*!****************************************************!*\
   !*** ./resources/js/frontend/BlockModalManager.js ***!
   \****************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -737,13 +737,13 @@ class BlockModalManager {
   }
 }
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/BlockPaymentComponent.js":
+/***/ "./resources/js/frontend/BlockPaymentComponent.js"
 /*!********************************************************!*\
   !*** ./resources/js/frontend/BlockPaymentComponent.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -808,6 +808,34 @@ const BlockPaymentComponent = props => {
     onCheckoutSuccess,
     onCheckoutValidation
   } = eventRegistration;
+
+  // Prevent native form submissions when Blocks checkout is used and
+  // PowerBoard is the active payment method. This avoids the browser
+  // submitting the form directly and ensures Woo Blocks flow handles it.
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const onSubmitCapture = e => {
+      try {
+        const target = e.target;
+        if (!target || !(target instanceof HTMLFormElement)) {
+          return;
+        }
+        // Only act within WooCommerce Blocks checkout forms
+        if (!target.closest('.wc-block-checkout, .wc-block-components-form')) {
+          return;
+        }
+        // At this point PowerBoard is selected (this component is mounted),
+        // so prevent default submit to let Blocks manage the process.
+        e.preventDefault();
+        e.stopPropagation();
+      } catch (_err) {
+        // Fail-safe: do nothing
+      }
+    };
+    document.addEventListener('submit', onSubmitCapture, true);
+    return () => {
+      document.removeEventListener('submit', onSubmitCapture, true);
+    };
+  }, []);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     // Initialize checkout handler
     const checkoutHandler = new _BlockCheckoutHandler_js__WEBPACK_IMPORTED_MODULE_2__.BlockCheckoutHandler(store, cart, settings, emitResponse.responseTypes, emitResponse.noticeContexts);
@@ -1030,13 +1058,13 @@ const createHiddenPaymentField = () => {
   });
 };
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/BlockValidationService.js":
+/***/ "./resources/js/frontend/BlockValidationService.js"
 /*!*********************************************************!*\
   !*** ./resources/js/frontend/BlockValidationService.js ***!
   \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -1101,13 +1129,13 @@ class BlockValidationService {
   }
 }
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/BlockWidgetManager.js":
+/***/ "./resources/js/frontend/BlockWidgetManager.js"
 /*!*****************************************************!*\
   !*** ./resources/js/frontend/BlockWidgetManager.js ***!
   \*****************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -1235,13 +1263,13 @@ class BlockWidgetManager {
   }
 }
 
-/***/ }),
+/***/ },
 
-/***/ "./resources/js/frontend/constants.js":
+/***/ "./resources/js/frontend/constants.js"
 /*!********************************************!*\
   !*** ./resources/js/frontend/constants.js ***!
   \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -1328,77 +1356,77 @@ const TEXT_DOMAIN = 'power-board';
 const MODAL_AUTO_CLOSE_DELAY = 2000;
 const MODAL_REDIRECT = 'modal';
 
-/***/ }),
+/***/ },
 
-/***/ "react":
-/*!************************!*\
-  !*** external "React" ***!
-  \************************/
-/***/ ((module) => {
-
-module.exports = window["React"];
-
-/***/ }),
-
-/***/ "@woocommerce/block-data":
+/***/ "@woocommerce/block-data"
 /*!**************************************!*\
   !*** external ["wc","wcBlocksData"] ***!
   \**************************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wc"]["wcBlocksData"];
 
-/***/ }),
+/***/ },
 
-/***/ "@woocommerce/blocks-registry":
+/***/ "@woocommerce/blocks-registry"
 /*!******************************************!*\
   !*** external ["wc","wcBlocksRegistry"] ***!
   \******************************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wc"]["wcBlocksRegistry"];
 
-/***/ }),
+/***/ },
 
-/***/ "@woocommerce/settings":
+/***/ "@woocommerce/settings"
 /*!************************************!*\
   !*** external ["wc","wcSettings"] ***!
   \************************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wc"]["wcSettings"];
 
-/***/ }),
+/***/ },
 
-/***/ "@wordpress/data":
+/***/ "@wordpress/data"
 /*!******************************!*\
   !*** external ["wp","data"] ***!
   \******************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wp"]["data"];
 
-/***/ }),
+/***/ },
 
-/***/ "@wordpress/html-entities":
+/***/ "@wordpress/html-entities"
 /*!**************************************!*\
   !*** external ["wp","htmlEntities"] ***!
   \**************************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wp"]["htmlEntities"];
 
-/***/ }),
+/***/ },
 
-/***/ "@wordpress/i18n":
+/***/ "@wordpress/i18n"
 /*!******************************!*\
   !*** external ["wp","i18n"] ***!
   \******************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = window["wp"]["i18n"];
 
-/***/ })
+/***/ },
+
+/***/ "react"
+/*!************************!*\
+  !*** external "React" ***!
+  \************************/
+(module) {
+
+module.exports = window["React"];
+
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -1411,6 +1439,12 @@ module.exports = window["wp"]["i18n"];
 /******/ 		var cachedModule = __webpack_module_cache__[moduleId];
 /******/ 		if (cachedModule !== undefined) {
 /******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Check if module exists (development only)
+/******/ 		if (__webpack_modules__[moduleId] === undefined) {
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -1469,6 +1503,8 @@ module.exports = window["wp"]["i18n"];
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+(() => {
 /*!****************************************!*\
   !*** ./resources/js/frontend/index.js ***!
   \****************************************/
@@ -1566,6 +1602,8 @@ const PowerBoardPaymentMethod = {
 (0,_woocommerce_blocks_registry__WEBPACK_IMPORTED_MODULE_1__.registerPaymentMethod)(PowerBoardPaymentMethod);
 
 // Export for testing purposes
+
+})();
 
 /******/ })()
 ;

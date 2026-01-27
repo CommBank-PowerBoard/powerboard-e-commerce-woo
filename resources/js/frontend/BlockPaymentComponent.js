@@ -44,6 +44,35 @@ export const BlockPaymentComponent                                   = ( props )
 	const { eventRegistration, emitResponse, store, cart, settings } = props;
 	const { onPaymentSetup, onCheckoutSuccess, onCheckoutValidation } = eventRegistration;
 
+	// Prevent native form submissions when Blocks checkout is used and
+	// PowerBoard is the active payment method. This avoids the browser
+	// submitting the form directly and ensures Woo Blocks flow handles it.
+	useEffect( () => {
+		const onSubmitCapture = ( e ) => {
+			try {
+				const target = e.target;
+				if ( !target || !( target instanceof HTMLFormElement ) ) {
+					return;
+				}
+				// Only act within WooCommerce Blocks checkout forms
+				if ( !target.closest( '.wc-block-checkout, .wc-block-components-form' ) ) {
+					return;
+				}
+				// At this point PowerBoard is selected (this component is mounted),
+				// so prevent default submit to let Blocks manage the process.
+				e.preventDefault();
+				e.stopPropagation();
+			} catch ( _err ) {
+				// Fail-safe: do nothing
+			}
+		};
+
+		document.addEventListener( 'submit', onSubmitCapture, true );
+		return () => {
+			document.removeEventListener( 'submit', onSubmitCapture, true );
+		};
+	}, [] );
+
 	useEffect(
 		() => {
 			// Initialize checkout handler

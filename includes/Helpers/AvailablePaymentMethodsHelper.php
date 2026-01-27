@@ -18,7 +18,10 @@ class AvailablePaymentMethodsHelper {
 		if ( empty( $result['error'] ) ) {
 			$configuration_template_content = JsonHelper::decode_stringified_json( $result['resource']['data']['content'] );
 			$configuration_template_version = $result['resource']['data']['version'];
-			$payment_method_options         = $configuration_template_content['payment_method_options'];
+			$payment_method_options         = !empty( $configuration_template_content['payment_method_options'] ) ?
+				$configuration_template_content['payment_method_options'] : (
+				!empty( $configuration_template_content['payment_methods'] ) ? $configuration_template_content['payment_methods'] :[]
+			);
 
 			if ( !empty( $payment_method_options ) ) {
 				$payment_methods_keys = array_keys( $payment_method_options );

@@ -1,5 +1,24 @@
 {
     "woocommerce": {
+      "2.3.0": {
+        "env": [
+          {
+            "name": "production",
+            "client_sdk_url": "https://widget.powerboard.commbank.com.au/sdk/v1.134.0/widget.umd.js"
+          },
+          {
+            "name": "preproduction",
+            "client_sdk_url": "https://widget.preproduction.powerboard.commbank.com.au/sdk/v1.134.0/widget.umd.js"
+          },
+          {
+            "name": "staging",
+            "client_sdk_url": "https://widget.staging.powerboard.commbank.com.au/sdk/v1.134.0-beta/widget.umd.js"
+          }
+        ],
+        "checkout_version": [
+          1, 2, 3
+        ]
+      },
       "2.2.0": {
         "env": [
           {

@@ -33,6 +33,8 @@ class IPNResponseService {
 		$http_host = !empty( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
 
 		// Get raw IPN payload
+		// php://input is a read-only stream wrapper, not a file path, so it cannot be used for path traversal.
+		// This is the standard and secure way to read raw POST data in PHP.
 		$raw_input = file_get_contents( 'php://input' );
 		$ipn_data  = json_decode( $raw_input, true );
 		$ipn       = new IPN( $ipn_data );

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.0] - 2026-01-22
+
+### Compatibility
+
+- Compatible with Wordpress version `6.9`
+- Compatible with WooCommerce version `10.4.3`.
+
+### Added
+
+- Add support for checkout version 3
+
 ## [2.2.0] - 2025-11-18
 
 ### Compatibility

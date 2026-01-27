@@ -4,8 +4,24 @@ stages:
  - test
  - publish
  - quality
+ - e2e_tests
  - deploy_cba
  - deploy_multitenant
+
+variables:
+
+  WOOCOMMERCE_PLUGIN_NAME:
+    value: PowerBoard for WooCommerce
+    options:
+      - PowerBoard for WooCommerce
+      - Paydock for WooCommerce
+    description: "The name of the Paydock WooCommerce plugin (used for locator prefixes.)"
+
+  PAYDOCK_ENVIRONMENT:
+    value: "staging-cba"
+    options:
+      - "staging-cba"
+    description: "Environment against which tests should be run (where merchant was created)."
 
 # noinspection ComposeMissingKeys
 include:
@@ -15,10 +31,28 @@ include:
     file: '/security/gitlab-security-scans.yaml'
   - project: 'paydock/platform/gitlab-templates'
     file: '/code_quality.yml'
+    # Variables for building WooCommerce test images
+  - project: 'paydock/bounded-contexts/woocommerce/ecommerce-woo-docker-containers'
+    ref: 'main'
+    file: '/.ci-variables.yml'
+
+.default_rules:
+  rules:
+    # Scenario A: Automatic run on Merge Request targeting default branch ('main')
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+      when: on_success
+    # Scenario B: Automatic run if you triggered the pipeline manually (Web UI)
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: on_success
+    - when: never  # Explicitly disable for all other cases
+
+create_version:  # override from included version.yml to add default rules
+  extends: .default_rules
 
 run_php_tests:
   image: composer:lts
   stage: test
+  extends: .default_rules
   script:
     - composer install
     - ./vendor/bin/phpunit ./tests --log-junit phpunit-junit.xml
@@ -29,13 +63,11 @@ run_php_tests:
     reports:
       junit: phpunit-junit.xml
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 run_js_tests:
   image: node:18-alpine
   stage: test
+  extends: .default_rules
   script:
     - npm ci
     - npm run test:js -- --ci
@@ -46,13 +78,11 @@ run_js_tests:
     reports:
       junit: jest-junit.xml
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 quality_scan:
   image: php:8.1-cli
   stage: quality
+  extends: .default_rules
   before_script:
     - apt-get update && apt-get install -y python3 python3-pip nodejs npm git unzip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -67,13 +97,11 @@ quality_scan:
     reports:
       codequality: gl-code-quality-report.json
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 run_npm_audit:
   image: node:18-alpine
   stage: quality
+  extends: .default_rules
   script:
     - npm ci --omit=dev
     - npm audit --json > npm-audit-report.json || true
@@ -88,12 +116,10 @@ run_npm_audit:
       - npm-audit-report.json
       - npm-audit-summary.txt
     expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 prepare_power_board_version:
   stage: publish
+  extends: .default_rules
   needs:
     - job: create_version
       artifacts: true
@@ -110,19 +136,148 @@ prepare_power_board_version:
 publish_power_board:
   image: composer:lts
   stage: publish
+  extends: .default_rules
   needs:
     - job: prepare_power_board_version
       artifacts: true
+  before_script:
+    # Installing  zip
+    - apk add --no-cache zip
   script:
     - composer install --no-dev
     - /bin/sh cleanup_files_for_zip.sh
-    - echo "ZIP_PUBLISH_JOB_ID=$CI_JOB_ID" > zip_publish.job_id
+
+    # Creating the container folder
+    - mkdir power-board
+
+    # Moving ALL files into 'power-board' (excluding the folder itself)
+    - find . -maxdepth 1 -not -name 'power-board' -not -name '.' -not -name '..' -exec mv {} power-board/ \;
+
+    # Defining the Package Registry URL components
+    - PACKAGE_VERSION=$ARTIFACT_NAME
+    - PACKAGE_FILE="${ARTIFACT_NAME}.zip"
+
+    # Zipping the folder
+    - zip -r "$PACKAGE_FILE" power-board
+
+    # Recreating Report Files for GitLab
+    - echo "ZIP_PUBLISH_JOB_ID=$CI_JOB_ID" > zip_publish.job_id  # Preserving the legacy dependency file
+    - |
+      if [ -n "$ARTIFACT_NAME" ]; then
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" > VERSION.TXT
+      else
+        echo "ARTIFACT_NAME is not set. Skipping VERSION.TXT creation or using fallback." > VERSION.TXT
+      fi
+
+    # Uploading the package to the Generic Package Registry using curl (API)
+    - |
+      curl --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+      --upload-file "$PACKAGE_FILE" \
+      "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/e-commerce-powerboard-woo/$PACKAGE_VERSION/$PACKAGE_FILE"
   artifacts:
+    # MUST keep the reports section for compatibility.
     name: $ARTIFACT_NAME
     paths:
-      - ./*
+      - "$ARTIFACT_NAME.zip"
+      - zip_publish.job_id
+      - VERSION.TXT
     reports:
-      dotenv: zip_publish.job_id
+      dotenv:
+       - zip_publish.job_id  # This line is kept to satisfy existing downstream jobs
+       - VERSION.TXT
+
+trigger_image_build:
+  stage: e2e_tests
+  extends: .default_rules
+  variables:  # to send downstream
+    BUILD_IMAGE: true
+    # other vars come from the include .ci-variables.yml
+  trigger:
+    project: "paydock/bounded-contexts/woocommerce/ecommerce-woo-docker-containers"
+    branch: "main"
+    strategy: mirror
+
+fetch_built_image_tag:
+  stage: e2e_tests
+  image: alpine:latest
+  extends: .default_rules
+  needs:
+    - job: trigger_image_build
+      artifacts: false  # Downstream job artifacts are not propagated to the upstream job and must be fetched manually
+  before_script:
+    - apk add --no-cache curl jq unzip
+  script:
+    - echo "🔍 Searching for downstream pipeline..."
+
+    # Finding the Bridge and get BOTH the Pipeline ID and the Downstream Project ID
+    - |
+      BRIDGE_RESPONSE=$(curl --silent --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/pipelines/${CI_PIPELINE_ID}/bridges")
+      
+      # Extract ID and Project ID. We accept the first matching bridge.
+      CHILD_PIPELINE_ID=$(echo "$BRIDGE_RESPONSE" | jq -r ".[] | select(.name == \"trigger_image_build\") | .downstream_pipeline.id")
+      DOWNSTREAM_PROJECT_ID=$(echo "$BRIDGE_RESPONSE" | jq -r ".[] | select(.name == \"trigger_image_build\") | .downstream_pipeline.project_id")
+
+    - echo "✅ Found Child Pipeline ID:" $CHILD_PIPELINE_ID in Project ":" $DOWNSTREAM_PROJECT_ID
+
+    # Safety check
+    - |
+      if [ "$CHILD_PIPELINE_ID" == "null" ] || [ -z "$CHILD_PIPELINE_ID" ]; then
+        echo "❌ Could not find downstream pipeline. Did the trigger job run?"
+        exit 1
+      fi
+
+    # Finding the specific job ID in the CHILD project (Using DOWNSTREAM_PROJECT_ID)
+    - |
+      ARTIFACT_JOB_ID=$(curl --silent --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        "${CI_API_V4_URL}/projects/${DOWNSTREAM_PROJECT_ID}/pipelines/${CHILD_PIPELINE_ID}/jobs" \
+        | jq -r ".[] | select(.name == \"build_image\") | .id")
+
+    - echo "✅ Found Child Job ID:" $ARTIFACT_JOB_ID
+
+    # Downloading artifacts from the CHILD project
+    - |
+      curl --silent --location --output child_artifacts.zip --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        "${CI_API_V4_URL}/projects/${DOWNSTREAM_PROJECT_ID}/jobs/${ARTIFACT_JOB_ID}/artifacts"
+
+    - unzip -o child_artifacts.zip
+
+    # Sourcing the environment
+    - |
+      if [ -f "BUILD.ENV" ]; then
+        echo "✅ Found BUILD.ENV, sourcing it..."
+        set -a
+        . ./BUILD.ENV
+        set +a
+      else
+        echo "❌ BUILD.ENV not found in the root of the zip!"
+        exit 1
+      fi
+    - echo "✅ BUILT_IMAGE_TAG in BUILD.ENV:" $BUILT_IMAGE_TAG
+  artifacts:
+    reports:
+      dotenv: BUILD.ENV
+
+trigger_e2e_tests:
+  stage: e2e_tests
+  extends: .default_rules
+  needs:
+    - job: publish_power_board
+      artifacts: true
+    - job: fetch_built_image_tag
+      artifacts: true
+  variables: # to send downstream
+    E_COMMERCE_UI: true
+    ENVIRONMENT: $PAYDOCK_ENVIRONMENT
+    DOCKER_IMAGE_TAG: $BUILT_IMAGE_TAG
+    PLUGIN_VERSION: $ARTIFACT_NAME
+    ADD_ARGS: >
+      --woocommerce_plugin_name="${WOOCOMMERCE_PLUGIN_NAME}"
+#      "-k test_create_a_direct_charge_with_card"
+  trigger:
+    project: "paydock/shared/testing/autotests"
+    branch: "dev"
+    strategy: mirror
 
 simulate_deploy_power_board_staging:
   stage: deploy_cba
@@ -130,6 +285,7 @@ simulate_deploy_power_board_staging:
     - main
   needs:
     - job: publish_power_board
+      optional: true
       artifacts: true
   trigger:
     project: paydock/bounded-contexts/woocommerce/multi-project-downstream
